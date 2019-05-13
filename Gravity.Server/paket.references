@@ -1,0 +1,15 @@
+Ioc.Modules
+Ioc.Modules.Ninject
+
+Newtonsoft.Json
+
+Owin
+Microsoft.Owin
+Microsoft.Owin.Host.SystemWeb
+
+Owin.Framework
+Owin.Framework.Urchin
+Owin.Framework.Pages.Framework
+Owin.Framework.Pages.Html
+Owin.Framework.Pages.Restful
+Owin.Framework.Pages.Standard
