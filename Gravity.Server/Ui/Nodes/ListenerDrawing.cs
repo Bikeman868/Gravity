@@ -1,0 +1,20 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using Gravity.Server.Configuration;
+using Gravity.Server.Ui.Shapes;
+
+namespace Gravity.Server.Ui.Nodes
+{
+    internal class ListenerDrawing: NodeDrawing
+    {
+        public ListenerDrawing(
+            DrawingElement page, 
+            ListenerEndpointConfiguration listener)
+            : base(page, "Listener " + listener.NodeName)
+        {
+            CssClass = "listener";
+        }
+    }
+}

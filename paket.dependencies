@@ -35,4 +35,4 @@ nuget Owin.Framework.Pages.Framework
 nuget Owin.Framework.Pages.Html
 nuget Owin.Framework.Pages.Restful
 nuget Owin.Framework.Pages.Standard
-
+nuget Owin.Framework.Pages.DebugMiddleware

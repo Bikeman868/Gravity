@@ -2,6 +2,7 @@ Ioc.Modules
 Ioc.Modules.Ninject
 
 Newtonsoft.Json
+Svg
 
 Owin
 Microsoft.Owin
@@ -13,3 +14,4 @@ Owin.Framework.Pages.Framework
 Owin.Framework.Pages.Html
 Owin.Framework.Pages.Restful
 Owin.Framework.Pages.Standard
+Owin.Framework.Pages.DebugMiddleware

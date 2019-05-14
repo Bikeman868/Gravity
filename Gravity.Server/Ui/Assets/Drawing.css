@@ -1,0 +1,43 @@
+﻿g { font-size: 12px; padding: 0; margin: 0; }
+
+rect { stroke-width: 0.4; }
+text { stroke-width: 0.1; }
+
+g.h1 { font-size: 18px; padding-top: 0; margin-top: 0; padding-bottom: 5px; margin-bottom: 10px; stroke-width: 0.15; }
+g.h2 { font-size: 15px; padding-top: 0; margin-top: 0; padding-bottom: 2px; margin-bottom: 3px; stroke-width: 0.15; }
+g.h3 { font-size: 12px; padding-top: 0; margin-top: 0; padding-bottom: 2px; margin-bottom: 3px; stroke-width: 0.13; }
+g.h4 { font-size: 12px; padding-top: 0; margin-top: 0; padding-bottom: 2px; margin-bottom: 3px; stroke-width: 0.12; }
+
+g.details > text { font-size: 9px; }
+
+g.drawing > rect { stroke:#676798; fill:#ffffff; }
+g.drawing > text { stroke:#000000; fill:#000000; }
+
+g.listener > rect { stroke:#676798; fill:#fdfdfd; }
+g.listener > text { stroke:#000000; fill:#000000; }
+
+g.router > rect { stroke:#3366ff; fill:#f8ecec; }
+g.router > text { stroke:#000000; fill:#000000; }
+
+g.responder > rect { stroke:#676798; fill:#f8d7d7; }
+g.responder > text { stroke:#000000; fill:#000000; }
+
+g.server > rect { stroke: #6A5ACD; fill: #e2e2f8; }
+g.server > text { stroke:#000000; fill:#000000; }
+
+g.transform > rect { stroke:#808080; fill:#F5F5eC; }
+g.transform > text { stroke:#696969; fill:#696969; }
+
+g.round_robbin > rect { stroke:#808080; fill:#F5F5DC; }
+g.round_robbin > text { stroke:#696969; fill:#696969; }
+
+g.sticky_session > rect { stroke:#3366ff; fill:#f8ecec; }
+g.sticky_session > text { stroke:#000000; fill:#000000; }
+
+g.popup > rect { stroke:#808080; fill:#F5F5DC; }
+g.popup > text { stroke:#696969; fill:#696969; }
+
+g.button > rect { stroke:#b3ff66; fill:#40bf80; }
+g.button > text { stroke:#ffffff; fill:#ffffff; }
+
+g.list  >  rect { stroke:#808080; fill:#F5F5DC; opacity:0.8; }

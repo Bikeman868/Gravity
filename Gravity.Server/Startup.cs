@@ -21,6 +21,7 @@ using OwinFramework.Pages.Core.Interfaces.Builder;
 using OwinFramework.Pages.Core.Interfaces.Managers;
 using Urchin.Client.Interfaces;
 using Urchin.Client.Sources;
+using OwinFramework.Pages.DebugMiddleware;
 
 [assembly: OwinStartup(typeof(Startup))]
 
@@ -47,6 +48,9 @@ namespace Gravity.Server
 
             pipelineBuilder.Register(ninject.Get<PagesMiddleware>()).ConfigureWith(config, "/gravity/pages");
             pipelineBuilder.Register(ninject.Get<ListenerMiddleware>()).ConfigureWith(config, "/gravity/listener");
+#if DEBUG
+            pipelineBuilder.Register(ninject.Get<DebugInfoMiddleware>()).ConfigureWith(config, "/gravity/pages/debugInfo");
+#endif
 
             app.UseBuilder(pipelineBuilder);
 
@@ -54,20 +58,9 @@ namespace Gravity.Server
             ninject.Get<OwinFramework.Pages.Framework.BuildEngine>().Install(fluentBuilder);
             ninject.Get<OwinFramework.Pages.Html.BuildEngine>().Install(fluentBuilder);
             ninject.Get<OwinFramework.Pages.Restful.BuildEngine>().Install(fluentBuilder);
-            fluentBuilder.Register(Assembly.GetExecutingAssembly());
+            fluentBuilder.Register(Assembly.GetExecutingAssembly(), t => ninject.Get(t));
 
             ninject.Get<INameManager>().Bind();
         }
     }
-
-    [IsPage]
-    [Route("/ui/**", Method.Get)]
-    [PageTitle("Gravity")]
-    [UsesLayout("homePageLayout")]
-    internal class HomePage { }
-
-    [IsLayout("homePageLayout", "region1")]
-    [RegionHtml("region1", "hello-world", "Gravity UI")]
-    internal class HomePageLayout { }
-
 }

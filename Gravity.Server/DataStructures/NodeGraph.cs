@@ -27,25 +27,46 @@ namespace Gravity.Server.DataStructures
 
         public void Configure(NodeGraphConfiguration configuration)
         {
-            configuration = configuration.Sanitize();
+            try
+            {
+                configuration = configuration.Sanitize();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("There was a problem with sanitizing the configuration data", ex);
+            }
 
             var nodes = new List<INode>();
 
-            ConfigureInternalPageNodes(configuration, nodes);
-            ConfigureResponseNodes(configuration, nodes);
-            ConfigureRoundRobinNodes(configuration, nodes);
-            ConfigureRouterNodes(configuration, nodes);
-            ConfigureServerNodes(configuration, nodes);
-            ConfigureStickySessionNodes(configuration, nodes);
-            ConfigureTransformNodes(configuration, nodes);
+            try
+            { 
+                ConfigureInternalPageNodes(configuration, nodes);
+                ConfigureResponseNodes(configuration, nodes);
+                ConfigureRoundRobinNodes(configuration, nodes);
+                ConfigureRouterNodes(configuration, nodes);
+                ConfigureServerNodes(configuration, nodes);
+                ConfigureStickySessionNodes(configuration, nodes);
+                ConfigureTransformNodes(configuration, nodes);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("There was a problem re-configuring nodes", ex);
+            }
 
             var instance = new NodeGraphInstance
             {
                 Nodes = nodes.ToArray()
             };
 
-            foreach (var node in nodes) 
-                node.Bind(instance);
+            try
+            {
+                foreach (var node in nodes)
+                    node.Bind(instance);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("There was a problem with binding nodes into a graph", ex);
+            }
 
             _current = instance;
         }
