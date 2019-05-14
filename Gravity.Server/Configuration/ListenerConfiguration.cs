@@ -9,16 +9,11 @@ namespace Gravity.Server.Configuration
 {
     internal class ListenerConfiguration
     {
-       [JsonProperty("enabled")]
-        public bool Enabled { get; set; }
+       [JsonProperty("disabled")]
+        public bool Disabled { get; set; }
 
         [JsonProperty("paths")]
-        public ListeningEndpoint[] Endpoints { get; set; }
-
-        public ListenerConfiguration()
-        {
-            Enabled = true;
-        }
+        public ListenerEndpointConfiguration[] Endpoints { get; set; }
 
         public ListenerConfiguration Sanitize()
         {
@@ -28,11 +23,11 @@ namespace Gravity.Server.Configuration
                 {
                     Endpoints = new[]
                     {
-                        new ListeningEndpoint
+                        // Default configuration is to send all traffic to node "A"
+                        new ListenerEndpointConfiguration
                         {
-                            Enabled = true,
                             IpAddress = "*",
-                            PortNumber = 52581,
+                            PortNumber = 0,
                             NodeName = "A"
                         }
                     };
@@ -40,7 +35,7 @@ namespace Gravity.Server.Configuration
             }
             catch
             {
-                Enabled = false;
+                Disabled = true;
                 throw;
             }
             return this;

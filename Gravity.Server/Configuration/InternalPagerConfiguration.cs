@@ -3,9 +3,7 @@ using Newtonsoft.Json;
 
 namespace Gravity.Server.Configuration
 {
-    internal class Node
+    internal class InternalPageConfiguration: NodeConfiguration
     {
-        [JsonProperty("name")]
-        public string Name { get; set; }
     }
 }

@@ -13,6 +13,7 @@ namespace Gravity.Server.ProcessingNodes
     {
         public string Name { get; set; }
         public string[] Outputs { get; set; }
+        public bool Disabled { get; set; }
 
         private int _next;
         private NodeOutput[] _outputs;
@@ -23,27 +24,33 @@ namespace Gravity.Server.ProcessingNodes
             {
                 Name = name,
                 Node = nodeGraph.NodeByName(name),
-                Enabled = true
             }).ToArray();
         }
 
         Task INode.ProcessRequest(IOwinContext context)
         {
+            if (Disabled)
+            {
+                context.Response.StatusCode = 503;
+                context.Response.ReasonPhrase = "Balancer " + Name + " is disabled";
+                return context.Response.WriteAsync(string.Empty);
+            }
+
             var outputs = _outputs;
 
             if (outputs == null || outputs.Length == 0)
             {
                 context.Response.StatusCode = 503;
-                context.Response.ReasonPhrase = "Balancer has no outputs";
+                context.Response.ReasonPhrase = "Balancer " + Name + " has no outputs";
                 return context.Response.WriteAsync(string.Empty);
             }
 
-            var enabledOutputs = outputs.Where(o => o.Enabled && o.Node != null).ToList();
+            var enabledOutputs = outputs.Where(o => !o.Disabled && o.Node != null).ToList();
 
             if (enabledOutputs.Count == 0)
             {
                 context.Response.StatusCode = 503;
-                context.Response.ReasonPhrase = "All balancer outputs are disabled";
+                context.Response.ReasonPhrase = "All balancer " + Name + " outputs are disabled";
                 return context.Response.WriteAsync(string.Empty);
             }
 

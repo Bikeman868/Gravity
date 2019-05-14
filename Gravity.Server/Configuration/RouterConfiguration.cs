@@ -3,9 +3,9 @@ using Newtonsoft.Json;
 
 namespace Gravity.Server.Configuration
 {
-    internal class RoundRobinNode: Node
+    internal class RouterConfiguration: NodeConfiguration
     {
         [JsonProperty("outputs")]
-        public string[] Outputs { get; set; }
+        public RouterOutputConfiguration[] Outputs { get; set; }
     }
 }

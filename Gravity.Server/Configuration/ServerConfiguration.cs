@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace Gravity.Server.Configuration
 {
-    internal class ServerNode: Node
+    internal class ServerConfiguration: NodeConfiguration
     {
     }
 }

@@ -11,6 +11,7 @@ namespace Gravity.Server.ProcessingNodes
     public class InternalPage: INode
     {
         public string Name { get; set; }
+        public bool Disabled { get; set; }
 
         void INode.Bind(INodeGraph nodeGraph)
         {

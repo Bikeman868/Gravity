@@ -18,38 +18,25 @@ namespace Gravity.Server.DataStructures
         {
             _configuration = configuration.Register(
                 "/gravity/nodeGraph", 
-                c => Configure(c.Sanitize()), 
-                new NodeGraphConfiguration() );
+                Configure, 
+                new NodeGraphConfiguration());
         }
 
-        private void Configure(NodeGraphConfiguration configuration)
+        public void Configure(NodeGraphConfiguration configuration)
         {
+            configuration = configuration.Sanitize();
+
             var nodes = new List<INode>();
 
-            if (configuration.ServerNodes != null)
-            {
-                foreach (var n in configuration.ServerNodes)
-                {
-                    nodes.Add(new ServerEndpoint
-                    {
-                        Name = n.Name
-                    });
-                }
-            }
+            ConfigureInternalPageNodes(configuration, nodes);
+            ConfigureResponseNodes(configuration, nodes);
+            ConfigureRoundRobinNodes(configuration, nodes);
+            ConfigureRouterNodes(configuration, nodes);
+            ConfigureServerNodes(configuration, nodes);
+            ConfigureStickySessionNodes(configuration, nodes);
+            ConfigureTransformNodes(configuration, nodes);
 
-            if (configuration.RoundRobinNodes != null)
-            {
-                foreach (var n in configuration.RoundRobinNodes)
-                {
-                    nodes.Add(new RoundRobinBalancer
-                    {
-                        Name = n.Name, 
-                        Outputs = n.Outputs
-                    });
-                }
-            }
-
-            var instance = new Instance
+            var instance = new NodeGraphInstance
             {
                 Nodes = nodes.ToArray()
             };
@@ -60,18 +47,151 @@ namespace Gravity.Server.DataStructures
             _current = instance;
         }
 
+        private static void ConfigureInternalPageNodes(NodeGraphConfiguration configuration, List<INode> nodes)
+        {
+            if (configuration.InternalPageNodes != null)
+            {
+                foreach (var internalPageConfiguration in configuration.InternalPageNodes)
+                {
+                    var node = new InternalPage
+                    {
+                        Name = internalPageConfiguration.Name,
+                        Disabled = internalPageConfiguration.Disabled,
+                    };
+                    internalPageConfiguration.Node = node;
+                    nodes.Add(node);
+                }
+            }
+        }
+
+        private static void ConfigureResponseNodes(NodeGraphConfiguration configuration, List<INode> nodes)
+        {
+            if (configuration.ResponseNodes != null)
+            {
+                foreach (var responseNodeConfiguration in configuration.ResponseNodes)
+                {
+                    var node = new Response
+                    {
+                        Name = responseNodeConfiguration.Name,
+                        Disabled = responseNodeConfiguration.Disabled,
+                        StatusCode = responseNodeConfiguration.StatusCode,
+                        ReasonPhrase = responseNodeConfiguration.ReasonPhrase ?? "OK",
+                        Content = responseNodeConfiguration.Content ?? string.Empty,
+                        HeaderNames = responseNodeConfiguration.Headers.Select(h => h.HeaderName).ToArray(),
+                        HeaderValues = responseNodeConfiguration.Headers.Select(h => new []{h.HeaderValue}).ToArray()
+                    };
+                    responseNodeConfiguration.Node = node;
+                    nodes.Add(node);
+                }
+            }
+        }
+
+        private static void ConfigureRoundRobinNodes(NodeGraphConfiguration configuration, List<INode> nodes)
+        {
+            if (configuration.RoundRobinNodes != null)
+            {
+                foreach (var roundRobinConfiguration in configuration.RoundRobinNodes)
+                {
+                    var node = new RoundRobinBalancer
+                    {
+                        Name = roundRobinConfiguration.Name,
+                        Disabled = roundRobinConfiguration.Disabled,
+                        Outputs = roundRobinConfiguration.Outputs
+                    };
+                    roundRobinConfiguration.Node = node;
+                    nodes.Add(node);
+                }
+            }
+        }
+
+        private static void ConfigureRouterNodes(NodeGraphConfiguration configuration, List<INode> nodes)
+        {
+            if (configuration.RouterNodes != null)
+            {
+                foreach (var routerNodeConfiguration in configuration.RouterNodes)
+                {
+                    var node = new RoutingNode
+                    {
+                        Name = routerNodeConfiguration.Name,
+                        Disabled = routerNodeConfiguration.Disabled,
+                        //Outputs = routerNodeConfiguration.Outputs
+                    };
+                    routerNodeConfiguration.Node = node;
+                    nodes.Add(node);
+                }
+            }
+        }
+
+        private static void ConfigureServerNodes(NodeGraphConfiguration configuration, List<INode> nodes)
+        {
+            if (configuration.ServerNodes != null)
+            {
+                foreach (var serverNodeConfiguration in configuration.ServerNodes)
+                {
+                    var node = new ServerEndpoint
+                    {
+                        Name = serverNodeConfiguration.Name,
+                        Disabled = serverNodeConfiguration.Disabled,
+                    };
+                    serverNodeConfiguration.Node = node;
+                    nodes.Add(node);
+                }
+            }
+        }
+
+        private static void ConfigureStickySessionNodes(NodeGraphConfiguration configuration, List<INode> nodes)
+        {
+            if (configuration.StickySessionNodes != null)
+            {
+                foreach (var stickySessionNodeConfiguration in configuration.StickySessionNodes)
+                {
+                    var node = new StickySessionBalancer
+                    {
+                        Name = stickySessionNodeConfiguration.Name,
+                        Disabled = stickySessionNodeConfiguration.Disabled,
+                        //Outputs = stickySessionNodeConfiguration.Outputs,
+                        //SesionCookie = stickySessionNodeConfiguration.SesionCookie,
+                    };
+                    stickySessionNodeConfiguration.Node = node;
+                    nodes.Add(node);
+                }
+            }
+        }
+
+        private static void ConfigureTransformNodes(NodeGraphConfiguration configuration, List<INode> nodes)
+        {
+            if (configuration.TransformNodes != null)
+            {
+                foreach (var transformNodeConfiguration in configuration.TransformNodes)
+                {
+                    var node = new StickySessionBalancer
+                    {
+                        Name = transformNodeConfiguration.Name,
+                        Disabled = transformNodeConfiguration.Disabled,
+                        //Script = stickySessionNodeConfiguration.Script,
+                    };
+                    transformNodeConfiguration.Node = node;
+                    nodes.Add(node);
+                }
+            }
+        }
+
         INode INodeGraph.NodeByName(string name)
         {
             return _current.NodeByName(name);
         }
 
-        private class Instance: INodeGraph
+        private class NodeGraphInstance: INodeGraph
         {
             public INode[] Nodes;
 
             INode INodeGraph.NodeByName(string name)
             {
                 return Nodes.FirstOrDefault(n => string.Equals(n.Name, name, StringComparison.OrdinalIgnoreCase));
+            }
+
+            void INodeGraph.Configure(NodeGraphConfiguration configuration)
+            {
             }
         }
     }

@@ -14,7 +14,7 @@ using OwinFramework.MiddlewareHelpers.Traceable;
 
 namespace Gravity.Server.Middleware
 {
-    public class ListenerMiddleware:
+    internal class ListenerMiddleware:
         IMiddleware<IRequestRewriter>,
         IConfigurable,
         ITraceable
@@ -42,7 +42,7 @@ namespace Gravity.Server.Middleware
         public Task Invoke(IOwinContext context, Func<Task> next)
         {
             var configuration = _configuration;
-            if (!configuration.Enabled) return next();
+            if (configuration.Disabled) return next();
 
             var localIp = context.Request.LocalIpAddress;
             var localPort = context.Request.LocalPort;
@@ -51,56 +51,54 @@ namespace Gravity.Server.Middleware
             for (var i = 0; i < endpoints.Length; i++)
             {
                 var endpoint = endpoints[i];
-                if (endpoint.Enabled)
+                if (endpoint.Disabled) continue;
+
+                if (endpoint.IpAddress == "*" || endpoint.IpAddress == localIp)
                 {
-                    if (endpoint.IpAddress == "*" || endpoint.IpAddress == localIp)
+                    if (localPort.HasValue && endpoint.PortNumber != 0 &&
+                        localPort.Value != endpoint.PortNumber) continue;
+
+                    _traceFilter.Trace(context, TraceLevel.Information, 
+                        () => "request matches listener endpoint " + i + ", forwarding to Node " + endpoint.NodeName);
+
+                    var output = endpoint.ProcessingNode;
+
+                    if (output == null)
                     {
-                        if (localPort.HasValue && endpoint.PortNumber != 0 &&
-                            localPort.Value != endpoint.PortNumber) continue;
-
-                        _traceFilter.Trace(context, TraceLevel.Information, 
-                            () => "request matches listener endpoint " + i + ", forwarding to Node " + endpoint.NodeName);
-
-                        var output = endpoint.ProcessingNode;
-
-                        if (output == null)
+                        output = new NodeOutput
                         {
-                            output = new NodeOutput
-                            {
-                                Name = endpoint.NodeName,
-                                Node = _nodeList.NodeByName(endpoint.NodeName),
-                                Enabled = true
-                            };
-                            endpoint.ProcessingNode = output;
-                        }
-                        else
-                        {
-                            output.Node = _nodeList.NodeByName(endpoint.NodeName);
-                        }
-
-                        if (output.Node == null)
-                        {
-                            _traceFilter.Trace(context, TraceLevel.Error,
-                                () => "there is no processing node configured with the name '" + output.Name + "'");
-
-                            context.Response.StatusCode = 500;
-                            context.Response.ReasonPhrase = "Listener endpoint configuration error";
-                            return context.Response.WriteAsync(string.Empty);
-                        }
-
-                        if (!output.Enabled)
-                        {
-                            _traceFilter.Trace(context, TraceLevel.Debug,
-                                () => "listener output '" + output.Name + "' is disabled");
-
-                            context.Response.StatusCode = 503;
-                            context.Response.ReasonPhrase = "Listener endpoint disabled";
-                            return context.Response.WriteAsync(string.Empty);
-                        }
-
-                        output.IncrementRequestCount();
-                        return output.Node.ProcessRequest(context) ?? next();
+                            Name = endpoint.NodeName,
+                            Node = _nodeList.NodeByName(endpoint.NodeName),
+                        };
+                        endpoint.ProcessingNode = output;
                     }
+                    else
+                    {
+                        output.Node = _nodeList.NodeByName(endpoint.NodeName);
+                    }
+
+                    if (output.Node == null)
+                    {
+                        _traceFilter.Trace(context, TraceLevel.Error,
+                            () => "there is no processing node configured with the name '" + output.Name + "'");
+
+                        context.Response.StatusCode = 500;
+                        context.Response.ReasonPhrase = "Listener endpoint configuration error";
+                        return context.Response.WriteAsync(string.Empty);
+                    }
+
+                    if (output.Disabled)
+                    {
+                        _traceFilter.Trace(context, TraceLevel.Debug,
+                            () => "listener output '" + output.Name + "' is disabled");
+
+                        context.Response.StatusCode = 503;
+                        context.Response.ReasonPhrase = "Listener endpoint disabled";
+                        return context.Response.WriteAsync(string.Empty);
+                    }
+
+                    output.IncrementRequestCount();
+                    return output.Node.ProcessRequest(context) ?? next();
                 }
             }
 

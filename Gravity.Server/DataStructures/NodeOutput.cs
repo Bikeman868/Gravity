@@ -7,7 +7,7 @@ namespace Gravity.Server.DataStructures
     {
         public string Name { get; set; }
         public INode Node { get; set; }
-        public bool Enabled { get; set; }
+        public bool Disabled { get; set; }
 
         private long _requestCounbt;
         public long RequestCount { get { return _requestCounbt; } }

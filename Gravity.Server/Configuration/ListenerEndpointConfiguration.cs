@@ -4,10 +4,10 @@ using Newtonsoft.Json;
 
 namespace Gravity.Server.Configuration
 {
-    internal class ListeningEndpoint
+    internal class ListenerEndpointConfiguration
     {
-        [JsonProperty("enabled")]
-        public bool Enabled { get; set; }
+        [JsonProperty("disabled")]
+        public bool Disabled { get; set; }
 
         [JsonProperty("ipAddress")]
         public string IpAddress { get; set; }

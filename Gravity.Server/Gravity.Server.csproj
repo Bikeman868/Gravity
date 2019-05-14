@@ -66,12 +66,21 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Configuration\RoundRobinNode.cs" />
-    <Compile Include="Configuration\ServerNode.cs" />
-    <Compile Include="Configuration\Node.cs" />
+    <Compile Include="Configuration\InternalPagerConfiguration.cs" />
+    <Compile Include="Configuration\ResponseHeaderConfiguration.cs" />
+    <Compile Include="Configuration\RouterRuleConfiguration.cs" />
+    <Compile Include="Configuration\RuleLogic.cs" />
+    <Compile Include="Configuration\ResponseConfiguration.cs" />
+    <Compile Include="Configuration\TransformConfiguration.cs" />
+    <Compile Include="Configuration\RouterOutputConfiguration.cs" />
+    <Compile Include="Configuration\StickySessionConfiguration.cs" />
+    <Compile Include="Configuration\RoundRobinConfiguration.cs" />
+    <Compile Include="Configuration\RouterConfiguration.cs" />
+    <Compile Include="Configuration\ServerConfiguration.cs" />
+    <Compile Include="Configuration\NodeConfiguration.cs" />
     <Compile Include="Configuration\NodeGraphConfiguration.cs" />
     <Compile Include="Configuration\ListenerConfiguration.cs" />
-    <Compile Include="Configuration\ListeningEndpoint.cs" />
+    <Compile Include="Configuration\ListenerEndpointConfiguration.cs" />
     <Compile Include="Interfaces\INode.cs" />
     <Compile Include="Interfaces\INodeGraph.cs" />
     <Compile Include="Middleware\ListenerMiddleware.cs" />
@@ -83,6 +92,7 @@
     <Compile Include="ProcessingNodes\RoutingNode.cs" />
     <Compile Include="ProcessingNodes\ServerEndpoint.cs" />
     <Compile Include="ProcessingNodes\StickySessionBalancer.cs" />
+    <Compile Include="ProcessingNodes\Response.cs" />
     <Compile Include="ProcessingNodes\Transform.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
