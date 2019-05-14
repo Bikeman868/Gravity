@@ -11,5 +11,8 @@ namespace Gravity.Server.Configuration
 
         [JsonProperty("condition")]
         public string Condition { get; set; }
+
+        [JsonProperty("negate")]
+        public bool Negate { get; set; }
     }
 }

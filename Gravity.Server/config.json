@@ -7,21 +7,44 @@
             }
         }
     },
-    "gravity":  {
-        "listener":  {
-
+    "gravity": {
+        "listener": {
+            "endpoints": [
+                { "ipAddress": "*", "port": 0, "node": "A" }
+            ]
         },
-        "nodeGraph":  {
-            "servers":  [
-                { "name":  "B" },
-                { "name":  "C" },
-                { "name":  "D" },
-                { "name":  "E" },
-                { "name":  "F" }
+        "nodeGraph": {
+            "routers": [
+                {
+                    "name": "A",
+                    "outputs": [
+                        {
+                            "routeTo": "B",
+                            "ruleLogic": "All",
+                            "rules": [ 
+                                { "condition": "{path[1]} = ui" }
+                            ]
+                        },
+                        {
+                            "routeTo": "C"
+                        }
+                    ]
+                }
+            ],
+            "pages": [
+                { "name": "B" }
             ],
             "roundRobin": [
-                { "name": "A", "outputs": [ "B", "C", "D" ] }
-            ]
+                { "name": "C", "outputs": [ "D", "E", "F" ] }
+            ],
+            "servers": [
+                { "name": "D" },
+                { "name": "E" },
+                { "name": "F" }
+            ],
+            "responses": [ ],
+            "stickySessions": [ ],
+            "transforms": [ ]
         },
         "pages": {
         }

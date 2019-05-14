@@ -10,12 +10,15 @@ namespace Gravity.Server.DataStructures
 {
     internal class NodeGraph: INodeGraph
     {
+        private readonly IExpressionParser _expressionParser;
         private readonly IDisposable _configuration;
         private INodeGraph _current;
 
         public NodeGraph(
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IExpressionParser expressionParser)
         {
+            _expressionParser = expressionParser;
             _configuration = configuration.Register(
                 "/gravity/nodeGraph", 
                 Configure, 
@@ -47,7 +50,7 @@ namespace Gravity.Server.DataStructures
             _current = instance;
         }
 
-        private static void ConfigureInternalPageNodes(NodeGraphConfiguration configuration, List<INode> nodes)
+        private void ConfigureInternalPageNodes(NodeGraphConfiguration configuration, List<INode> nodes)
         {
             if (configuration.InternalPageNodes != null)
             {
@@ -64,7 +67,7 @@ namespace Gravity.Server.DataStructures
             }
         }
 
-        private static void ConfigureResponseNodes(NodeGraphConfiguration configuration, List<INode> nodes)
+        private void ConfigureResponseNodes(NodeGraphConfiguration configuration, List<INode> nodes)
         {
             if (configuration.ResponseNodes != null)
             {
@@ -86,7 +89,7 @@ namespace Gravity.Server.DataStructures
             }
         }
 
-        private static void ConfigureRoundRobinNodes(NodeGraphConfiguration configuration, List<INode> nodes)
+        private void ConfigureRoundRobinNodes(NodeGraphConfiguration configuration, List<INode> nodes)
         {
             if (configuration.RoundRobinNodes != null)
             {
@@ -104,17 +107,17 @@ namespace Gravity.Server.DataStructures
             }
         }
 
-        private static void ConfigureRouterNodes(NodeGraphConfiguration configuration, List<INode> nodes)
+        private void ConfigureRouterNodes(NodeGraphConfiguration configuration, List<INode> nodes)
         {
             if (configuration.RouterNodes != null)
             {
                 foreach (var routerNodeConfiguration in configuration.RouterNodes)
                 {
-                    var node = new RoutingNode
+                    var node = new RoutingNode(_expressionParser)
                     {
                         Name = routerNodeConfiguration.Name,
                         Disabled = routerNodeConfiguration.Disabled,
-                        //Outputs = routerNodeConfiguration.Outputs
+                        Outputs = routerNodeConfiguration.Outputs
                     };
                     routerNodeConfiguration.Node = node;
                     nodes.Add(node);
@@ -122,7 +125,7 @@ namespace Gravity.Server.DataStructures
             }
         }
 
-        private static void ConfigureServerNodes(NodeGraphConfiguration configuration, List<INode> nodes)
+        private void ConfigureServerNodes(NodeGraphConfiguration configuration, List<INode> nodes)
         {
             if (configuration.ServerNodes != null)
             {
@@ -139,7 +142,7 @@ namespace Gravity.Server.DataStructures
             }
         }
 
-        private static void ConfigureStickySessionNodes(NodeGraphConfiguration configuration, List<INode> nodes)
+        private void ConfigureStickySessionNodes(NodeGraphConfiguration configuration, List<INode> nodes)
         {
             if (configuration.StickySessionNodes != null)
             {
@@ -158,7 +161,7 @@ namespace Gravity.Server.DataStructures
             }
         }
 
-        private static void ConfigureTransformNodes(NodeGraphConfiguration configuration, List<INode> nodes)
+        private void ConfigureTransformNodes(NodeGraphConfiguration configuration, List<INode> nodes)
         {
             if (configuration.TransformNodes != null)
             {

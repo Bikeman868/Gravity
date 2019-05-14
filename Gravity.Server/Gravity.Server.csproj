@@ -81,6 +81,9 @@
     <Compile Include="Configuration\NodeGraphConfiguration.cs" />
     <Compile Include="Configuration\ListenerConfiguration.cs" />
     <Compile Include="Configuration\ListenerEndpointConfiguration.cs" />
+    <Compile Include="DataStructures\ExpressionParser.cs" />
+    <Compile Include="Interfaces\IExpression.cs" />
+    <Compile Include="Interfaces\IExpressionParser.cs" />
     <Compile Include="Interfaces\INode.cs" />
     <Compile Include="Interfaces\INodeGraph.cs" />
     <Compile Include="Middleware\ListenerMiddleware.cs" />

@@ -36,45 +36,9 @@ namespace Gravity.Server.Configuration
             {
                 // Define the default node graph to use when there is no configuration
 
-                RouterNodes = new[]
-                {
-                    new RouterConfiguration
-                    {
-                        Name = "A",
-                        Outputs = new[]
-                        {
-                            new RouterOutputConfiguration
-                            {
-                                NodeName = "B",
-                                RuleLogic = RuleLogic.All,
-                                Rules = new[]
-                                {
-                                    new RouterRuleConfiguration {Condition = "Path[1] = 'ui'"}
-                                }
-                            },
-                            new RouterOutputConfiguration
-                            {
-                                NodeName = "C"
-                            }
-                        }
-                    }
-                };
-
                 InternalPageNodes = new[]
                 {
-                    new InternalPageConfiguration {Name = "B"}
-                };
-
-                RoundRobinNodes = new[]
-                {
-                    new RoundRobinConfiguration {Name = "C", Outputs = new[] {"D", "E", "F"}}
-                };
-
-                ServerNodes = new[]
-                {
-                    new ServerConfiguration {Name = "D"},
-                    new ServerConfiguration {Name = "E"},
-                    new ServerConfiguration {Name = "F"},
+                    new InternalPageConfiguration {Name = "A"}
                 };
             }
             else

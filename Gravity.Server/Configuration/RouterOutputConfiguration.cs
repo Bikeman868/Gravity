@@ -6,8 +6,8 @@ namespace Gravity.Server.Configuration
 {
     internal class RouterOutputConfiguration
     {
-        [JsonProperty("node")]
-        public string NodeName { get; set; }
+        [JsonProperty("routeTo")]
+        public string RouteTo { get; set; }
 
         [JsonProperty("rules")]
         public RouterRuleConfiguration[] Rules { get; set; }

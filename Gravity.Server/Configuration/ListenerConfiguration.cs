@@ -12,7 +12,7 @@ namespace Gravity.Server.Configuration
        [JsonProperty("disabled")]
         public bool Disabled { get; set; }
 
-        [JsonProperty("paths")]
+        [JsonProperty("endpoints")]
         public ListenerEndpointConfiguration[] Endpoints { get; set; }
 
         public ListenerConfiguration Sanitize()
