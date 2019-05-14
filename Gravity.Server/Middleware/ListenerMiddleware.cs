@@ -73,6 +73,10 @@ namespace Gravity.Server.Middleware
                             };
                             endpoint.ProcessingNode = output;
                         }
+                        else
+                        {
+                            output.Node = _nodeList.NodeByName(endpoint.NodeName);
+                        }
 
                         if (output.Node == null)
                         {
