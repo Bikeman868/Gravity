@@ -61,13 +61,13 @@ namespace Gravity.Server
     }
 
     [IsPage]
-    [Route("/", Method.Get)]
-    [PageTitle("Getting started with Owin Framework Pages")]
+    [Route("/ui/**", Method.Get)]
+    [PageTitle("Gravity")]
     [UsesLayout("homePageLayout")]
     internal class HomePage { }
 
     [IsLayout("homePageLayout", "region1")]
-    [RegionHtml("region1", "hello-world", "Hello, world")]
+    [RegionHtml("region1", "hello-world", "Gravity UI")]
     internal class HomePageLayout { }
 
 }
