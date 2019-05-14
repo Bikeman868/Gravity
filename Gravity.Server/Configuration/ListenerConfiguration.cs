@@ -18,7 +18,6 @@ namespace Gravity.Server.Configuration
         public ListenerConfiguration()
         {
             Enabled = true;
-            Sanitize();
         }
 
         public ListenerConfiguration Sanitize()

@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Web;
+﻿using System.Threading;
 using Gravity.Server.Interfaces;
 
-namespace Gravity.Server.ProcessingNodes
+namespace Gravity.Server.DataStructures
 {
     internal class NodeOutput
     {

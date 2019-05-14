@@ -1,0 +1,21 @@
+﻿{
+    "owinFramework": {
+        "pages": {
+            "html": {
+                "includeComments": true,
+                "indented": true
+            }
+        }
+    },
+    "gravity":  {
+        "listener":  {
+
+        },
+        "nodeGraph":  {
+
+        },
+        "pages": {
+
+        }
+    }
+}

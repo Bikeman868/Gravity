@@ -8,6 +8,5 @@ namespace Gravity.Server.Interfaces
     public interface INodeGraph
     {
         INode NodeByName(string name);
-        void Configure();
     }
 }

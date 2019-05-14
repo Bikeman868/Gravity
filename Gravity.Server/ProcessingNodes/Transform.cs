@@ -8,7 +8,7 @@ using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes
 {
-    public class TransformNode: INode
+    public class Transform: INode
     {
         public string Name { get; set; }
 

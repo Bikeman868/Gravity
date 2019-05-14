@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using Gravity.Server.DataStructures;
 using Gravity.Server.Interfaces;
 using Gravity.Server.ProcessingNodes;
 using Ioc.Modules;
 using OwinFramework.Interfaces.Builder;
+using OwinFramework.Interfaces.Utility;
 using OwinFramework.Pages.Core.Interfaces.Builder;
 using OwinFramework.Pages.Core.Interfaces.Managers;
 
@@ -32,6 +34,7 @@ namespace Gravity.Server
                 new IocRegistration().Init<IBuilder>(),
                 new IocRegistration().Init<IFluentBuilder>(),
                 new IocRegistration().Init<INameManager>(),
+                new IocRegistration().Init<IHostingEnvironment>(),
             });
         }
     }

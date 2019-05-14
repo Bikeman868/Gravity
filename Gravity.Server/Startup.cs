@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Web;
@@ -12,11 +13,14 @@ using Ninject;
 using Owin;
 using OwinFramework.Builder;
 using OwinFramework.Interfaces.Builder;
+using OwinFramework.Interfaces.Utility;
 using OwinFramework.Pages.Core;
 using OwinFramework.Pages.Core.Attributes;
 using OwinFramework.Pages.Core.Enums;
 using OwinFramework.Pages.Core.Interfaces.Builder;
 using OwinFramework.Pages.Core.Interfaces.Managers;
+using Urchin.Client.Interfaces;
+using Urchin.Client.Sources;
 
 [assembly: OwinStartup(typeof(Startup))]
 
@@ -24,12 +28,18 @@ namespace Gravity.Server
 {
     public class Startup
     {
+        private static IDisposable _configurationFileSource;
+
         public void Configuration(IAppBuilder app)
         {
             var packageLocator = new PackageLocator()
                .ProbeBinFolderAssemblies()
                .Add(Assembly.GetExecutingAssembly());
             var ninject = new StandardKernel(new Ioc.Modules.Ninject.Module(packageLocator));
+
+            var hostingEnvironment = ninject.Get<IHostingEnvironment>();
+            var configFile = new FileInfo(hostingEnvironment.MapPath("config.json"));
+            _configurationFileSource = ninject.Get<FileSource>().Initialize(configFile, TimeSpan.FromSeconds(5));
 
             var config = ninject.Get<IConfiguration>();
 
@@ -47,7 +57,6 @@ namespace Gravity.Server
             fluentBuilder.Register(Assembly.GetExecutingAssembly());
 
             ninject.Get<INameManager>().Bind();
-            ninject.Get<INodeGraph>().Configure();
         }
     }
 

@@ -66,25 +66,32 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\RoundRobinNode.cs" />
+    <Compile Include="Configuration\ServerNode.cs" />
+    <Compile Include="Configuration\Node.cs" />
+    <Compile Include="Configuration\NodeGraphConfiguration.cs" />
     <Compile Include="Configuration\ListenerConfiguration.cs" />
     <Compile Include="Configuration\ListeningEndpoint.cs" />
     <Compile Include="Interfaces\INode.cs" />
     <Compile Include="Interfaces\INodeGraph.cs" />
     <Compile Include="Middleware\ListenerMiddleware.cs" />
     <Compile Include="Package.cs" />
-    <Compile Include="ProcessingNodes\InternalPageNode.cs" />
-    <Compile Include="ProcessingNodes\NodeGraph.cs" />
-    <Compile Include="ProcessingNodes\NodeOutput.cs" />
+    <Compile Include="ProcessingNodes\InternalPage.cs" />
+    <Compile Include="DataStructures\NodeGraph.cs" />
+    <Compile Include="DataStructures\NodeOutput.cs" />
     <Compile Include="ProcessingNodes\RoundRobinBalancer.cs" />
     <Compile Include="ProcessingNodes\RoutingNode.cs" />
     <Compile Include="ProcessingNodes\ServerEndpoint.cs" />
     <Compile Include="ProcessingNodes\StickySessionBalancer.cs" />
-    <Compile Include="ProcessingNodes\TransformNode.cs" />
+    <Compile Include="ProcessingNodes\Transform.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="paket.references" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="config.json" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
