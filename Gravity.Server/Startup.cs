@@ -4,6 +4,8 @@ using System.Linq;
 using System.Reflection;
 using System.Web;
 using Gravity.Server;
+using Gravity.Server.Interfaces;
+using Gravity.Server.Middleware;
 using Ioc.Modules;
 using Microsoft.Owin;
 using Ninject;
@@ -32,7 +34,9 @@ namespace Gravity.Server
             var config = ninject.Get<IConfiguration>();
 
             var pipelineBuilder = ninject.Get<IBuilder>();
-            pipelineBuilder.Register(ninject.Get<PagesMiddleware>()).ConfigureWith(config, "/pages");
+
+            pipelineBuilder.Register(ninject.Get<PagesMiddleware>()).ConfigureWith(config, "/gravity/pages");
+            pipelineBuilder.Register(ninject.Get<ListenerMiddleware>()).ConfigureWith(config, "/gravity/listener");
 
             app.UseBuilder(pipelineBuilder);
 
@@ -43,6 +47,7 @@ namespace Gravity.Server
             fluentBuilder.Register(Assembly.GetExecutingAssembly());
 
             ninject.Get<INameManager>().Bind();
+            ninject.Get<INodeGraph>().Configure();
         }
     }
 
