@@ -6,13 +6,13 @@ namespace Gravity.Server.Configuration
 {
     internal class RouterOutputConfiguration
     {
-        [JsonProperty("routeTo")]
+        [JsonProperty("to")]
         public string RouteTo { get; set; }
 
-        [JsonProperty("rules")]
+        [JsonProperty("conditions")]
         public RouterRuleConfiguration[] Rules { get; set; }
 
-        [JsonProperty("ruleLogic")]
+        [JsonProperty("logic")]
         public RuleLogic RuleLogic { get; set; }
     }
 }

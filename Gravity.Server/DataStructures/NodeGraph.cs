@@ -80,9 +80,12 @@ namespace Gravity.Server.DataStructures
                         StatusCode = responseNodeConfiguration.StatusCode,
                         ReasonPhrase = responseNodeConfiguration.ReasonPhrase ?? "OK",
                         Content = responseNodeConfiguration.Content ?? string.Empty,
-                        HeaderNames = responseNodeConfiguration.Headers.Select(h => h.HeaderName).ToArray(),
-                        HeaderValues = responseNodeConfiguration.Headers.Select(h => new []{h.HeaderValue}).ToArray()
                     };
+                    if (responseNodeConfiguration.Headers != null)
+                    {
+                        node.HeaderNames = responseNodeConfiguration.Headers.Select(h => h.HeaderName).ToArray();
+                        node.HeaderValues = responseNodeConfiguration.Headers.Select(h => h.HeaderValue).ToArray();
+                    }
                     responseNodeConfiguration.Node = node;
                     nodes.Add(node);
                 }

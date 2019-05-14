@@ -5,7 +5,7 @@ namespace Gravity.Server.Configuration
 {
     internal class RouterConfiguration: NodeConfiguration
     {
-        [JsonProperty("outputs")]
+        [JsonProperty("routes")]
         public RouterOutputConfiguration[] Outputs { get; set; }
     }
 }

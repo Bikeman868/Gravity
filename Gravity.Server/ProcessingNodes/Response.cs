@@ -16,7 +16,7 @@ namespace Gravity.Server.ProcessingNodes
         public string ReasonPhrase { get; set; }
         public string Content { get; set; }
         public string[] HeaderNames { get; set; }
-        public string[][] HeaderValues { get; set; }
+        public string[] HeaderValues { get; set; }
 
         void INode.Bind(INodeGraph nodeGraph)
         {
@@ -30,7 +30,7 @@ namespace Gravity.Server.ProcessingNodes
             if (HeaderNames != null)
             {
                 for (var i = 0; i < HeaderNames.Length; i++) 
-                    context.Response.Headers.Add(HeaderNames[i], HeaderValues[i]);
+                    context.Response.Headers[HeaderNames[i]] = HeaderValues[i];
             }
 
             return context.Response.WriteAsync(Content);

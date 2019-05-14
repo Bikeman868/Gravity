@@ -12,6 +12,9 @@ namespace Gravity.Server.DataStructures
     {
         private readonly Regex _delimitedExpressionRegex = new Regex("{(.*)}", RegexOptions.Compiled);
         private readonly Regex _pathExpressionRegex = new Regex("path\\[(.*)]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private readonly Regex _nullExpressionRegex = new Regex("^null$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private readonly Regex _headerExpressionRegex = new Regex("header\\[(.*)]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private readonly Regex _methodExpressionRegex = new Regex("^method$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         IExpression<T> IExpressionParser.Parse<T>(string expression)
         {
@@ -26,9 +29,21 @@ namespace Gravity.Server.DataStructures
 
             expression = match.Groups[1].Value;
 
+            var nullMatch = _nullExpressionRegex.Match(expression);
+            if (nullMatch.Success)
+                return new DefaultExpression<T>();
+
+            var methodMatch = _methodExpressionRegex.Match(expression);
+            if (methodMatch.Success)
+                return new MethodExpression<T>();
+
             var pathMatch = _pathExpressionRegex.Match(expression);
             if (pathMatch.Success)
                 return new PathExpression<T>(int.Parse(pathMatch.Groups[1].Value));
+
+            var headerMatch = _headerExpressionRegex.Match(expression);
+            if (headerMatch.Success)
+                return new HeaderExpression<T>(headerMatch.Groups[1].Value);
 
             throw new Exception("Unknown expression syntax '" + expression + "'");
         }
@@ -56,6 +71,39 @@ namespace Gravity.Server.DataStructures
             T IExpression<T>.Evaluate(IOwinContext context)
             {
                 return _value;
+            }
+        }
+
+        private class HeaderExpression<T> : IExpression<T>
+        {
+            private readonly string _headerName;
+
+            public HeaderExpression(string headerName)
+            {
+                _headerName = headerName;
+            }
+
+            T IExpression<T>.Evaluate(IOwinContext context)
+            {
+                var header = context.Request.Headers[_headerName];
+
+                if (typeof (string) == typeof (T))
+                    return (T)(object)header;
+
+                return (T)Convert.ChangeType(header, typeof(T));
+            }
+        }
+
+        private class MethodExpression<T> : IExpression<T>
+        {
+            T IExpression<T>.Evaluate(IOwinContext context)
+            {
+                var method = context.Request.Method;
+
+                if (typeof (string) == typeof (T))
+                    return (T)(object)method;
+
+                return (T)Convert.ChangeType(method, typeof(T));
             }
         }
 

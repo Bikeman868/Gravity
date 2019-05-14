@@ -17,16 +17,25 @@
             "routers": [
                 {
                     "name": "A",
-                    "outputs": [
+                    "routes": [
                         {
-                            "routeTo": "B",
-                            "ruleLogic": "All",
-                            "rules": [ 
+                            "to": "B",
+                            "logic": "All",
+                            "conditions": [
+                                { "condition": "{method} = GET" },
                                 { "condition": "{path[1]} = ui" }
                             ]
                         },
                         {
-                            "routeTo": "C"
+                            "to": "G",
+                            "logic": "All",
+                            "conditions": [
+                                { "condition": "{method} = GET" },
+                                { "condition": "{path[0]} = /favicon.ico" }
+                            ]
+                        },
+                        {
+                            "to": "C"
                         }
                     ]
                 }
@@ -38,11 +47,42 @@
                 { "name": "C", "outputs": [ "D", "E", "F" ] }
             ],
             "servers": [
-                { "name": "D" },
-                { "name": "E" },
-                { "name": "F" }
+                { "name": "I" }
             ],
-            "responses": [ ],
+            "responses": [
+                {
+                    "name": "D",
+                    "statusCode": 200,
+                    "ressonPhrase": "OK",
+                    "content": "Server D",
+                    "headers": [
+                        { "name": "Content-Type", "value": "text/plain" }
+                    ]
+                },
+                {
+                    "name": "E",
+                    "statusCode": 200,
+                    "ressonPhrase": "OK",
+                    "content": "Server E",
+                    "headers": [
+                        { "name": "Content-Type", "value": "text/plain" }
+                    ]
+                },
+                {
+                    "name": "F",
+                    "statusCode": 200,
+                    "ressonPhrase": "OK",
+                    "content": "Server F",
+                    "headers": [
+                        { "name": "Content-Type", "value": "text/plain" }
+                    ]
+                },
+                {
+                    "name": "G",
+                    "statusCode": 404,
+                    "ressonPhrase": "Not found"
+                }
+            ],
             "stickySessions": [ ],
             "transforms": [ ]
         },
