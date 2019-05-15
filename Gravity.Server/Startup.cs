@@ -46,10 +46,10 @@ namespace Gravity.Server
 
             var pipelineBuilder = ninject.Get<IBuilder>();
 
-            pipelineBuilder.Register(ninject.Get<PagesMiddleware>()).ConfigureWith(config, "/gravity/pages");
-            pipelineBuilder.Register(ninject.Get<ListenerMiddleware>()).ConfigureWith(config, "/gravity/listener");
+            pipelineBuilder.Register(ninject.Get<PagesMiddleware>()).ConfigureWith(config, "/gravity/middleware/pages");
+            pipelineBuilder.Register(ninject.Get<ListenerMiddleware>()).ConfigureWith(config, "/gravity/middleware/listener");
 #if DEBUG
-            pipelineBuilder.Register(ninject.Get<DebugInfoMiddleware>()).ConfigureWith(config, "/gravity/pages/debugInfo");
+            pipelineBuilder.Register(ninject.Get<DebugInfoMiddleware>()).ConfigureWith(config, "/gravity/middleware/debugInfo");
 #endif
 
             app.UseBuilder(pipelineBuilder);

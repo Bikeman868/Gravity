@@ -1,20 +1,5 @@
 ﻿{
-    "owinFramework": {
-        "pages": {
-            "html": {
-                "includeComments": true,
-                "indented": true
-            }
-        }
-    },
     "gravity": {
-        "listener": {
-            "endpoints": [
-                { "ipAddress": "*", "port": 0, "node": "A" },
-                { "ipAddress": "192.168.3.1", "port": 80, "node": "A" },
-                { "ipAddress": "192.168.3.1", "port": 443, "node": "J" }
-            ]
-        },
         "nodeGraph": {
             "routers": [
                 {
@@ -92,22 +77,43 @@
                 { "name": "J", "output": "H"}
             ]
         },
-        "dashboard": {
-            "listeners": { "x": 0, "y": 50, "xSpacing": 0, "ySpacing": 70 },
-            "nodes": [
-                { "name": "A", "x": 300, "y": 50 },
-                { "name": "B", "x": 500, "y": 80 },
-                { "name": "C", "x": 500, "y": 230 },
-                { "name": "D", "x": 700, "y": 120 },
-                { "name": "E", "x": 700, "y": 200 },
-                { "name": "F", "x": 700, "y": 280 },
-                { "name": "G", "x": 500, "y": 150 },
-                { "name": "H", "x": 500, "y": 400 },
-                { "name": "I", "x": 700, "y": 400 },
-                { "name": "J", "x": 300, "y": 400 }
-            ]
+        "ui": {
+            "dashboard": {
+                "listeners": { "x": 0, "y": 50, "xSpacing": 0, "ySpacing": 70 },
+                "nodes": [
+                    { "name": "A", "x": 300, "y": 50 },
+                    { "name": "B", "x": 500, "y": 80 },
+                    { "name": "C", "x": 500, "y": 230 },
+                    { "name": "D", "x": 700, "y": 120 },
+                    { "name": "E", "x": 700, "y": 200 },
+                    { "name": "F", "x": 700, "y": 280 },
+                    { "name": "G", "x": 500, "y": 150 },
+                    { "name": "H", "x": 500, "y": 400 },
+                    { "name": "I", "x": 700, "y": 400 },
+                    { "name": "J", "x": 300, "y": 400 }
+                ]
+            }
         },
+        "middleware": {
+            "listener": {
+                "endpoints": [
+                    { "ipAddress": "*", "port": 0, "node": "A" },
+                    { "ipAddress": "192.168.3.1", "port": 80, "node": "A" },
+                    { "ipAddress": "192.168.3.1", "port": 443, "node": "J" }
+                ]
+            },
+            "pages": {
+            },
+            "debugInfo": {
+            }
+        }
+    },
+    "owinFramework": {
         "pages": {
+            "html": {
+                "includeComments": true,
+                "indented": true
+            }
         }
     }
 }

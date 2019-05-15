@@ -38,12 +38,12 @@ namespace Gravity.Server.Ui
             _nodeGraph = nodeGraph;
 
             _listenerConfig = configuration.Register(
-                "/gravity/listener", 
+                "/gravity/middleware/listener", 
                 c => _listenerConfiguration = c.Sanitize(), 
                 new ListenerConfiguration());
 
             _dashboardConfig = configuration.Register(
-                "/gravity/dashboard",
+                "/gravity/ui/dashboard",
                 c => _dashboardConfiguration = c.Sanitize(),
                 new DashboardConfiguration());
         }
