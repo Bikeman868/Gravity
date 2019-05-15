@@ -13,9 +13,9 @@ namespace Gravity.Server.Ui.Nodes
         public TransformDrawing(
             DrawingElement drawing, 
             Transform transform) 
-            : base(drawing, "Transform " + transform.Name)
+            : base(drawing, "Transform", 2, transform.Name)
         {
-            CssClass = "transform";
+            CssClass = transform.Disabled ? "disabled" : "transform";
         }
     }
 }

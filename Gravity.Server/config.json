@@ -85,11 +85,15 @@
                     "reasonPhrase": "Not found"
                 }
             ],
-            "stickySessions": [ ],
-            "transforms": [ ]
+            "stickySessions": [
+                { "name": "H" }
+            ],
+            "transforms": [ 
+                { "name": "J" }
+            ]
         },
         "dashboard": {
-            "listeners": { "x": 0, "y": 50, "xSpacing":  0, "ySpacing": 70 },
+            "listeners": { "x": 0, "y": 50, "xSpacing": 0, "ySpacing": 70 },
             "nodes": [
                 { "name": "A", "x": 300, "y": 50 },
                 { "name": "B", "x": 500, "y": 80 },
@@ -98,7 +102,9 @@
                 { "name": "E", "x": 700, "y": 300 },
                 { "name": "F", "x": 700, "y": 380 },
                 { "name": "G", "x": 500, "y": 160 },
-                { "name": "I", "x": 300, "y": 300 }
+                { "name": "H", "x": 300, "y": 350 },
+                { "name": "I", "x": 300, "y": 300 },
+                { "name": "J", "x": 300, "y": 400 }
             ]
         },
         "pages": {

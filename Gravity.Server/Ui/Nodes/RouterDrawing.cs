@@ -13,14 +13,11 @@ namespace Gravity.Server.Ui.Nodes
         public RouterDrawing(
             DrawingElement drawing, 
             RoutingNode router) 
-            : base(drawing, "Router " + router.Name)
+            : base(drawing, "Router", 2, router.Name)
         {
-            CssClass = "router";
+            CssClass = router.Disabled ? "disabled" : "router";
 
             var details = new List<string>();
-
-            if (router.Disabled) 
-                details.Add("Disabled");
 
             if (router.Outputs != null)
             {
@@ -36,7 +33,7 @@ namespace Gravity.Server.Ui.Nodes
             public RouterOutputDrawing(
                 DrawingElement drawing,
                 RouterOutputConfiguration routerOutput)
-                : base(drawing, "Output to " + routerOutput.RouteTo)
+                : base(drawing, "Output to " + routerOutput.RouteTo, 3)
             {
                 CssClass = "router_output";
 

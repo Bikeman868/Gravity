@@ -10,14 +10,11 @@ namespace Gravity.Server.Ui.Nodes
         public ResponseDrawing(
             DrawingElement drawing, 
             Response response) 
-            : base(drawing, "Response " + response.Name)
+            : base(drawing, "Response", 2, response.Name)
         {
-            CssClass = "responder";
+            CssClass = response.Disabled ? "disabled" : "responder";
 
             var details = new List<string>();
-
-            if (response.Disabled) 
-                details.Add("Disabled");
 
             details.Add(response.StatusCode + " " + response.ReasonPhrase);
 

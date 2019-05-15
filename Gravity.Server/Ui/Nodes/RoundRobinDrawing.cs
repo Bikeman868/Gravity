@@ -9,14 +9,11 @@ namespace Gravity.Server.Ui.Nodes
         public RoundRobbinDrawing(
             DrawingElement drawing, 
             RoundRobinBalancer roundRobbin) 
-            : base(drawing, "Round robin " + roundRobbin.Name)
+            : base(drawing, "Round robin", 2, roundRobbin.Name)
         {
-            CssClass = "round_robin";
+            CssClass = roundRobbin.Disabled ? "disabled" : "round_robin";
 
             var details = new List<string>();
-
-            if (roundRobbin.Disabled) 
-                details.Add("Disabled");
 
             if (roundRobbin.Outputs != null)
             {

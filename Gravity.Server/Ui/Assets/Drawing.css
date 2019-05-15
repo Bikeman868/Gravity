@@ -10,35 +10,43 @@ g.h4 { font-size: 12px; padding-top: 0; margin-top: 0; padding-bottom: 2px; marg
 
 g.details > text { font-size: 9px; }
 
-g.drawing > rect { stroke:#676798; fill:#ffffff; }
+g.drawing > rect { stroke:#676798; fill:#ffffff;opacity: 0; }
 g.drawing > text { stroke:#000000; fill:#000000; }
 
-g.listener > rect { stroke:#676798; fill:#fdfdfd; }
+g.disabled > rect { stroke:#808080; fill:#fdfdfd; opacity: 0.6; }
+g.disabled > text { stroke:#a0a0a0; fill:#a0a0a0; }
+
+g.label > rect { stroke:#808080; fill:#fdfdfd; opacity: 0.6; }
+g.label > text { stroke:#a0a0a0; fill:#a0a0a0; }
+
+
+g.listener > rect { stroke:#009900; fill:#e6ffe6; }
 g.listener > text { stroke:#000000; fill:#000000; }
 
-g.router > rect { stroke:#3366ff; fill:#f8ecec; }
+g.router > rect { stroke:#dda2a2; fill:#f1dada; }
 g.router > text { stroke:#000000; fill:#000000; }
 
-g.router_output > rect { stroke:#ffffff; fill:#f0e0e0; }
+g.router_output > rect { stroke:#dda2a2; fill:#f8ecec; }
 g.router_output > text { stroke:#000000; fill:#000000; }
 
-g.responder > rect { stroke:#676798; fill:#f8d7d7; }
+g.responder > rect { stroke:#009999; fill:#e6ffff; }
 g.responder > text { stroke:#000000; fill:#000000; }
 
-g.server > rect { stroke: #6A5ACD; fill: #e2e2f8; }
+g.server > rect { stroke:#009900; fill:#e6ffe6; }
 g.server > text { stroke:#000000; fill:#000000; }
 
-g.transform > rect { stroke:#808080; fill:#F5F5eC; }
+g.transform > rect { stroke: #6A5ACD; fill: #e2e2f8; }
 g.transform > text { stroke:#696969; fill:#696969; }
 
 g.round_robin > rect { stroke:#808080; fill:#F5F5DC; }
 g.round_robin > text { stroke:#696969; fill:#696969; }
 
-g.sticky_session > rect { stroke:#3366ff; fill:#f8ecec; }
+g.sticky_session > rect { stroke:#808080; fill:#F5F5DC; }
 g.sticky_session > text { stroke:#000000; fill:#000000; }
 
-g.internal > rect { stroke:#676798; fill:#fdfdfd; }
+g.internal > rect { stroke:#009999; fill:#e6ffff; }
 g.internal > text { stroke:#000000; fill:#000000; }
+
 
 g.popup > rect { stroke:#808080; fill:#F5F5DC; }
 g.popup > text { stroke:#696969; fill:#696969; }

@@ -21,6 +21,9 @@ namespace Gravity.Server.Ui.Shapes
         public int ZOrder;
         public string CssClass;
 
+        public bool FixedPosition;
+        public bool FixedSize;
+
         public List<DrawingElement> Children = new List<DrawingElement>();
         public DrawingElement Parent;
 
@@ -46,13 +49,13 @@ namespace Gravity.Server.Ui.Shapes
         /// </summary>
         protected virtual void ArrangeChildren()
         {
-            ArrangeChildrenStatically();
+            ArrangeChildrenInFixedPositions();
         }
 
         /// <summary>
         /// Leaves children where they were placed during drawing construction
         /// </summary>
-        protected virtual void ArrangeChildrenStatically()
+        protected virtual void ArrangeChildrenInFixedPositions()
         {
             foreach (var child in Children)
                 child.Arrange();
@@ -69,11 +72,16 @@ namespace Gravity.Server.Ui.Shapes
 
             foreach (var child in Children)
             {
-                child.Left = x;
-                child.Top = y;
+                if (!child.FixedPosition)
+                {
+                    child.Left = x;
+                    child.Top = y;
+                }
+
                 child.Arrange();
 
-                x += child.Width + gap;
+                if (!child.FixedPosition)
+                    x += child.Width + gap;
             }
         }
 
@@ -88,11 +96,16 @@ namespace Gravity.Server.Ui.Shapes
 
             foreach (var child in Children)
             {
-                child.Left = x;
-                child.Top = y;
+                if (!child.FixedPosition)
+                {
+                    child.Left = x;
+                    child.Top = y;
+                }
+
                 child.Arrange();
 
-                y += child.Height + gap;
+                if (!child.FixedPosition)
+                    y += child.Height + gap;
             }
         }
 
@@ -104,25 +117,33 @@ namespace Gravity.Server.Ui.Shapes
         {
             if (Children.Count == 0)
             {
-                Width = LeftMargin + RightMargin;
-                Height = TopMargin + BottomMargin;
+                if (!FixedSize)
+                {
+                    Width = LeftMargin + RightMargin;
+                    Height = TopMargin + BottomMargin;
+                }
                 return;
             }
 
-            var minChildLeft = Children.Min(c => c.Left);
-            var minChildTop = Children.Min(c => c.Top);
+            var moveableChildren = Children.Where(c => !c.FixedPosition).ToList();
+
+            var minChildLeft = moveableChildren.Min(c => c.Left);
+            var minChildTop = moveableChildren.Min(c => c.Top);
 
             var childLeftAdjustment = LeftMargin - minChildLeft;
             var childTopAdjustment = TopMargin - minChildTop;
 
-            foreach (var child in Children)
+            foreach (var child in moveableChildren)
             {
                 child.Left += childLeftAdjustment;
                 child.Top += childTopAdjustment;
             }
 
-            Width = Children.Max(c => c.Left + c.Width) + RightMargin;
-            Height = Children.Max(c => c.Top + c.Height) + BottomMargin;
+            if (!FixedSize)
+            {
+                Width = Children.Max(c => c.Left + c.Width) + RightMargin;
+                Height = Children.Max(c => c.Top + c.Height) + BottomMargin;
+            }
         }
 
         /// <summary>
@@ -188,7 +209,8 @@ namespace Gravity.Server.Ui.Shapes
         public virtual SvgElement Draw()
         {
             Container = GetContainer();
-            DrawChildren(Container.Children);
+            if (Container != null)
+                DrawChildren(Container.Children);
             return Container;
         }
 
@@ -201,20 +223,24 @@ namespace Gravity.Server.Ui.Shapes
             var container = new SvgGroup();
             container.Transforms.Add(new SvgTranslate(Left, Top));
 
-            if (!String.IsNullOrEmpty(CssClass))
+            if (!string.IsNullOrEmpty(CssClass))
                 container.CustomAttributes.Add("class", CssClass);
 
             return container;
         }
 
         /// <summary>
-        /// Recursively drawss all of the descentents within the container
+        /// Recursively draws all of the descentents within the container
         /// of this drawing element
         /// </summary>
         protected virtual void DrawChildren(SvgElementCollection container)
         {
             foreach (var child in Children)
-                container.Add(child.Draw());
+            {
+                var childDrawing = child.Draw();
+                if (childDrawing != null)
+                    container.Add(childDrawing);
+            }
         }
     }
 }

@@ -8,9 +8,9 @@ namespace Gravity.Server.Ui.Nodes
         public StickySessionDrawing(
             DrawingElement drawing, 
             StickySessionBalancer stickySession) 
-            : base(drawing, "Sticky session " + stickySession.Name)
+            : base(drawing, "Sticky session", 2, stickySession.Name)
         {
-            CssClass = "sticky_session";
+            CssClass = stickySession.Disabled ? "disabled" : "sticky_session";
         }
     }
 }

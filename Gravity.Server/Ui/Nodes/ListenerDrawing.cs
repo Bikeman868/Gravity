@@ -14,12 +14,9 @@ namespace Gravity.Server.Ui.Nodes
             ListenerEndpointConfiguration listener)
             : base(page, "Listener " + listener.IpAddress + ":" + listener.PortNumber)
         {
-            CssClass = "listener";
+            CssClass = listener.Disabled ? "disabled" : "listener";
 
             var details = new List<string>();
-
-            if (listener.Disabled) 
-                details.Add("Disabled");
 
             details.Add("Send to node " + listener.NodeName);
 

@@ -191,11 +191,12 @@ namespace Gravity.Server.DataStructures
             {
                 foreach (var transformNodeConfiguration in configuration.TransformNodes)
                 {
-                    var node = new StickySessionBalancer
+                    var node = new Transform
                     {
                         Name = transformNodeConfiguration.Name,
                         Disabled = transformNodeConfiguration.Disabled,
-                        //Script = stickySessionNodeConfiguration.Script,
+                        //RequestScript = transformNodeConfiguration.RequestScript,
+                        //ResponseScript = transformNodeConfiguration.ResponseScript,
                     };
                     transformNodeConfiguration.Node = node;
                     nodes.Add(node);

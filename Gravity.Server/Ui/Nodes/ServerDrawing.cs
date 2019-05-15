@@ -8,7 +8,7 @@ namespace Gravity.Server.Ui.Nodes
         public ServerDrawing(
             DrawingElement drawing, 
             ServerEndpoint server) 
-            : base(drawing, "Server " + server.Name)
+            : base(drawing, "Server", 2, server.Name)
         {
             CssClass = "server";
         }

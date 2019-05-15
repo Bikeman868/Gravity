@@ -133,7 +133,7 @@ namespace Gravity.Server.Ui
 
             protected override void ArrangeChildren()
             {
-                ArrangeChildrenStatically();
+                ArrangeChildrenInFixedPositions();
             }
         }
     }

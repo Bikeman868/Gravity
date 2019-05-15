@@ -115,9 +115,10 @@
     <Compile Include="Ui\Nodes\TransformDrawing.cs" />
     <Compile Include="Ui\Nodes\RouterDrawing.cs" />
     <Compile Include="Ui\Pages.cs" />
+    <Compile Include="Ui\Shapes\SpacerDrawing.cs" />
     <Compile Include="Ui\Shapes\ButtonDrawing.cs" />
     <Compile Include="Ui\Shapes\DrawingElement.cs" />
-    <Compile Include="Ui\Shapes\HorizontalLitDrawing.cs" />
+    <Compile Include="Ui\Shapes\HorizontalListDrawing.cs" />
     <Compile Include="Ui\Shapes\PopupBoxDrawing.cs" />
     <Compile Include="Ui\Shapes\PopupButtonDrawing.cs" />
     <Compile Include="Ui\Shapes\RectangleDrawing.cs" />

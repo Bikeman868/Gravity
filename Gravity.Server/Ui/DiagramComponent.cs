@@ -19,7 +19,7 @@ namespace Gravity.Server.Ui
     {
         public const float SvgTextHeight = 12;
         public const float SvgTextLineSpacing = 15;
-        public const float SvgTextCharacterSpacing = 7;
+        public const float SvgTextCharacterSpacing = 6.3f;
 
         protected DiagramComponent(
             IComponentDependenciesFactory dependencies) 
