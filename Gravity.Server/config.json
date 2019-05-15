@@ -11,8 +11,8 @@
         "listener": {
             "endpoints": [
                 { "ipAddress": "*", "port": 0, "node": "A" },
-                { "ipAddress": "*", "port": 80, "node": "A" },
-                { "ipAddress": "*", "port": 443, "node": "A" }
+                { "ipAddress": "192.168.3.1", "port": 80, "node": "A" },
+                { "ipAddress": "192.168.3.1", "port": 443, "node": "A" }
             ]
         },
         "nodeGraph": {
@@ -91,14 +91,14 @@
         "dashboard": {
             "listeners": { "x": 0, "y": 50, "xSpacing":  0, "ySpacing": 70 },
             "nodes": [
-                { "name": "A", "x": 200, "y": 50 },
-                { "name": "B", "x": 400, "y": 80 },
-                { "name": "C", "x": 400, "y": 220 },
-                { "name": "D", "x": 600, "y": 220 },
-                { "name": "E", "x": 600, "y": 300 },
-                { "name": "F", "x": 600, "y": 380 },
-                { "name": "G", "x": 400, "y": 160 },
-                { "name": "I", "x": 200, "y": 300 }
+                { "name": "A", "x": 300, "y": 50 },
+                { "name": "B", "x": 500, "y": 80 },
+                { "name": "C", "x": 500, "y": 220 },
+                { "name": "D", "x": 700, "y": 220 },
+                { "name": "E", "x": 700, "y": 300 },
+                { "name": "F", "x": 700, "y": 380 },
+                { "name": "G", "x": 500, "y": 160 },
+                { "name": "I", "x": 300, "y": 300 }
             ]
         },
         "pages": {
