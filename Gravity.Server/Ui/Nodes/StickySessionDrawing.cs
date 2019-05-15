@@ -16,7 +16,8 @@ namespace Gravity.Server.Ui.Nodes
         {
             _drawing = drawing;
             _stickySession = stickySession;
-            CssClass = stickySession.Disabled ? "disabled" : "sticky_session";
+            
+            SetCssClass(stickySession.Disabled ? "disabled" : "sticky_session");
         }
 
         public override void AddLines(IDictionary<string, NodeDrawing> nodeDrawings)

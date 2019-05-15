@@ -22,7 +22,8 @@ namespace Gravity.Server.Ui.Nodes
         {
             _drawing = drawing;
             _router = router;
-            CssClass = router.Disabled ? "disabled" : "router";
+
+            SetCssClass(router.Disabled ? "disabled" : "router");
 
             var details = new List<string>();
 

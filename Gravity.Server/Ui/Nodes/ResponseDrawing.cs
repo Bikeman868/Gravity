@@ -12,7 +12,7 @@ namespace Gravity.Server.Ui.Nodes
             Response response) 
             : base(drawing, "Response", 2, response.Name)
         {
-            CssClass = response.Disabled ? "disabled" : "responder";
+            SetCssClass(response.Disabled ? "disabled" : "responder");
 
             var details = new List<string>();
 

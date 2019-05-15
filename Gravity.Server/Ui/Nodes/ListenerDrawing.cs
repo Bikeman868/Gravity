@@ -19,7 +19,8 @@ namespace Gravity.Server.Ui.Nodes
         {
             _drawing = drawing;
             _listener = listener;
-            CssClass = listener.Disabled ? "disabled" : "listener";
+
+            SetCssClass(listener.Disabled ? "disabled" : "listener");
 
             var details = new List<string>();
 

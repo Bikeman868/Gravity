@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Web.UI;
 using Gravity.Server.Ui.Shapes;
 using Svg;
 
@@ -77,7 +78,12 @@ namespace Gravity.Server.Ui.Nodes
                 Header.AddChild(new SpacerDrawing(1, 1));
             }
 
-            Title = new TextDrawing { Text = new[] { title } }.HeadingLevel(headingLevel);
+            Title = new TextDrawing
+            {
+                Text = new[] { title }
+            }
+            .HeadingLevel(headingLevel);
+
             Header.AddChild(Title);
 
             TopLeftSideConnection = new ConnectionPoint(() =>
@@ -105,6 +111,12 @@ namespace Gravity.Server.Ui.Nodes
             });
 
             ConnectionPoints = new[] { TopLeftSideConnection, TopRightSideConnection, BottomMiddleConnection };
+        }
+
+        protected void SetCssClass(string cssClass)
+        {
+            CssClass = cssClass;
+            if (Header != null) Header.CssClass = cssClass;
         }
 
         protected PopupBoxDrawing AddHeaderButton(DrawingElement page, string caption)

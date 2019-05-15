@@ -10,7 +10,7 @@ namespace Gravity.Server.Ui.Nodes
             ServerEndpoint server) 
             : base(drawing, "Server", 2, server.Name)
         {
-            CssClass = server.Disabled ? "disabled" : "server";
+            SetCssClass(server.Disabled ? "disabled" : "server");
         }
     }
 }
