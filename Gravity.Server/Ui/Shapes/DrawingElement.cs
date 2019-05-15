@@ -29,10 +29,22 @@ namespace Gravity.Server.Ui.Shapes
 
         public SvgElement Container;
 
+        protected ConnectionPoint[] ConnectionPoints;
+
         public void AddChild(DrawingElement element)
         {
             Children.Add(element);
             element.Parent = this;
+        }
+
+        public void UpdateConnectedElements()
+        {
+            foreach (var child in Children)
+                child.UpdateConnectedElements();
+
+            if (ConnectionPoints != null)
+                foreach(var connectionPoint in ConnectionPoints)
+                    connectionPoint.Moved();
         }
 
         /// <summary>
@@ -144,18 +156,6 @@ namespace Gravity.Server.Ui.Shapes
                 Width = Children.Max(c => c.Left + c.Width) + RightMargin;
                 Height = Children.Max(c => c.Top + c.Height) + BottomMargin;
             }
-        }
-
-        /// <summary>
-        /// After the whole drawing has been arranged and the position and size of
-        /// everything has bee determined, this method is called to allow elements
-        /// to position popup boxes to be positioned relative to the final position
-        /// of the element
-        /// </summary>
-        public virtual void PositionPopups()
-        {
-            foreach (var child in Children) 
-                child.PositionPopups();
         }
 
         /// <summary>

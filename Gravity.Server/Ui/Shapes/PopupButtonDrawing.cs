@@ -6,24 +6,20 @@ namespace Gravity.Server.Ui.Shapes
     {
         public PopupBoxDrawing PopupBox;
 
-        public PopupButtonDrawing(DrawingElement page, string caption)
+        public PopupButtonDrawing(DrawingElement page, string caption, ConnectionPoint connectionPoint)
         {
             AddChild(new TextDrawing { Text = new[] { caption }, CssClass = "button" }); 
             
             PopupBox = new PopupBoxDrawing();
             page.AddChild(PopupBox);
-        }
 
-        public override void PositionPopups()
-        {
-            if (!ReferenceEquals(PopupBox, null))
+            connectionPoint.Subscribe((left, top) =>
             {
-                float left, top;
-                GetAbsolutePosition(out left, out top);
-                PopupBox.SetAbsolutePosition(left, top + Height);
-            }
-
-            base.PositionPopups();
+                if (!ReferenceEquals(PopupBox, null))
+                {
+                    PopupBox.SetAbsolutePosition(left, top + Height);
+                }
+            });
         }
 
         public override SvgElement Draw()

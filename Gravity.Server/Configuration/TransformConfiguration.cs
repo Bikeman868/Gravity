@@ -6,6 +6,12 @@ namespace Gravity.Server.Configuration
     internal class TransformConfiguration: NodeConfiguration
     {
         /// <summary>
+        /// The node to send thr request to after transformation
+        /// </summary>
+        [JsonProperty("output")]
+        public string OutputNode { get; set; }
+
+        /// <summary>
         /// The language used to write the scripts ion this node
         /// </summary>
         [JsonProperty("scriptLanguage")]

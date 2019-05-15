@@ -176,7 +176,7 @@ namespace Gravity.Server.DataStructures
                     {
                         Name = stickySessionNodeConfiguration.Name,
                         Disabled = stickySessionNodeConfiguration.Disabled,
-                        //Outputs = stickySessionNodeConfiguration.Outputs,
+                        Outputs = stickySessionNodeConfiguration.Outputs,
                         //SesionCookie = stickySessionNodeConfiguration.SesionCookie,
                     };
                     stickySessionNodeConfiguration.Node = node;
@@ -195,6 +195,7 @@ namespace Gravity.Server.DataStructures
                     {
                         Name = transformNodeConfiguration.Name,
                         Disabled = transformNodeConfiguration.Disabled,
+                        OutputNode = transformNodeConfiguration.OutputNode,
                         //RequestScript = transformNodeConfiguration.RequestScript,
                         //ResponseScript = transformNodeConfiguration.ResponseScript,
                     };

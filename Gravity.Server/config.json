@@ -12,7 +12,7 @@
             "endpoints": [
                 { "ipAddress": "*", "port": 0, "node": "A" },
                 { "ipAddress": "192.168.3.1", "port": 80, "node": "A" },
-                { "ipAddress": "192.168.3.1", "port": 443, "node": "A" }
+                { "ipAddress": "192.168.3.1", "port": 443, "node": "J" }
             ]
         },
         "nodeGraph": {
@@ -49,7 +49,7 @@
                 { "name": "C", "outputs": [ "D", "E", "F" ] }
             ],
             "servers": [
-                { "name": "I" }
+                { "name": "I", "disabled": true}
             ],
             "responses": [
                 {
@@ -86,10 +86,10 @@
                 }
             ],
             "stickySessions": [
-                { "name": "H" }
+                { "name": "H", "outputs": [ "I" ] }
             ],
             "transforms": [ 
-                { "name": "J" }
+                { "name": "J", "output": "H"}
             ]
         },
         "dashboard": {
@@ -97,13 +97,13 @@
             "nodes": [
                 { "name": "A", "x": 300, "y": 50 },
                 { "name": "B", "x": 500, "y": 80 },
-                { "name": "C", "x": 500, "y": 220 },
-                { "name": "D", "x": 700, "y": 220 },
-                { "name": "E", "x": 700, "y": 300 },
-                { "name": "F", "x": 700, "y": 380 },
-                { "name": "G", "x": 500, "y": 160 },
-                { "name": "H", "x": 300, "y": 350 },
-                { "name": "I", "x": 300, "y": 300 },
+                { "name": "C", "x": 500, "y": 230 },
+                { "name": "D", "x": 700, "y": 120 },
+                { "name": "E", "x": 700, "y": 200 },
+                { "name": "F", "x": 700, "y": 280 },
+                { "name": "G", "x": 500, "y": 150 },
+                { "name": "H", "x": 500, "y": 400 },
+                { "name": "I", "x": 700, "y": 400 },
                 { "name": "J", "x": 300, "y": 400 }
             ]
         },

@@ -44,7 +44,7 @@ namespace Gravity.Server.Ui
         {
             rootElement.SortDescendentsByZOrder();
             rootElement.Arrange();
-            rootElement.PositionPopups();
+            rootElement.UpdateConnectedElements();
             rootElement.ArrangeMargins();
             var drawing = rootElement.Draw();
 

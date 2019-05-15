@@ -71,6 +71,9 @@ namespace Gravity.Server.Ui
 
                 CssClass = "drawing";
 
+                var listenerDrawings = new List<ListenerDrawing>();
+                var nodeDrawings = new Dictionary<string, NodeDrawing>(StringComparer.OrdinalIgnoreCase);
+
                 if (listenerConfiguration.Endpoints != null)
                 {
                     var x = dashboardConfiguration.Listeners.X;
@@ -78,14 +81,17 @@ namespace Gravity.Server.Ui
 
                     foreach (var endpoint in listenerConfiguration.Endpoints)
                     {
-                        var listenerDrawing = new ListenerDrawing(this, endpoint);
-
-                        listenerDrawing.Left = x;
-                        listenerDrawing.Top = y;
-                        listenerDrawing.Width = 200;
-                        listenerDrawing.Height = 80;
+                        var listenerDrawing = new ListenerDrawing(this, endpoint)
+                        {
+                            Left = x,
+                            Top = y,
+                            Width = 200,
+                            Height = 80
+                        };
 
                         AddChild(listenerDrawing);
+
+                        listenerDrawings.Add(listenerDrawing);
 
                         x += dashboardConfiguration.Listeners.XSpacing;
                         y += dashboardConfiguration.Listeners.YSpacing;
@@ -127,8 +133,15 @@ namespace Gravity.Server.Ui
                         }
 
                         AddChild(nodeDrawing);
+                        nodeDrawings[node.Name] = nodeDrawing;
                     }
                 }
+
+                foreach (var listenerDrawing in listenerDrawings)
+                    listenerDrawing.AddLines(nodeDrawings);
+
+                foreach (var nodeDrawing in nodeDrawings.Values)
+                    nodeDrawing.AddLines(nodeDrawings);
             }
 
             protected override void ArrangeChildren()

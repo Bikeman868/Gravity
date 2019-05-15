@@ -9,11 +9,16 @@ namespace Gravity.Server.Ui.Nodes
 {
     internal class ListenerDrawing: NodeDrawing
     {
+        private readonly DrawingElement _drawing;
+        private readonly ListenerEndpointConfiguration _listener;
+
         public ListenerDrawing(
-            DrawingElement page, 
+            DrawingElement drawing, 
             ListenerEndpointConfiguration listener)
-            : base(page, "Listener " + listener.IpAddress + ":" + listener.PortNumber)
+            : base(drawing, "Listener " + listener.IpAddress + ":" + listener.PortNumber)
         {
+            _drawing = drawing;
+            _listener = listener;
             CssClass = listener.Disabled ? "disabled" : "listener";
 
             var details = new List<string>();
@@ -24,6 +29,18 @@ namespace Gravity.Server.Ui.Nodes
                 details.Add(listener.ProcessingNode.RequestCount + " requests");
 
             AddDetails(details);
+        }
+
+        public override void AddLines(IDictionary<string, NodeDrawing> nodeDrawings)
+        {
+            NodeDrawing nodeDrawing;
+            if (nodeDrawings.TryGetValue(_listener.NodeName, out nodeDrawing))
+            {
+                _drawing.AddChild(new ConnectedLineDrawing(TopRightSideConnection, nodeDrawing.TopLeftSideConnection)
+                {
+                    CssClass = "connection_light"
+                });
+            }
         }
     }
 }

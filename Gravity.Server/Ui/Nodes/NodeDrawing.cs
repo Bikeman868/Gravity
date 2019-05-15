@@ -7,6 +7,10 @@ namespace Gravity.Server.Ui.Nodes
 {
     internal class NodeDrawing : RectangleDrawing
     {
+        public ConnectionPoint TopLeftSideConnection;
+        public ConnectionPoint TopRightSideConnection;
+        public ConnectionPoint BottomMiddleConnection;
+
         protected readonly DrawingElement Header;
         protected readonly DrawingElement Title;
         protected readonly DrawingElement Label;
@@ -49,7 +53,23 @@ namespace Gravity.Server.Ui.Nodes
                     Height = 22,
                     FixedSize = true,
                 };
-                Label.AddChild(new TextDrawing {Text = new[] {label}, CssClass = "label"});
+
+                var labelText = new TextDrawing
+                {
+                    Text = new[] {label}, 
+                    CssClass = "label"
+                };
+
+                if (headingLevel == 3)
+                {
+                    Label.Width = 14;
+                    Label.Height = 16;
+                    Label.TopMargin = 3;
+                    Label.LeftMargin = 2;
+                    labelText.TextSize = 9f / 12f;
+                }
+                
+                Label.AddChild(labelText);
                 Header.AddChild(Label);
             }
             else
@@ -59,11 +79,37 @@ namespace Gravity.Server.Ui.Nodes
 
             Title = new TextDrawing { Text = new[] { title } }.HeadingLevel(headingLevel);
             Header.AddChild(Title);
+
+            TopLeftSideConnection = new ConnectionPoint(() =>
+            {
+                float left;
+                float top;
+                GetAbsolutePosition(out left, out top);
+                return new Tuple<float, float>(left, top + 10);
+            });
+
+            TopRightSideConnection = new ConnectionPoint(() =>
+            {
+                float left;
+                float top;
+                GetAbsolutePosition(out left, out top);
+                return new Tuple<float, float>(left + Width, top + 10);
+            });
+
+            BottomMiddleConnection = new ConnectionPoint(() =>
+            {
+                float left;
+                float top;
+                GetAbsolutePosition(out left, out top);
+                return new Tuple<float, float>(left + Width / 2, top + Height);
+            });
+
+            ConnectionPoints = new[] { TopLeftSideConnection, TopRightSideConnection, BottomMiddleConnection };
         }
 
         protected PopupBoxDrawing AddHeaderButton(DrawingElement page, string caption)
         {
-            var button = new PopupButtonDrawing(page, caption);
+            var button = new PopupButtonDrawing(page, caption, BottomMiddleConnection);
             Header.AddChild(button);
             return button.PopupBox;
         }
@@ -81,5 +127,10 @@ namespace Gravity.Server.Ui.Nodes
                 parent.AddChild(new TextDetailsDrawing { Text = details.ToArray() });
             }
         }
+
+        public virtual void AddLines(IDictionary<string, NodeDrawing> nodeDrawings)
+        {
+        }
+
     }
 }

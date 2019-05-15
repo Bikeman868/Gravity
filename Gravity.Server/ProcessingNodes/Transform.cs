@@ -12,6 +12,7 @@ namespace Gravity.Server.ProcessingNodes
     {
         public string Name { get; set; }
         public bool Disabled { get; set; }
+        public string OutputNode { get; set; }
 
         void INode.Bind(INodeGraph nodeGraph)
         {

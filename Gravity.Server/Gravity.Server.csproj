@@ -115,6 +115,9 @@
     <Compile Include="Ui\Nodes\TransformDrawing.cs" />
     <Compile Include="Ui\Nodes\RouterDrawing.cs" />
     <Compile Include="Ui\Pages.cs" />
+    <Compile Include="Ui\Shapes\ConnectionPoint.cs" />
+    <Compile Include="Ui\Shapes\ConnectedLineDrawing.cs" />
+    <Compile Include="Ui\Shapes\LineDrawing.cs" />
     <Compile Include="Ui\Shapes\SpacerDrawing.cs" />
     <Compile Include="Ui\Shapes\ButtonDrawing.cs" />
     <Compile Include="Ui\Shapes\DrawingElement.cs" />
