@@ -177,7 +177,7 @@ namespace Gravity.Server.DataStructures
                         Name = stickySessionNodeConfiguration.Name,
                         Disabled = stickySessionNodeConfiguration.Disabled,
                         Outputs = stickySessionNodeConfiguration.Outputs,
-                        //SesionCookie = stickySessionNodeConfiguration.SesionCookie,
+                        SessionCookie = stickySessionNodeConfiguration.SesionCookie,
                     };
                     stickySessionNodeConfiguration.Node = node;
                     nodes.Add(node);
