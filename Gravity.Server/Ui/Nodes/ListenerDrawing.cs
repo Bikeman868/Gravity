@@ -12,9 +12,21 @@ namespace Gravity.Server.Ui.Nodes
         public ListenerDrawing(
             DrawingElement page, 
             ListenerEndpointConfiguration listener)
-            : base(page, "Listener " + listener.NodeName)
+            : base(page, "Listener " + listener.IpAddress + ":" + listener.PortNumber)
         {
             CssClass = "listener";
+
+            var details = new List<string>();
+
+            if (listener.Disabled) 
+                details.Add("Disabled");
+
+            details.Add("Send to node " + listener.NodeName);
+
+            if (listener.ProcessingNode != null)
+                details.Add(listener.ProcessingNode.RequestCount + " requests");
+
+            AddDetails(details);
         }
     }
 }

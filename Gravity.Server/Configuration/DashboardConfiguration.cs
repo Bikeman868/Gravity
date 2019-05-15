@@ -9,6 +9,9 @@ namespace Gravity.Server.Configuration
 {
     internal class DashboardConfiguration
     {
+        [JsonProperty("listeners")]
+        public ListenersConfiguration Listeners { get; set; }
+
         [JsonProperty("nodes")]
         public NodeConfiguration[] Nodes { get; set; }
 
@@ -42,6 +45,21 @@ namespace Gravity.Server.Configuration
             }
 
             return this;
+        }
+
+        public class ListenersConfiguration
+        {
+            [JsonProperty("x")]
+            public int X { get; set; }
+
+            [JsonProperty("y")]
+            public int Y { get; set; }
+
+            [JsonProperty("xSpacing")]
+            public int XSpacing { get; set; }
+
+            [JsonProperty("ySpacing")]
+            public int YSpacing { get; set; }
         }
 
         public class NodeConfiguration

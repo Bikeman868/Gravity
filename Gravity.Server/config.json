@@ -10,7 +10,9 @@
     "gravity": {
         "listener": {
             "endpoints": [
-                { "ipAddress": "*", "port": 0, "node": "A" }
+                { "ipAddress": "*", "port": 0, "node": "A" },
+                { "ipAddress": "*", "port": 80, "node": "A" },
+                { "ipAddress": "*", "port": 443, "node": "A" }
             ]
         },
         "nodeGraph": {
@@ -53,7 +55,7 @@
                 {
                     "name": "D",
                     "statusCode": 200,
-                    "ressonPhrase": "OK",
+                    "reasonPhrase": "OK",
                     "content": "Server D",
                     "headers": [
                         { "name": "Content-Type", "value": "text/plain" }
@@ -62,7 +64,7 @@
                 {
                     "name": "E",
                     "statusCode": 200,
-                    "ressonPhrase": "OK",
+                    "reasonPhrase": "OK",
                     "content": "Server E",
                     "headers": [
                         { "name": "Content-Type", "value": "text/plain" }
@@ -71,7 +73,7 @@
                 {
                     "name": "F",
                     "statusCode": 200,
-                    "ressonPhrase": "OK",
+                    "reasonPhrase": "OK",
                     "content": "Server F",
                     "headers": [
                         { "name": "Content-Type", "value": "text/plain" }
@@ -80,11 +82,24 @@
                 {
                     "name": "G",
                     "statusCode": 404,
-                    "ressonPhrase": "Not found"
+                    "reasonPhrase": "Not found"
                 }
             ],
             "stickySessions": [ ],
             "transforms": [ ]
+        },
+        "dashboard": {
+            "listeners": { "x": 0, "y": 50, "xSpacing":  0, "ySpacing": 70 },
+            "nodes": [
+                { "name": "A", "x": 200, "y": 50 },
+                { "name": "B", "x": 400, "y": 80 },
+                { "name": "C", "x": 400, "y": 220 },
+                { "name": "D", "x": 600, "y": 220 },
+                { "name": "E", "x": 600, "y": 300 },
+                { "name": "F", "x": 600, "y": 380 },
+                { "name": "G", "x": 400, "y": 160 },
+                { "name": "I", "x": 200, "y": 300 }
+            ]
         },
         "pages": {
         }

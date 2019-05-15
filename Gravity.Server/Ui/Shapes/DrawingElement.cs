@@ -46,6 +46,14 @@ namespace Gravity.Server.Ui.Shapes
         /// </summary>
         protected virtual void ArrangeChildren()
         {
+            ArrangeChildrenStatically();
+        }
+
+        /// <summary>
+        /// Leaves children where they were placed during drawing construction
+        /// </summary>
+        protected virtual void ArrangeChildrenStatically()
+        {
             foreach (var child in Children)
                 child.Arrange();
         }

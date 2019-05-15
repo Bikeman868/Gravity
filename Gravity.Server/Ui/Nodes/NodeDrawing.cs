@@ -1,10 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Gravity.Server.Ui.Shapes;
-using OwinFramework.Pages.Core.Debug;
-using OwinFramework.Pages.Core.Extensions;
-using OwinFramework.Pages.Core.Interfaces;
-using OwinFramework.Pages.Core.Interfaces.Runtime;
 using Svg;
 
 namespace Gravity.Server.Ui.Nodes
@@ -16,7 +12,7 @@ namespace Gravity.Server.Ui.Nodes
         protected SvgUnit ChildSpacing;
 
         public NodeDrawing(
-            DrawingElement page, 
+            DrawingElement drawing, 
             string title, 
             int headingLevel = 2)
         {
@@ -42,35 +38,13 @@ namespace Gravity.Server.Ui.Nodes
             ArrangeChildrenVertically(ChildSpacing);
         }
 
-        protected void AddDetails(List<string> details, DrawingElement parent)
+        protected void AddDetails(List<string> details, DrawingElement parent = null)
         {
             if (details.Count > 0)
             {
+                parent = parent ?? this;
                 parent.AddChild(new TextDetailsDrawing { Text = details.ToArray() });
             }
-        }
-
-        protected void AddDebugInfo(List<string> text, DebugInfo debugInfo)
-        {
-            if (!ReferenceEquals(debugInfo.Instance, null))
-                text.Add("Implemented by " + debugInfo.Instance.GetType().DisplayName());
-            AddDependentComponents(text, debugInfo.DependentComponents);
-            AddDataConsumer(text, debugInfo.DataConsumer);
-        }
-
-        protected void AddDependentComponents(List<string> text, List<IComponent> dependentComponents)
-        {
-            if (!ReferenceEquals(dependentComponents, null))
-            {
-                foreach (var component in dependentComponents)
-                    text.Add("Depends on " + component.GetDebugInfo());
-            }
-        }
-
-        protected void AddDataConsumer(List<string> text, DebugDataConsumer consumer)
-        {
-            if (!ReferenceEquals(consumer, null))
-                text.AddRange(consumer.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None));
         }
     }
 }

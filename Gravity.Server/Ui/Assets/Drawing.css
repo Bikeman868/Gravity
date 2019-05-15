@@ -19,6 +19,9 @@ g.listener > text { stroke:#000000; fill:#000000; }
 g.router > rect { stroke:#3366ff; fill:#f8ecec; }
 g.router > text { stroke:#000000; fill:#000000; }
 
+g.router_output > rect { stroke:#ffffff; fill:#f0e0e0; }
+g.router_output > text { stroke:#000000; fill:#000000; }
+
 g.responder > rect { stroke:#676798; fill:#f8d7d7; }
 g.responder > text { stroke:#000000; fill:#000000; }
 
@@ -28,11 +31,14 @@ g.server > text { stroke:#000000; fill:#000000; }
 g.transform > rect { stroke:#808080; fill:#F5F5eC; }
 g.transform > text { stroke:#696969; fill:#696969; }
 
-g.round_robbin > rect { stroke:#808080; fill:#F5F5DC; }
-g.round_robbin > text { stroke:#696969; fill:#696969; }
+g.round_robin > rect { stroke:#808080; fill:#F5F5DC; }
+g.round_robin > text { stroke:#696969; fill:#696969; }
 
 g.sticky_session > rect { stroke:#3366ff; fill:#f8ecec; }
 g.sticky_session > text { stroke:#000000; fill:#000000; }
+
+g.internal > rect { stroke:#676798; fill:#fdfdfd; }
+g.internal > text { stroke:#000000; fill:#000000; }
 
 g.popup > rect { stroke:#808080; fill:#F5F5DC; }
 g.popup > text { stroke:#696969; fill:#696969; }

@@ -107,6 +107,12 @@
     <Compile Include="Ui\DiagramComponent.cs" />
     <Compile Include="Ui\Nodes\NodeDrawing.cs" />
     <Compile Include="Ui\Nodes\ListenerDrawing.cs" />
+    <Compile Include="Ui\Nodes\InternalRequestDrawing.cs" />
+    <Compile Include="Ui\Nodes\StickySessionDrawing.cs" />
+    <Compile Include="Ui\Nodes\ServerDrawing.cs" />
+    <Compile Include="Ui\Nodes\RoundRobinDrawing.cs" />
+    <Compile Include="Ui\Nodes\ResponseDrawing.cs" />
+    <Compile Include="Ui\Nodes\TransformDrawing.cs" />
     <Compile Include="Ui\Nodes\RouterDrawing.cs" />
     <Compile Include="Ui\Pages.cs" />
     <Compile Include="Ui\Shapes\ButtonDrawing.cs" />

@@ -208,6 +208,11 @@ namespace Gravity.Server.DataStructures
             return _current.NodeByName(name);
         }
 
+        T[] INodeGraph.GetNodes<T>(Func<INode, T> map, Func<INode, bool> predicate)
+        {
+            return _current.GetNodes(map, predicate);
+        }
+
         private class NodeGraphInstance: INodeGraph
         {
             public INode[] Nodes;
@@ -219,6 +224,13 @@ namespace Gravity.Server.DataStructures
 
             void INodeGraph.Configure(NodeGraphConfiguration configuration)
             {
+            }
+
+            T[] INodeGraph.GetNodes<T>(Func<INode, T> map, Func<INode, bool> predicate)
+            {
+                var enumeration = (IEnumerable<INode>)Nodes;
+                if (predicate != null) enumeration = enumeration.Where(predicate);
+                return enumeration.Select(map).ToArray();
             }
         }
     }
