@@ -38,10 +38,15 @@
                     "name": "I",
                     "disabled": true,
                     "host": "192.168.20.53", 
+                    "healthCheckHost": "mycompany.com" },
+                {
+                    "name": "M",
+                    "disabled": true,
+                    "host": "192.168.20.54", 
                     "healthCheckHost": "mycompany.com" }
             ],
             "cors": [
-                { "name": "L" }
+                { "name": "L", "output": "K" }
             ],
             "responses": [
                 {
@@ -80,7 +85,7 @@
             "stickySessions": [
                 {
                     "name": "H",
-                    "outputs": [ "I" ],
+                    "outputs": [ "I", "M" ],
                     "disabled": false,
                     "cookie": "ASP.NET_SessionId",
                     "sessionDuration": "01:00:00"
@@ -89,8 +94,8 @@
             "leastConnections": [
                 {
                     "name": "K",
-                    "outputs": [ "I" ],
-                    "disabled": true
+                    "outputs": [ "I", "M" ],
+                    "disabled": false
                 }
             ],
             "transforms": [ 
@@ -108,11 +113,12 @@
                     { "name": "E", "x": 700, "y": 200 },
                     { "name": "F", "x": 700, "y": 280 },
                     { "name": "G", "x": 500, "y": 150 },
-                    { "name": "H", "x": 500, "y": 400 },
-                    { "name": "I", "x": 700, "y": 400 },
+                    { "name": "H", "x": 500, "y": 500 },
+                    { "name": "I", "x": 700, "y": 380 },
                     { "name": "J", "x": 300, "y": 400 },
-                    { "name": "K", "x": 500, "y": 340 },
-                    { "name": "L", "x": 300, "y": 500 }
+                    { "name": "K", "x": 500, "y": 380 },
+                    { "name": "L", "x": 300, "y": 300 },
+                    { "name": "M", "x": 700, "y": 500 }
                 ]
             }
         },
@@ -120,7 +126,7 @@
             "listener": {
                 "endpoints": [
                     { "ipAddress": "*", "port": 0, "node": "A" },
-                    { "ipAddress": "192.168.3.1", "port": 80, "node": "A" },
+                    { "ipAddress": "192.168.3.1", "port": 80, "node": "L" },
                     { "ipAddress": "192.168.3.1", "port": 443, "node": "J" }
                 ]
             },

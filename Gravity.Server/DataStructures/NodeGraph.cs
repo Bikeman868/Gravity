@@ -83,6 +83,7 @@ namespace Gravity.Server.DataStructures
                     {
                         Name = corsConfiguration.Name,
                         Disabled = corsConfiguration.Disabled,
+                        OutputNode = corsConfiguration.OutputNode
                     };
                     corsConfiguration.Node = node;
                     nodes.Add(node);
