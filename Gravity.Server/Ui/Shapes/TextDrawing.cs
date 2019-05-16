@@ -1,5 +1,4 @@
 using System.Linq;
-using OwinFramework.Pages.DebugMiddleware.SvgDrawing;
 using Svg;
 using Svg.Transforms;
 

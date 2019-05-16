@@ -38,7 +38,7 @@ g.responder > text { stroke:#000000; fill:#000000; }
 g.server_healthy > rect { stroke:#009900; fill:#e6ffe6; }
 g.server_healthy > text { stroke:#000000; fill:#000000; }
 
-g.server_unhealthy > rect { stroke:#ff0066; fill:#fdfdfd; }
+g.server_unhealthy > rect { stroke:#ff0066; fill:#ffe6f0; }
 g.server_unhealthy > text { stroke:#ff0066; fill:#ff0066; }
 
 g.transform > rect { stroke: #6A5ACD; fill: #e2e2f8; }
@@ -47,15 +47,23 @@ g.transform > text { stroke:#696969; fill:#696969; }
 g.cors > rect { stroke: #6A5ACD; fill: #e2e2f8; }
 g.cors > text { stroke:#696969; fill:#696969; }
 
-g.round_robin > rect { stroke:#808080; fill:#F5F5DC; }
-g.round_robin > text { stroke:#696969; fill:#696969; }
+g.round_robbin > rect { stroke:#808080; fill:#F5F5DC; }
+g.round_robbin > text { stroke:#696969; fill:#696969; }
+
+g.round_robbin_output > rect { stroke:#d8d874; fill:#f9f9eb; }
+g.round_robbin_output > text { stroke:#000000; fill:#000000; }
 
 g.sticky_session > rect { stroke:#808080; fill:#F5F5DC; }
 g.sticky_session > text { stroke:#000000; fill:#000000; }
 
+g.sticky_session_output > rect { stroke:#d8d874; fill:#f9f9eb; }
+g.sticky_session_output > text { stroke:#000000; fill:#000000; }
+
 g.least_connections > rect { stroke:#808080; fill:#F5F5DC; }
 g.least_connections > text { stroke:#000000; fill:#000000; }
 
+g.least_connections_output > rect { stroke:#d8d874; fill:#f9f9eb; }
+g.least_connections_output > text { stroke:#000000; fill:#000000; }
 
 g.popup > rect { stroke:#808080; fill:#F5F5DC; }
 g.popup > text { stroke:#696969; fill:#696969; }

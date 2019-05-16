@@ -1,5 +1,4 @@
-﻿using Gravity.Server.ProcessingNodes;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace Gravity.Server.Configuration
 {
@@ -13,6 +12,9 @@ namespace Gravity.Server.Configuration
 
         [JsonProperty("content")]
         public string Content { get; set; }
+
+        [JsonProperty("contentFile")]
+        public string ContentFile { get; set; }
 
         [JsonProperty("headers")]
         public ResponseHeaderConfiguration[] Headers { get; set; }

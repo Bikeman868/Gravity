@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 using Gravity.Server.Configuration;
 using Gravity.Server.ProcessingNodes;
 using Gravity.Server.Ui.Shapes;
@@ -12,8 +10,7 @@ namespace Gravity.Server.Ui.Nodes
     {
         private readonly DrawingElement _drawing;
         private readonly RoutingNode _router;
-
-        private RouterOutputDrawing[] _outputDrawings;
+        private readonly RouterOutputDrawing[] _outputDrawings;
 
         public RouterDrawing(
             DrawingElement drawing, 

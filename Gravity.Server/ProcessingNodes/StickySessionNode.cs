@@ -9,7 +9,7 @@ using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes
 {
-    public class StickySessionNode: INode
+    internal class StickySessionNode: INode
     {
         public string Name { get; set; }
         public string[] Outputs { get; set; }
@@ -17,7 +17,8 @@ namespace Gravity.Server.ProcessingNodes
         public string SessionCookie { get; set; }
         public TimeSpan SessionDuration { get; set; }
 
-        private NodeOutput[] _outputs;
+        public NodeOutput[] OutputNodes;
+
         private readonly Dictionary<string, NodeOutput> _sessionNodes;
         private readonly List<Tuple<string, DateTime>> _sessionExpiry;
         private readonly Thread _cleanupThread;
@@ -75,7 +76,7 @@ namespace Gravity.Server.ProcessingNodes
 
         void INode.Bind(INodeGraph nodeGraph)
         {
-            _outputs = Outputs.Select(name => new NodeOutput
+            OutputNodes = Outputs.Select(name => new NodeOutput
             {
                 Name = name,
                 Node = nodeGraph.NodeByName(name),
@@ -102,7 +103,7 @@ namespace Gravity.Server.ProcessingNodes
 
             if (string.IsNullOrEmpty(sessionId))
             {
-                var output = _outputs
+                var output = OutputNodes
                     .Where(o => !o.Disabled && o.Node != null)
                     .OrderBy(o => o.ConnectionCount)
                     .ThenBy(o => o.SessionCount)
@@ -147,7 +148,7 @@ namespace Gravity.Server.ProcessingNodes
 
             if (!hasSession)
             {
-                sessionOutput = _outputs
+                sessionOutput = OutputNodes
                     .Where(o => !o.Disabled && o.Node != null)
                     .OrderBy(o => o.ConnectionCount)
                     .ThenBy(o => o.SessionCount)

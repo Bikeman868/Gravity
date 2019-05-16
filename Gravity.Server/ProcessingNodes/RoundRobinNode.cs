@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Gravity.Server.DataStructures;
@@ -9,18 +7,18 @@ using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes
 {
-    public class RoundRobinNode: INode
+    internal class RoundRobinNode: INode
     {
         public string Name { get; set; }
         public string[] Outputs { get; set; }
         public bool Disabled { get; set; }
 
         private int _next;
-        private NodeOutput[] _outputs;
+        public NodeOutput[] OutputNodes;
 
         void INode.Bind(INodeGraph nodeGraph)
         {
-            _outputs = Outputs.Select(name => new NodeOutput
+            OutputNodes = Outputs.Select(name => new NodeOutput
             {
                 Name = name,
                 Node = nodeGraph.NodeByName(name),
@@ -36,7 +34,7 @@ namespace Gravity.Server.ProcessingNodes
                 return context.Response.WriteAsync(string.Empty);
             }
 
-            var outputs = _outputs;
+            var outputs = OutputNodes;
 
             if (outputs == null || outputs.Length == 0)
             {

@@ -83,7 +83,13 @@ namespace Gravity.Server.DataStructures
                     {
                         Name = corsConfiguration.Name,
                         Disabled = corsConfiguration.Disabled,
-                        OutputNode = corsConfiguration.OutputNode
+                        OutputNode = corsConfiguration.OutputNode,
+                        AllowCredentials = corsConfiguration.AllowCredentials,
+                        AllowedMethods = corsConfiguration.AllowedMethods,
+                        AllowedHeaders = corsConfiguration.AllowedHeaders,
+                        AllowedOrigins = corsConfiguration.AllowedOrigins,
+                        ExposedHeaders = corsConfiguration.ExposedHeaders,
+                        WebsiteOrigin = corsConfiguration.WebsiteOrigin
                     };
                     corsConfiguration.Node = node;
                     nodes.Add(node);
@@ -139,6 +145,7 @@ namespace Gravity.Server.DataStructures
                         StatusCode = responseNodeConfiguration.StatusCode,
                         ReasonPhrase = responseNodeConfiguration.ReasonPhrase ?? "OK",
                         Content = responseNodeConfiguration.Content ?? string.Empty,
+                        ContentFile = responseNodeConfiguration.ContentFile,
                     };
                     if (responseNodeConfiguration.Headers != null)
                     {

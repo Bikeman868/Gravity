@@ -1,18 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Web;
+﻿using System.Threading.Tasks;
 using Gravity.Server.Interfaces;
 using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes
 {
-    public class CorsNode: INode
+    internal class CorsNode: INode
     {
         public string Name { get; set; }
         public bool Disabled { get; set; }
         public string OutputNode { get; set; }
+        public string WebsiteOrigin { get; set; }
+        public string AllowedOrigins { get; set; }
+        public string AllowedHeaders { get; set; }
+        public string AllowedMethods { get; set; }
+        public bool AllowCredentials { get; set; }
+        public string ExposedHeaders { get; set; }
 
         void INode.Bind(INodeGraph nodeGraph)
         {

@@ -1,5 +1,3 @@
-using Svg;
-
 namespace Gravity.Server.Ui.Shapes
 {
     internal class ConnectedLineDrawing : LineDrawing

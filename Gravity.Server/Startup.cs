@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Web;
 using Gravity.Server;
-using Gravity.Server.Interfaces;
 using Gravity.Server.Middleware;
 using Ioc.Modules;
 using Microsoft.Owin;
@@ -15,11 +11,8 @@ using OwinFramework.Builder;
 using OwinFramework.Interfaces.Builder;
 using OwinFramework.Interfaces.Utility;
 using OwinFramework.Pages.Core;
-using OwinFramework.Pages.Core.Attributes;
-using OwinFramework.Pages.Core.Enums;
 using OwinFramework.Pages.Core.Interfaces.Builder;
 using OwinFramework.Pages.Core.Interfaces.Managers;
-using Urchin.Client.Interfaces;
 using Urchin.Client.Sources;
 using OwinFramework.Pages.DebugMiddleware;
 

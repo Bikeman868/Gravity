@@ -10,6 +10,7 @@
                             "logic": "All",
                             "conditions": [
                                 { "condition": "{method} = GET" },
+                                { "condition": "{header[host]} = localhost:52581" },
                                 { "condition": "{path[1]} = ui" }
                             ]
                         },
@@ -36,12 +37,12 @@
             "servers": [
                 {
                     "name": "I",
-                    "disabled": true,
+                    "disabled": false,
                     "host": "192.168.20.53", 
                     "healthCheckHost": "mycompany.com" },
                 {
                     "name": "M",
-                    "disabled": true,
+                    "disabled": false,
                     "host": "192.168.20.54", 
                     "healthCheckHost": "mycompany.com" }
             ],
@@ -107,18 +108,18 @@
                 "listeners": { "x": 0, "y": 50, "xSpacing": 0, "ySpacing": 70 },
                 "nodes": [
                     { "name": "A", "x": 300, "y": 50 },
-                    { "name": "B", "x": 500, "y": 80 },
-                    { "name": "C", "x": 500, "y": 230 },
-                    { "name": "D", "x": 700, "y": 120 },
-                    { "name": "E", "x": 700, "y": 200 },
-                    { "name": "F", "x": 700, "y": 280 },
-                    { "name": "G", "x": 500, "y": 150 },
-                    { "name": "H", "x": 500, "y": 500 },
-                    { "name": "I", "x": 700, "y": 380 },
-                    { "name": "J", "x": 300, "y": 400 },
-                    { "name": "K", "x": 500, "y": 380 },
-                    { "name": "L", "x": 300, "y": 300 },
-                    { "name": "M", "x": 700, "y": 500 }
+                    { "name": "B", "x": 550, "y": 80 },
+                    { "name": "C", "x": 550, "y": 230 },
+                    { "name": "D", "x": 800, "y": 220 },
+                    { "name": "E", "x": 800, "y": 300 },
+                    { "name": "F", "x": 800, "y": 380 },
+                    { "name": "G", "x": 550, "y": 150 },
+                    { "name": "H", "x": 550, "y": 700 },
+                    { "name": "I", "x": 800, "y": 550 },
+                    { "name": "J", "x": 300, "y": 700 },
+                    { "name": "K", "x": 550, "y": 500 },
+                    { "name": "L", "x": 300, "y": 500 },
+                    { "name": "M", "x": 800, "y": 700 }
                 ]
             }
         },

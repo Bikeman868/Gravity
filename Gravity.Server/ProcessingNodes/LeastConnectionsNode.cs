@@ -6,17 +6,17 @@ using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes
 {
-    public class LeastConnectionsNode: INode
+    internal class LeastConnectionsNode: INode
     {
         public string Name { get; set; }
         public string[] Outputs { get; set; }
         public bool Disabled { get; set; }
 
-        private NodeOutput[] _outputs;
+        public NodeOutput[] OutputNodes;
 
         void INode.Bind(INodeGraph nodeGraph)
         {
-            _outputs = Outputs.Select(name => new NodeOutput
+            OutputNodes = Outputs.Select(name => new NodeOutput
             {
                 Name = name,
                 Node = nodeGraph.NodeByName(name),
@@ -32,7 +32,7 @@ namespace Gravity.Server.ProcessingNodes
                 return context.Response.WriteAsync(string.Empty);
             }
 
-            var output = _outputs
+            var output = OutputNodes
                 .Where(o => !o.Disabled && o.Node != null)
                 .OrderBy(o => o.ConnectionCount)
                 .FirstOrDefault();

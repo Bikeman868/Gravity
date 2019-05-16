@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-
-namespace Gravity.Server.Configuration
+﻿namespace Gravity.Server.Configuration
 {
     public enum RuleLogic
     {

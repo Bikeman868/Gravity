@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Gravity.Server.ProcessingNodes;
 using Gravity.Server.Ui.Shapes;
 
@@ -26,7 +25,9 @@ namespace Gravity.Server.Ui.Nodes
                 }
             }
 
-            if (!string.IsNullOrWhiteSpace(response.Content))
+            if (!string.IsNullOrEmpty(response.ContentFile))
+                details.Add("[" + response.ContentFile + "]");
+            else if (!string.IsNullOrWhiteSpace(response.Content))
                 details.Add(response.Content);
 
             AddDetails(details);

@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Gravity.Server.Configuration;
 using Gravity.Server.DataStructures;
 using Gravity.Server.Interfaces;
-using Gravity.Server.ProcessingNodes;
 using Microsoft.Owin;
 using OwinFramework.Builder;
 using OwinFramework.Interfaces.Builder;

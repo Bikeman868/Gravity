@@ -1,5 +1,4 @@
 ﻿using Gravity.Server.DataStructures;
-using Gravity.Server.ProcessingNodes;
 using Newtonsoft.Json;
 
 namespace Gravity.Server.Configuration

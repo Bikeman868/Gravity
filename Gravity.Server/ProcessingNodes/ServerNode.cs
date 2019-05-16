@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using System.Web;
 using Gravity.Server.Interfaces;
 using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes
 {
-    public class ServerNode: INode
+    internal class ServerNode: INode
     {
         public string Name { get; set; }
         public bool Disabled { get; set; }
@@ -24,6 +21,7 @@ namespace Gravity.Server.ProcessingNodes
 
         void INode.Bind(INodeGraph nodeGraph)
         {
+            Healthy = true;
         }
 
         Task INode.ProcessRequest(IOwinContext context)

@@ -1,5 +1,4 @@
 ﻿using Gravity.Server.Interfaces;
-using Gravity.Server.ProcessingNodes;
 using Newtonsoft.Json;
 
 namespace Gravity.Server.Configuration
