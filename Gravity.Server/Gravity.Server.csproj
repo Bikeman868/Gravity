@@ -68,9 +68,11 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Configuration\InternalPagerConfiguration.cs" />
+    <Compile Include="Configuration\CorsConfiguration.cs" />
+    <Compile Include="Configuration\InternalEndpointConfiguration.cs" />
     <Compile Include="Configuration\DashboardConfiguration.cs" />
     <Compile Include="Configuration\ResponseHeaderConfiguration.cs" />
+    <Compile Include="Configuration\LeastConnectionsConfiguration.cs" />
     <Compile Include="Configuration\RouterRuleConfiguration.cs" />
     <Compile Include="Configuration\RuleLogic.cs" />
     <Compile Include="Configuration\ResponseConfiguration.cs" />
@@ -92,15 +94,17 @@
     <Compile Include="Interfaces\INodeGraph.cs" />
     <Compile Include="Middleware\ListenerMiddleware.cs" />
     <Compile Include="Package.cs" />
-    <Compile Include="ProcessingNodes\InternalPage.cs" />
+    <Compile Include="ProcessingNodes\InternalNode.cs" />
     <Compile Include="DataStructures\NodeGraph.cs" />
     <Compile Include="DataStructures\NodeOutput.cs" />
-    <Compile Include="ProcessingNodes\RoundRobinBalancer.cs" />
+    <Compile Include="ProcessingNodes\RoundRobinNode.cs" />
     <Compile Include="ProcessingNodes\RoutingNode.cs" />
-    <Compile Include="ProcessingNodes\ServerEndpoint.cs" />
-    <Compile Include="ProcessingNodes\StickySessionBalancer.cs" />
-    <Compile Include="ProcessingNodes\Response.cs" />
-    <Compile Include="ProcessingNodes\Transform.cs" />
+    <Compile Include="ProcessingNodes\ServerNode.cs" />
+    <Compile Include="ProcessingNodes\LeastConnectionsNode.cs" />
+    <Compile Include="ProcessingNodes\StickySessionNode.cs" />
+    <Compile Include="ProcessingNodes\ResponseNode.cs" />
+    <Compile Include="ProcessingNodes\CorsNode.cs" />
+    <Compile Include="ProcessingNodes\TransformNode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
     <Compile Include="Ui\DashboardDiagramComponent.cs" />
@@ -108,10 +112,12 @@
     <Compile Include="Ui\Nodes\NodeDrawing.cs" />
     <Compile Include="Ui\Nodes\ListenerDrawing.cs" />
     <Compile Include="Ui\Nodes\InternalRequestDrawing.cs" />
+    <Compile Include="Ui\Nodes\LeastConnectionsDrawing.cs" />
     <Compile Include="Ui\Nodes\StickySessionDrawing.cs" />
     <Compile Include="Ui\Nodes\ServerDrawing.cs" />
     <Compile Include="Ui\Nodes\RoundRobinDrawing.cs" />
     <Compile Include="Ui\Nodes\ResponseDrawing.cs" />
+    <Compile Include="Ui\Nodes\CorsDrawing.cs" />
     <Compile Include="Ui\Nodes\TransformDrawing.cs" />
     <Compile Include="Ui\Nodes\RouterDrawing.cs" />
     <Compile Include="Ui\Pages.cs" />

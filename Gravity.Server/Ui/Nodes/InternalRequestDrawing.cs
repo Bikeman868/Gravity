@@ -7,8 +7,8 @@ namespace Gravity.Server.Ui.Nodes
     {
         public InternalRequestDrawing(
             DrawingElement drawing, 
-            InternalPage internalRequest) 
-            : base(drawing, "Internal request", 2, internalRequest.Name)
+            InternalNode internalRequest) 
+            : base(drawing, "Internal", 2, internalRequest.Name)
         {
             SetCssClass( internalRequest.Disabled ? "disabled" : "internal");
         }

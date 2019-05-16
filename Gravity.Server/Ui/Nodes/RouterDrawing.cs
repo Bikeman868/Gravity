@@ -54,7 +54,7 @@ namespace Gravity.Server.Ui.Nodes
                 {
                     _drawing.AddChild(new ConnectedLineDrawing(outputDrawing.TopRightSideConnection, nodeDrawing.TopLeftSideConnection)
                     {
-                        CssClass = "connection_heavy"
+                        CssClass = _router.Disabled ? "connection_disabled" : "connection_light"
                     });
                 }
             }

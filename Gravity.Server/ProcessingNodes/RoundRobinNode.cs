@@ -9,7 +9,7 @@ using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes
 {
-    public class RoundRobinBalancer: INode
+    public class RoundRobinNode: INode
     {
         public string Name { get; set; }
         public string[] Outputs { get; set; }

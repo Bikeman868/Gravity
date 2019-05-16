@@ -9,7 +9,7 @@ namespace Gravity.Server.Ui.Nodes
     {
         public ResponseDrawing(
             DrawingElement drawing, 
-            Response response) 
+            ResponseNode response) 
             : base(drawing, "Response", 2, response.Name)
         {
             SetCssClass(response.Disabled ? "disabled" : "responder");

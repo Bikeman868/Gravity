@@ -4,42 +4,39 @@ using Gravity.Server.Ui.Shapes;
 
 namespace Gravity.Server.Ui.Nodes
 {
-    internal class StickySessionDrawing: NodeDrawing
+    internal class LeastConnectionsDrawing: NodeDrawing
     {
         private readonly DrawingElement _drawing;
-        private readonly StickySessionNode _stickySession;
+        private readonly LeastConnectionsNode _leastConnections;
 
-        public StickySessionDrawing(
+        public LeastConnectionsDrawing(
             DrawingElement drawing, 
-            StickySessionNode stickySession) 
-            : base(drawing, "Sticky session", 2, stickySession.Name)
+            LeastConnectionsNode leastConnections) 
+            : base(drawing, "Least busy", 2, leastConnections.Name)
         {
             _drawing = drawing;
-            _stickySession = stickySession;
+            _leastConnections = leastConnections;
             
-            SetCssClass(stickySession.Disabled ? "disabled" : "sticky_session");
+            SetCssClass(leastConnections.Disabled ? "disabled" : "least_connections");
 
             var details = new List<string>();
 
-            if (stickySession.Outputs != null)
-                details.Add("To: " + string.Join(", ", stickySession.Outputs));
-
-            details.Add("Cookie: " + stickySession.SessionCookie);
-            details.Add("Lifetime: " + stickySession.SessionDuration);
+            if (leastConnections.Outputs != null)
+                details.Add("To: " + string.Join(", ", leastConnections.Outputs));
 
             AddDetails(details);
         }
 
         public override void AddLines(IDictionary<string, NodeDrawing> nodeDrawings)
         {
-            foreach (var output in _stickySession.Outputs)
+            foreach (var output in _leastConnections.Outputs)
             {
                 NodeDrawing nodeDrawing;
                 if (nodeDrawings.TryGetValue(output, out nodeDrawing))
                 {
                     _drawing.AddChild(new ConnectedLineDrawing(TopRightSideConnection, nodeDrawing.TopLeftSideConnection)
                     {
-                        CssClass = _stickySession.Disabled ? "connection_disabled" : "connection_light"
+                        CssClass = _leastConnections.Disabled ? "connection_disabled" : "connection_light"
                     });
                 }
             }

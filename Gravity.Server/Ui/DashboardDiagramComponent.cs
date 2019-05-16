@@ -104,13 +104,15 @@ namespace Gravity.Server.Ui
                     {
                         NodeDrawing nodeDrawing;
 
-                        var internalRequest = node as InternalPage;
-                        var response = node as Response;
-                        var roundRobin = node as RoundRobinBalancer;
+                        var internalRequest = node as InternalNode;
+                        var response = node as ResponseNode;
+                        var roundRobin = node as RoundRobinNode;
                         var router = node as RoutingNode;
-                        var server = node as ServerEndpoint;
-                        var stickySession = node as StickySessionBalancer;
-                        var transform = node as Transform;
+                        var server = node as ServerNode;
+                        var stickySession = node as StickySessionNode;
+                        var transform = node as TransformNode;
+                        var leastConnections = node as LeastConnectionsNode;
+                        var cors = node as CorsNode;
 
                         if (internalRequest != null) nodeDrawing = new InternalRequestDrawing(this, internalRequest);
                         else if (response != null) nodeDrawing = new ResponseDrawing(this, response);
@@ -119,6 +121,8 @@ namespace Gravity.Server.Ui
                         else if (server != null) nodeDrawing = new ServerDrawing(this, server);
                         else if (stickySession != null) nodeDrawing = new StickySessionDrawing(this, stickySession);
                         else if (transform != null) nodeDrawing = new TransformDrawing(this, transform);
+                        else if (leastConnections != null) nodeDrawing = new LeastConnectionsDrawing(this, leastConnections);
+                        else if (cors != null) nodeDrawing = new CorsDrawing(this, cors);
                         else nodeDrawing = new NodeDrawing(this, node.Name);
 
                         var nodeName = node.Name;

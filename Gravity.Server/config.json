@@ -27,14 +27,21 @@
                     ]
                 }
             ],
-            "pages": [
+            "internalEndpoints": [
                 { "name": "B" }
             ],
             "roundRobin": [
                 { "name": "C", "outputs": [ "D", "E", "F" ] }
             ],
             "servers": [
-                { "name": "I", "disabled": true}
+                {
+                    "name": "I",
+                    "disabled": true,
+                    "host": "192.168.20.53", 
+                    "healthCheckHost": "mycompany.com" }
+            ],
+            "cors": [
+                { "name": "L" }
             ],
             "responses": [
                 {
@@ -71,7 +78,20 @@
                 }
             ],
             "stickySessions": [
-                { "name": "H", "outputs": [ "I" ] }
+                {
+                    "name": "H",
+                    "outputs": [ "I" ],
+                    "disabled": false,
+                    "cookie": "ASP.NET_SessionId",
+                    "sessionDuration": "01:00:00"
+                }
+            ],
+            "leastConnections": [
+                {
+                    "name": "K",
+                    "outputs": [ "I" ],
+                    "disabled": true
+                }
             ],
             "transforms": [ 
                 { "name": "J", "output": "H"}
@@ -90,7 +110,9 @@
                     { "name": "G", "x": 500, "y": 150 },
                     { "name": "H", "x": 500, "y": 400 },
                     { "name": "I", "x": 700, "y": 400 },
-                    { "name": "J", "x": 300, "y": 400 }
+                    { "name": "J", "x": 300, "y": 400 },
+                    { "name": "K", "x": 500, "y": 340 },
+                    { "name": "L", "x": 300, "y": 500 }
                 ]
             }
         },

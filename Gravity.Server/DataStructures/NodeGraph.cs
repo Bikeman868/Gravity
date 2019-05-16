@@ -40,7 +40,9 @@ namespace Gravity.Server.DataStructures
 
             try
             { 
+                ConfigureCorsNodes(configuration, nodes);
                 ConfigureInternalPageNodes(configuration, nodes);
+                ConfigureLeastConnectionsNodes(configuration, nodes);
                 ConfigureResponseNodes(configuration, nodes);
                 ConfigureRoundRobinNodes(configuration, nodes);
                 ConfigureRouterNodes(configuration, nodes);
@@ -71,18 +73,53 @@ namespace Gravity.Server.DataStructures
             _current = instance;
         }
 
+        private void ConfigureCorsNodes(NodeGraphConfiguration configuration, List<INode> nodes)
+        {
+            if (configuration.CorsNodes != null)
+            {
+                foreach (var corsConfiguration in configuration.CorsNodes)
+                {
+                    var node = new CorsNode
+                    {
+                        Name = corsConfiguration.Name,
+                        Disabled = corsConfiguration.Disabled,
+                    };
+                    corsConfiguration.Node = node;
+                    nodes.Add(node);
+                }
+            }
+        }
+
         private void ConfigureInternalPageNodes(NodeGraphConfiguration configuration, List<INode> nodes)
         {
-            if (configuration.InternalPageNodes != null)
+            if (configuration.InternalNodes != null)
             {
-                foreach (var internalPageConfiguration in configuration.InternalPageNodes)
+                foreach (var internalPageConfiguration in configuration.InternalNodes)
                 {
-                    var node = new InternalPage
+                    var node = new InternalNode
                     {
                         Name = internalPageConfiguration.Name,
                         Disabled = internalPageConfiguration.Disabled,
                     };
                     internalPageConfiguration.Node = node;
+                    nodes.Add(node);
+                }
+            }
+        }
+
+        private void ConfigureLeastConnectionsNodes(NodeGraphConfiguration configuration, List<INode> nodes)
+        {
+            if (configuration.LeastConnectionsNodes != null)
+            {
+                foreach (var leastConnectionsConfiguration in configuration.LeastConnectionsNodes)
+                {
+                    var node = new LeastConnectionsNode
+                    {
+                        Name = leastConnectionsConfiguration.Name,
+                        Disabled = leastConnectionsConfiguration.Disabled,
+                        Outputs = leastConnectionsConfiguration.Outputs
+                    };
+                    leastConnectionsConfiguration.Node = node;
                     nodes.Add(node);
                 }
             }
@@ -94,7 +131,7 @@ namespace Gravity.Server.DataStructures
             {
                 foreach (var responseNodeConfiguration in configuration.ResponseNodes)
                 {
-                    var node = new Response
+                    var node = new ResponseNode
                     {
                         Name = responseNodeConfiguration.Name,
                         Disabled = responseNodeConfiguration.Disabled,
@@ -119,7 +156,7 @@ namespace Gravity.Server.DataStructures
             {
                 foreach (var roundRobinConfiguration in configuration.RoundRobinNodes)
                 {
-                    var node = new RoundRobinBalancer
+                    var node = new RoundRobinNode
                     {
                         Name = roundRobinConfiguration.Name,
                         Disabled = roundRobinConfiguration.Disabled,
@@ -155,10 +192,18 @@ namespace Gravity.Server.DataStructures
             {
                 foreach (var serverNodeConfiguration in configuration.ServerNodes)
                 {
-                    var node = new ServerEndpoint
+                    var node = new ServerNode
                     {
                         Name = serverNodeConfiguration.Name,
                         Disabled = serverNodeConfiguration.Disabled,
+                        Host = serverNodeConfiguration.Host,
+                        Port = serverNodeConfiguration.Port,
+                        ConnectionTimeout = serverNodeConfiguration.ConnectionTimeout,
+                        RequestTimeout = serverNodeConfiguration.RequestTimeout,
+                        HealthCheckPort = serverNodeConfiguration.HealthCheckPort,
+                        HealthCheckHost = serverNodeConfiguration.HealthCheckHost,
+                        HealthCheckPath = serverNodeConfiguration.HealthCheckPath,
+                        HealthCheckMethod = serverNodeConfiguration.HealthCheckMethod,
                     };
                     serverNodeConfiguration.Node = node;
                     nodes.Add(node);
@@ -172,12 +217,13 @@ namespace Gravity.Server.DataStructures
             {
                 foreach (var stickySessionNodeConfiguration in configuration.StickySessionNodes)
                 {
-                    var node = new StickySessionBalancer
+                    var node = new StickySessionNode
                     {
                         Name = stickySessionNodeConfiguration.Name,
                         Disabled = stickySessionNodeConfiguration.Disabled,
                         Outputs = stickySessionNodeConfiguration.Outputs,
                         SessionCookie = stickySessionNodeConfiguration.SesionCookie,
+                        SessionDuration = stickySessionNodeConfiguration.SessionDuration
                     };
                     stickySessionNodeConfiguration.Node = node;
                     nodes.Add(node);
@@ -191,7 +237,7 @@ namespace Gravity.Server.DataStructures
             {
                 foreach (var transformNodeConfiguration in configuration.TransformNodes)
                 {
-                    var node = new Transform
+                    var node = new TransformNode
                     {
                         Name = transformNodeConfiguration.Name,
                         Disabled = transformNodeConfiguration.Disabled,

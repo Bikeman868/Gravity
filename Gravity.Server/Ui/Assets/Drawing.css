@@ -23,6 +23,9 @@ g.label > text { stroke:#a0a0a0; fill:#a0a0a0; }
 g.listener > rect { stroke:#009900; fill:#e6ffe6; }
 g.listener > text { stroke:#000000; fill:#000000; }
 
+g.internal > rect { stroke:#009999; fill:#e6ffff; }
+g.internal > text { stroke:#000000; fill:#000000; }
+
 g.router > rect { stroke:#dda2a2; fill:#f1dada; }
 g.router > text { stroke:#000000; fill:#000000; }
 
@@ -32,11 +35,17 @@ g.router_output > text { stroke:#000000; fill:#000000; }
 g.responder > rect { stroke:#009999; fill:#e6ffff; }
 g.responder > text { stroke:#000000; fill:#000000; }
 
-g.server > rect { stroke:#009900; fill:#e6ffe6; }
-g.server > text { stroke:#000000; fill:#000000; }
+g.server_healthy > rect { stroke:#009900; fill:#e6ffe6; }
+g.server_healthy > text { stroke:#000000; fill:#000000; }
+
+g.server_unhealthy > rect { stroke:#ff0066; fill:#fdfdfd; }
+g.server_unhealthy > text { stroke:#ff0066; fill:#ff0066; }
 
 g.transform > rect { stroke: #6A5ACD; fill: #e2e2f8; }
 g.transform > text { stroke:#696969; fill:#696969; }
+
+g.cors > rect { stroke: #6A5ACD; fill: #e2e2f8; }
+g.cors > text { stroke:#696969; fill:#696969; }
 
 g.round_robin > rect { stroke:#808080; fill:#F5F5DC; }
 g.round_robin > text { stroke:#696969; fill:#696969; }
@@ -44,8 +53,8 @@ g.round_robin > text { stroke:#696969; fill:#696969; }
 g.sticky_session > rect { stroke:#808080; fill:#F5F5DC; }
 g.sticky_session > text { stroke:#000000; fill:#000000; }
 
-g.internal > rect { stroke:#009999; fill:#e6ffff; }
-g.internal > text { stroke:#000000; fill:#000000; }
+g.least_connections > rect { stroke:#808080; fill:#F5F5DC; }
+g.least_connections > text { stroke:#000000; fill:#000000; }
 
 
 g.popup > rect { stroke:#808080; fill:#F5F5DC; }

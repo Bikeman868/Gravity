@@ -7,11 +7,11 @@ namespace Gravity.Server.Ui.Nodes
     internal class RoundRobbinDrawing: NodeDrawing
     {
         private readonly DrawingElement _drawing;
-        private readonly RoundRobinBalancer _roundRobbin;
+        private readonly RoundRobinNode _roundRobbin;
 
         public RoundRobbinDrawing(
             DrawingElement drawing, 
-            RoundRobinBalancer roundRobbin) 
+            RoundRobinNode roundRobbin) 
             : base(drawing, "Round robin", 2, roundRobbin.Name)
         {
             _drawing = drawing;
@@ -23,7 +23,7 @@ namespace Gravity.Server.Ui.Nodes
 
             if (roundRobbin.Outputs != null)
             {
-                details.Add(string.Join(" -> ", roundRobbin.Outputs));
+                details.Add("To: " + string.Join(" -> ", roundRobbin.Outputs));
             }
 
             AddDetails(details);
@@ -38,7 +38,7 @@ namespace Gravity.Server.Ui.Nodes
                 {
                     _drawing.AddChild(new ConnectedLineDrawing(TopRightSideConnection, nodeDrawing.TopLeftSideConnection)
                     {
-                        CssClass = "connection_medium"
+                        CssClass = _roundRobbin.Disabled ? "connection_disabled" : "connection_light"
                     });
                 }
             }

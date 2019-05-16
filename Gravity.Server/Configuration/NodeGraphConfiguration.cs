@@ -9,8 +9,14 @@ namespace Gravity.Server.Configuration
 {
     internal class NodeGraphConfiguration
     {
-        [JsonProperty("pages")]
-        public InternalPageConfiguration[] InternalPageNodes { get; set; }
+        [JsonProperty("cors")]
+        public CorsConfiguration[] CorsNodes { get; set; }
+
+        [JsonProperty("internalEndpoints")]
+        public InternalEndpointConfiguration[] InternalNodes { get; set; }
+
+        [JsonProperty("leastConnections")]
+        public LeastConnectionsConfiguration[] LeastConnectionsNodes { get; set; }
 
         [JsonProperty("roundRobin")]
         public RoundRobinConfiguration[] RoundRobinNodes { get; set; }
@@ -36,9 +42,9 @@ namespace Gravity.Server.Configuration
             {
                 // Define the default node graph to use when there is no configuration
 
-                InternalPageNodes = new[]
+                InternalNodes = new[]
                 {
-                    new InternalPageConfiguration {Name = "A"}
+                    new InternalEndpointConfiguration {Name = "A"}
                 };
             }
             else

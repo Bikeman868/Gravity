@@ -8,33 +8,33 @@ using Gravity.Server.Ui.Shapes;
 
 namespace Gravity.Server.Ui.Nodes
 {
-    internal class TransformDrawing: NodeDrawing
+    internal class CorsDrawing: NodeDrawing
     {
         private readonly DrawingElement _drawing;
-        private readonly TransformNode _transform;
+        private readonly CorsNode _corsNode;
 
-        public TransformDrawing(
+        public CorsDrawing(
             DrawingElement drawing, 
-            TransformNode transform) 
-            : base(drawing, "Transform", 2, transform.Name)
+            CorsNode corsNode) 
+            : base(drawing, "CORS", 2, corsNode.Name)
         {
             _drawing = drawing;
-            _transform = transform;
+            _corsNode = corsNode;
 
-            SetCssClass(transform.Disabled ? "disabled" : "transform");
+            SetCssClass(corsNode.Disabled ? "disabled" : "cors");
         }
 
         public override void AddLines(IDictionary<string, NodeDrawing> nodeDrawings)
         {
-            if (string.IsNullOrEmpty(_transform.OutputNode))
+            if (string.IsNullOrEmpty(_corsNode.OutputNode))
                 return;
 
             NodeDrawing nodeDrawing;
-            if (nodeDrawings.TryGetValue(_transform.OutputNode, out nodeDrawing))
+            if (nodeDrawings.TryGetValue(_corsNode.OutputNode, out nodeDrawing))
             {
                 _drawing.AddChild(new ConnectedLineDrawing(TopRightSideConnection, nodeDrawing.TopLeftSideConnection)
                 {
-                    CssClass = _transform.Disabled ? "connection_disabled" : "connection_light"
+                    CssClass = _corsNode.Disabled ? "connection_disabled" : "connection_light"
                 });
             }
         }

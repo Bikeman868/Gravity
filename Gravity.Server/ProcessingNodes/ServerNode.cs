@@ -8,10 +8,19 @@ using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes
 {
-    public class ServerEndpoint: INode
+    public class ServerNode: INode
     {
         public string Name { get; set; }
         public bool Disabled { get; set; }
+        public bool Healthy { get; set; }
+        public string Host { get; set; }
+        public int Port { get; set; }
+        public TimeSpan ConnectionTimeout { get; set; }
+        public TimeSpan RequestTimeout { get; set; }
+        public string HealthCheckMethod { get; set; }
+        public string HealthCheckHost { get; set; }
+        public int HealthCheckPort { get; set; }
+        public string HealthCheckPath { get; set; }
 
         void INode.Bind(INodeGraph nodeGraph)
         {

@@ -1,4 +1,5 @@
-﻿using Gravity.Server.ProcessingNodes;
+﻿using System;
+using Gravity.Server.ProcessingNodes;
 using Newtonsoft.Json;
 
 namespace Gravity.Server.Configuration
@@ -10,5 +11,8 @@ namespace Gravity.Server.Configuration
 
         [JsonProperty("cookie")]
         public string SesionCookie { get; set; }
+
+        [JsonProperty("sessionDuration")]
+        public TimeSpan SessionDuration { get; set; }
     }
 }

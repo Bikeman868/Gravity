@@ -8,7 +8,7 @@ using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes
 {
-    public class InternalPage: INode
+    public class InternalNode: INode
     {
         public string Name { get; set; }
         public bool Disabled { get; set; }

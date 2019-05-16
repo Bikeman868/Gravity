@@ -9,22 +9,22 @@ using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes
 {
-    public class StickySessionBalancer: INode
+    public class StickySessionNode: INode
     {
         public string Name { get; set; }
         public string[] Outputs { get; set; }
         public bool Disabled { get; set; }
         public string SessionCookie { get; set; }
-        public TimeSpan SessionExpiry { get; set; }
+        public TimeSpan SessionDuration { get; set; }
 
         private NodeOutput[] _outputs;
         private readonly Dictionary<string, NodeOutput> _sessionNodes;
         private readonly List<Tuple<string, DateTime>> _sessionExpiry;
         private readonly Thread _cleanupThread;
 
-        public StickySessionBalancer()
+        public StickySessionNode()
         {
-            SessionExpiry = TimeSpan.FromHours(1);
+            SessionDuration = TimeSpan.FromHours(1);
 
             _sessionNodes = new Dictionary<string, NodeOutput>();
             _sessionExpiry = new List<Tuple<string, DateTime>>();
@@ -135,7 +135,7 @@ namespace Gravity.Server.ProcessingNodes
 
                             output.IncrementSessionCount();
                             lock (_sessionNodes) _sessionNodes[sessionId] = output;
-                            lock (_sessionExpiry) _sessionExpiry.Add(new Tuple<string, DateTime>(sessionId, DateTime.UtcNow + SessionExpiry));
+                            lock (_sessionExpiry) _sessionExpiry.Add(new Tuple<string, DateTime>(sessionId, DateTime.UtcNow + SessionDuration));
                         }
                     }
                 });
@@ -162,7 +162,7 @@ namespace Gravity.Server.ProcessingNodes
 
                 sessionOutput.IncrementSessionCount();
                 lock (_sessionNodes) _sessionNodes[sessionId] = sessionOutput;
-                lock (_sessionExpiry) _sessionExpiry.Add(new Tuple<string, DateTime>(sessionId, DateTime.UtcNow + SessionExpiry));
+                lock (_sessionExpiry) _sessionExpiry.Add(new Tuple<string, DateTime>(sessionId, DateTime.UtcNow + SessionDuration));
             }
 
             if (sessionOutput.Disabled)

@@ -9,8 +9,8 @@ namespace Gravity.Server.DataStructures
         public INode Node { get; set; }
         public bool Disabled { get; set; }
 
-        private long _requestCounbt;
-        public long RequestCount { get { return _requestCounbt; } }
+        private long _requestCount;
+        public long RequestCount { get { return _requestCount; } }
 
         private long _connectionCount;
         public long ConnectionCount { get { return _connectionCount; } }
@@ -20,7 +20,7 @@ namespace Gravity.Server.DataStructures
 
         public void IncrementRequestCount()
         {
-            Interlocked.Increment(ref _requestCounbt);
+            Interlocked.Increment(ref _requestCount);
         }
 
         public void IncrementConnectionCount()
