@@ -74,6 +74,12 @@ namespace Gravity.Server.ProcessingNodes
             _cleanupThread.Start();
         }
 
+        public void Dispose()
+        {
+            _cleanupThread.Abort();
+            _cleanupThread.Join(TimeSpan.FromSeconds(10));
+        }
+
         void INode.Bind(INodeGraph nodeGraph)
         {
             OutputNodes = Outputs.Select(name => new NodeOutput

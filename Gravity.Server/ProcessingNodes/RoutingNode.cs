@@ -23,6 +23,10 @@ namespace Gravity.Server.ProcessingNodes
             _expressionParser = expressionParser;
         }
 
+        public void Dispose()
+        {
+        }
+
         void INode.Bind(INodeGraph nodeGraph)
         {
             _outputs = Outputs.Select(o =>

@@ -38,8 +38,14 @@ g.responder > text { stroke:#000000; fill:#000000; }
 g.server_healthy > rect { stroke:#009900; fill:#e6ffe6; }
 g.server_healthy > text { stroke:#000000; fill:#000000; }
 
-g.server_unhealthy > rect { stroke:#ff0066; fill:#ffe6f0; }
+g.server_unhealthy > rect { stroke:#ff0066; fill:#ffdce8; }
 g.server_unhealthy > text { stroke:#ff0066; fill:#ff0066; }
+
+g.server_ip_address_healthy > rect { stroke:#009900; fill:#e6ffe6; }
+g.server_ip_address_healthy > text { stroke:#000000; fill:#000000; }
+
+g.server_ip_address_unhealthy > rect { stroke:#ff0066; fill:#ffe6f0; }
+g.server_ip_address_unhealthy > text { stroke:#ff0066; fill:#ff0066; }
 
 g.transform > rect { stroke: #6A5ACD; fill: #e2e2f8; }
 g.transform > text { stroke:#696969; fill:#696969; }

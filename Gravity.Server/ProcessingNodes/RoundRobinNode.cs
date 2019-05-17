@@ -16,6 +16,10 @@ namespace Gravity.Server.ProcessingNodes
         private int _next;
         public NodeOutput[] OutputNodes;
 
+        public void Dispose()
+        {
+        }
+
         void INode.Bind(INodeGraph nodeGraph)
         {
             OutputNodes = Outputs.Select(name => new NodeOutput

@@ -42,8 +42,8 @@
                     "healthCheckHost": "mycompany.com" },
                 {
                     "name": "M",
-                    "disabled": true,
-                    "host": "192.168.0.2", 
+                    "disabled": false,
+                    "host": "localhost", 
                     "healthCheckHost": "mycompany.com" }
             ],
             "cors": [
@@ -119,7 +119,7 @@
                     { "name": "J", "x": 300, "y": 700 },
                     { "name": "K", "x": 550, "y": 500 },
                     { "name": "L", "x": 300, "y": 500 },
-                    { "name": "M", "x": 800, "y": 700 }
+                    { "name": "M", "x": 800, "y": 750 }
                 ]
             }
         },

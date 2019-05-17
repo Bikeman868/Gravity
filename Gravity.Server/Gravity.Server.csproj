@@ -88,6 +88,7 @@
     <Compile Include="Configuration\ListenerConfiguration.cs" />
     <Compile Include="Configuration\ListenerEndpointConfiguration.cs" />
     <Compile Include="DataStructures\ExpressionParser.cs" />
+    <Compile Include="DataStructures\ServerIpAddress.cs" />
     <Compile Include="Interfaces\IExpression.cs" />
     <Compile Include="Interfaces\IExpressionParser.cs" />
     <Compile Include="Interfaces\INode.cs" />

@@ -16,6 +16,10 @@ namespace Gravity.Server.ProcessingNodes
         public bool AllowCredentials { get; set; }
         public string ExposedHeaders { get; set; }
 
+        public void Dispose()
+        {
+        }
+
         void INode.Bind(INodeGraph nodeGraph)
         {
         }

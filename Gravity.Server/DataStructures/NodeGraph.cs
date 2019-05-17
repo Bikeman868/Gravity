@@ -70,7 +70,14 @@ namespace Gravity.Server.DataStructures
                 throw new Exception("There was a problem with binding nodes into a graph", ex);
             }
 
+            var prior = _current as NodeGraphInstance;
             _current = instance;
+
+            if (prior != null)
+            {
+                for (var i = 0; i < prior.Nodes.Length; i++)
+                    prior.Nodes[i].Dispose();
+            }
         }
 
         private void ConfigureCorsNodes(NodeGraphConfiguration configuration, List<INode> nodes)

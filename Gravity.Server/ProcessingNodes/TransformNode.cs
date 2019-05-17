@@ -10,6 +10,10 @@ namespace Gravity.Server.ProcessingNodes
         public bool Disabled { get; set; }
         public string OutputNode { get; set; }
 
+        public void Dispose()
+        {
+        }
+
         void INode.Bind(INodeGraph nodeGraph)
         {
         }

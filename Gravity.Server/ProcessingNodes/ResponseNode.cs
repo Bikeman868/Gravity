@@ -15,6 +15,10 @@ namespace Gravity.Server.ProcessingNodes
         public string[] HeaderNames { get; set; }
         public string[] HeaderValues { get; set; }
 
+        public void Dispose()
+        {
+        }
+
         void INode.Bind(INodeGraph nodeGraph)
         {
             if (!string.IsNullOrWhiteSpace(ContentFile))

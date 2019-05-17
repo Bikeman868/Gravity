@@ -1,19 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Gravity.Server.DataStructures;
 using Gravity.Server.Interfaces;
 using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes
 {
-    internal class ServerNode: INode, IDisposable
+    internal class ServerNode: INode
     {
         public string Name { get; set; }
         public bool Disabled { get; set; }
-        public bool Healthy { get; private set; }
-        public string UnhealthyReason { get; set; }
         public string Host { get; set; }
         public int Port { get; set; }
         public TimeSpan ConnectionTimeout { get; set; }
@@ -23,7 +24,12 @@ namespace Gravity.Server.ProcessingNodes
         public int HealthCheckPort { get; set; }
         public string HealthCheckPath { get; set; }
 
+        public bool Healthy { get; private set; }
+        public string UnhealthyReason { get; private set; }
+        public ServerIpAddress[] IpAddresses;
+
         private readonly Thread _heathCheckThread;
+        private DateTime _nextDnsLookup;
 
         public ServerNode()
         {
@@ -77,66 +83,117 @@ namespace Gravity.Server.ProcessingNodes
 
         Task INode.ProcessRequest(IOwinContext context)
         {
-            context.Response.StatusCode = 200;
+            if (Healthy)
+            {
+                context.Response.StatusCode = 200;
+                context.Response.ReasonPhrase = "OK";
+                return context.Response.WriteAsync(Name);
+            }
+
+            context.Response.StatusCode = 503;
             context.Response.ReasonPhrase = "OK";
             return context.Response.WriteAsync(Name);
         }
 
         private void CheckHealth()
         {
-            IPAddress ipAddress;
-
-            if (!IPAddress.TryParse(Host, out ipAddress))
+            if (IpAddresses == null || DateTime.UtcNow > _nextDnsLookup)
             {
-                try
+                IPAddress ipAddress;
+
+                if (IPAddress.TryParse(Host, out ipAddress))
                 {
-                    var hostEntry = Dns.GetHostEntry(Host);
-                    if (hostEntry.AddressList == null || hostEntry.AddressList.Length == 0)
+                    IpAddresses = new[]
                     {
-                        UnhealthyReason = "DNS returned no IP addresses for " + Host;
+                        new ServerIpAddress
+                        {
+                            Address = ipAddress
+                        }
+                    };
+                    _nextDnsLookup = DateTime.UtcNow.AddHours(1);
+                }
+                else
+                {
+                    try
+                    {
+                        var hostEntry = Dns.GetHostEntry(Host);
+                        if (hostEntry.AddressList == null || hostEntry.AddressList.Length == 0)
+                        {
+                            UnhealthyReason = "DNS returned no IP addresses for " + Host;
+                            Healthy = false;
+                            _nextDnsLookup = DateTime.UtcNow.AddSeconds(10);
+                            return;
+                        }
+                        IpAddresses = hostEntry.AddressList
+                            .Select(a => new ServerIpAddress {Address = a})
+                            .ToArray();
+                        _nextDnsLookup = DateTime.UtcNow.AddMinutes(10);
+                    }
+                    catch (Exception ex)
+                    {
+                        UnhealthyReason = ex.Message + " " + Host;
                         Healthy = false;
+                        _nextDnsLookup = DateTime.UtcNow.AddSeconds(10);
                         return;
                     }
-                    ipAddress = hostEntry.AddressList[0];
-                }
-                catch (Exception ex)
-                {
-                    UnhealthyReason = ex.Message + " " + Host;
-                    Healthy = false;
-                    return;
                 }
             }
 
             var host = HealthCheckHost ?? Host;
             if (HealthCheckPort != 80) host += ":" + HealthCheckPort;
 
-            var request = new Request
+            var healthy = false;
+
+            for (var i = 0; i < IpAddresses.Length; i++)
             {
-                IpAddress = ipAddress.ToString(),
-                PortNumber = HealthCheckPort,
-                Method = HealthCheckMethod,
-                PathAndQuery = HealthCheckPath,
-                Headers = new[]
+                var request = new Request
                 {
-                    new Tuple<string, string>( "Host", host)
+                    IpAddress = IpAddresses[i].Address.ToString(),
+                    PortNumber = HealthCheckPort,
+                    Method = HealthCheckMethod,
+                    PathAndQuery = HealthCheckPath,
+                    Headers = new[]
+                    {
+                        new Tuple<string, string>("Host", host)
+                    }
+                };
+
+                var response = Send(request);
+
+                if (response.StatusCode == 200)
+                {
+                    healthy = true;
+                    IpAddresses[i].SetHealthy();
                 }
-            };
-
-            var response = Send(request);
-
-            if (response.StatusCode == 200)
-            {
-                Healthy = true;
+                else
+                {
+                    IpAddresses[i].SetUnhealthy("Status code " + response.StatusCode);
+                }
             }
+
+            if (healthy)
+                Healthy = true;
             else
             {
-                UnhealthyReason = "Status code " + response.StatusCode;
+                UnhealthyReason = "No healthy IP addresses";
                 Healthy = false;
             }
         }
 
         private Response Send(Request request)
         {
+            if (request.IpAddress == "127.0.0.1")
+                return new Response
+                {
+                    StatusCode = 200,
+                    ReasonPhrase = "OK",
+                    Headers = new[]
+                    {
+                        new Tuple<string, string>("Content-Length", "7")
+                    },
+                    Content = Encoding.UTF8.GetBytes("Success")
+                };
+
             return new Response
             {
                 StatusCode = 404,
