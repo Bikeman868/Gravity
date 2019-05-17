@@ -15,6 +15,13 @@ namespace Gravity.Server.Ui.Nodes
 
             var details = new List<string>();
 
+            if (!server.Healthy)
+            {
+                details.Add("Health check failed");
+                details.Add(server.UnhealthyReason);
+                details.Add("");
+            }
+
             details.Add("Host " + (server.Host ?? string.Empty));
             details.Add("Port " + server.Port);
             details.Add("Connection timeout " + server.ConnectionTimeout);

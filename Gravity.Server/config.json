@@ -38,12 +38,12 @@
                 {
                     "name": "I",
                     "disabled": false,
-                    "host": "192.168.20.53", 
+                    "host": "192.168.0.1", 
                     "healthCheckHost": "mycompany.com" },
                 {
                     "name": "M",
-                    "disabled": false,
-                    "host": "192.168.20.54", 
+                    "disabled": true,
+                    "host": "192.168.0.2", 
                     "healthCheckHost": "mycompany.com" }
             ],
             "cors": [
