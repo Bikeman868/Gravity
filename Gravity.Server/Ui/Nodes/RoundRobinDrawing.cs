@@ -3,6 +3,7 @@ using Gravity.Server.ProcessingNodes;
 using Gravity.Server.Ui.Shapes;
 using System.Collections.Generic;
 using Gravity.Server.DataStructures;
+using Gravity.Server.ProcessingNodes.LoadBalancing;
 
 namespace Gravity.Server.Ui.Nodes
 {

@@ -2,7 +2,7 @@
 using Gravity.Server.Interfaces;
 using Microsoft.Owin;
 
-namespace Gravity.Server.ProcessingNodes
+namespace Gravity.Server.ProcessingNodes.SpecialPurpose
 {
     internal class CorsNode: INode
     {
@@ -16,17 +16,32 @@ namespace Gravity.Server.ProcessingNodes
         public bool AllowCredentials { get; set; }
         public string ExposedHeaders { get; set; }
 
+        private INode _nextNode;
+
         public void Dispose()
         {
         }
 
         void INode.Bind(INodeGraph nodeGraph)
         {
+            _nextNode = nodeGraph.NodeByName(OutputNode);
         }
 
         Task INode.ProcessRequest(IOwinContext context)
         {
-            return null;
+            if (_nextNode == null)
+            {
+                context.Response.StatusCode = 503;
+                context.Response.ReasonPhrase = "CORS node " + Name + " has no downstream";
+                return context.Response.WriteAsync(string.Empty);
+            }
+
+            if (!Disabled)
+            {
+                // TODO: Preform CORS checks here
+            }
+
+            return _nextNode.ProcessRequest(context);
         }
     }
 }

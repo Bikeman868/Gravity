@@ -7,7 +7,7 @@ using Gravity.Server.DataStructures;
 using Gravity.Server.Interfaces;
 using Microsoft.Owin;
 
-namespace Gravity.Server.ProcessingNodes
+namespace Gravity.Server.ProcessingNodes.LoadBalancing
 {
     internal class StickySessionNode: INode
     {

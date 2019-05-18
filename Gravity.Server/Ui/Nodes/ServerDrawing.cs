@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Gravity.Server.DataStructures;
 using Gravity.Server.ProcessingNodes;
+using Gravity.Server.ProcessingNodes.Server;
 using Gravity.Server.Ui.Shapes;
 
 namespace Gravity.Server.Ui.Nodes
@@ -36,7 +37,7 @@ namespace Gravity.Server.Ui.Nodes
             details.Add("Host " + (server.Host ?? string.Empty));
             details.Add("Port " + server.Port);
             details.Add("Connection timeout " + server.ConnectionTimeout);
-            details.Add("Request timeout " + server.RequestTimeout);
+            details.Add("Response timeout " + server.ResponseTimeout);
             details.Add("Health check " + 
                 server.HealthCheckMethod + " http://" + 
                 (server.HealthCheckHost ?? server.Host) + 
@@ -64,13 +65,13 @@ namespace Gravity.Server.Ui.Nodes
         {
             details.Add("Health check failed");
 
-            while (unhealthyReason.Length > 30)
+            while (unhealthyReason.Length > 50)
             {
-                var i = unhealthyReason.IndexOf(' ', 25);
+                var i = unhealthyReason.IndexOf(' ', 45);
                 if (i < 0)
                 {
-                    details.Add(unhealthyReason.Substring(0, 30));
-                    unhealthyReason = unhealthyReason.Substring(30);
+                    details.Add(unhealthyReason.Substring(0, 50));
+                    unhealthyReason = unhealthyReason.Substring(50);
                 }
                 else
                 {

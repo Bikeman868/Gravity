@@ -26,8 +26,8 @@ namespace Gravity.Server.Configuration
         /// <summary>
         /// How long to wait for the server to respond to a request
         /// </summary>
-        [JsonProperty("requestTimeout")]
-        public TimeSpan RequestTimeout { get; set; }
+        [JsonProperty("responseTimeout")]
+        public TimeSpan ResponseTimeout { get; set; }
 
         /// <summary>
         /// The path of the URL to send as a health check
@@ -57,7 +57,7 @@ namespace Gravity.Server.Configuration
         {
             Port = 80;
             ConnectionTimeout = TimeSpan.FromSeconds(5);
-            RequestTimeout = TimeSpan.FromMinutes(1);
+            ResponseTimeout = TimeSpan.FromMinutes(1);
             HealthCheckMethod = "GET";
             HealthCheckPath = "/";
             HealthCheckPort = 80;

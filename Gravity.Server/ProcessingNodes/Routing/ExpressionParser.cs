@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using Gravity.Server.Interfaces;
 using Microsoft.Owin;
 
-namespace Gravity.Server.DataStructures
+namespace Gravity.Server.ProcessingNodes.Routing
 {
     internal class ExpressionParser: IExpressionParser
     {

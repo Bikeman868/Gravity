@@ -4,14 +4,24 @@ using System.Linq;
 using Gravity.Server.Configuration;
 using Gravity.Server.Interfaces;
 using Gravity.Server.ProcessingNodes;
+using Gravity.Server.ProcessingNodes.LoadBalancing;
+using Gravity.Server.ProcessingNodes.Routing;
+using Gravity.Server.ProcessingNodes.Server;
+using Gravity.Server.ProcessingNodes.SpecialPurpose;
+using Gravity.Server.ProcessingNodes.Transform;
 using Gravity.Server.Ui.Nodes;
 using Gravity.Server.Ui.Shapes;
 using OwinFramework.Interfaces.Builder;
 using OwinFramework.Pages.Core.Attributes;
+using OwinFramework.Pages.Core.Enums;
 using OwinFramework.Pages.Core.Interfaces.Builder;
+using OwinFramework.Pages.Core.Interfaces.Runtime;
 
 namespace Gravity.Server.Ui
 {
+    // TODO: Make a service that returns the SVG and just output and <img> tag into the page
+    // TODO: replace initialization JavaScript to jsut refres the image
+
     [IsComponent("dashboard_diagram")]
     internal class DashboardDiagramComponent: DiagramComponent
     {
@@ -40,6 +50,16 @@ namespace Gravity.Server.Ui
                 "/gravity/ui/dashboard",
                 c => _dashboardConfiguration = c.Sanitize(),
                 new DashboardConfiguration());
+
+            InitializationWriters = new Action<IRenderContext>[]
+            {
+                rc =>
+                {
+                    rc.Html.WriteScriptOpen();
+                    rc.Html.WriteLine("setTimeout(function(){window.location=window.location}, 5000);");
+                    rc.Html.WriteScriptClose();
+                }
+            };
         }
 
         protected override DrawingElement DrawDiagram()

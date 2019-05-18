@@ -2,7 +2,7 @@
 using Gravity.Server.Interfaces;
 using Microsoft.Owin;
 
-namespace Gravity.Server.ProcessingNodes
+namespace Gravity.Server.ProcessingNodes.SpecialPurpose
 {
     internal class ResponseNode: INode
     {

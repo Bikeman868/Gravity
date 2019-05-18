@@ -4,6 +4,11 @@ using System.Linq;
 using Gravity.Server.Configuration;
 using Gravity.Server.Interfaces;
 using Gravity.Server.ProcessingNodes;
+using Gravity.Server.ProcessingNodes.LoadBalancing;
+using Gravity.Server.ProcessingNodes.Routing;
+using Gravity.Server.ProcessingNodes.Server;
+using Gravity.Server.ProcessingNodes.SpecialPurpose;
+using Gravity.Server.ProcessingNodes.Transform;
 using OwinFramework.Interfaces.Builder;
 
 namespace Gravity.Server.DataStructures
@@ -214,7 +219,7 @@ namespace Gravity.Server.DataStructures
                         Host = serverNodeConfiguration.Host,
                         Port = serverNodeConfiguration.Port,
                         ConnectionTimeout = serverNodeConfiguration.ConnectionTimeout,
-                        RequestTimeout = serverNodeConfiguration.RequestTimeout,
+                        ResponseTimeout = serverNodeConfiguration.ResponseTimeout,
                         HealthCheckPort = serverNodeConfiguration.HealthCheckPort,
                         HealthCheckHost = serverNodeConfiguration.HealthCheckHost,
                         HealthCheckPath = serverNodeConfiguration.HealthCheckPath,

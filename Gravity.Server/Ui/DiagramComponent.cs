@@ -33,7 +33,7 @@ namespace Gravity.Server.Ui
                 Write(rootElement, context.Html);
             }
 
-            return WriteResult.Continue();
+            return base.WritePageArea(context, pageArea);
         }
 
         protected abstract DrawingElement DrawDiagram();

@@ -5,7 +5,7 @@ using Gravity.Server.Configuration;
 using Gravity.Server.Interfaces;
 using Microsoft.Owin;
 
-namespace Gravity.Server.ProcessingNodes
+namespace Gravity.Server.ProcessingNodes.Routing
 {
     internal class RoutingNode: INode
     {
