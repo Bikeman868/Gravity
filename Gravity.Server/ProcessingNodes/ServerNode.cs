@@ -24,6 +24,7 @@ namespace Gravity.Server.ProcessingNodes
         public string HealthCheckHost { get; set; }
         public int HealthCheckPort { get; set; }
         public string HealthCheckPath { get; set; }
+        public TimeSpan DnsLookupInterval { get; set; }
 
         public bool? Healthy { get; private set; }
         public string UnhealthyReason { get; private set; }
@@ -33,13 +34,18 @@ namespace Gravity.Server.ProcessingNodes
 
         private readonly Thread _heathCheckThread;
         private DateTime _nextDnsLookup;
+        private int _lastIpAddressIndex;
 
         public ServerNode()
         {
             Port = 80;
             ConnectionTimeout = TimeSpan.FromSeconds(5);
             RequestTimeout = TimeSpan.FromMinutes(1);
-
+#if DEBUG
+            DnsLookupInterval = TimeSpan.FromSeconds(10);
+#else
+            DnsLookupInterval = TimeSpan.FromMinutes(10);
+#endif
             HealthCheckPort = 80;
             HealthCheckMethod = "GET";
             HealthCheckPath = "/";
@@ -94,16 +100,70 @@ namespace Gravity.Server.ProcessingNodes
 
         Task INode.ProcessRequest(IOwinContext context)
         {
-            if (Healthy.HasValue && Healthy.Value)
+            var allIpAddresses = IpAddresses;
+
+            if (allIpAddresses == null || allIpAddresses.Length == 0)
             {
-                context.Response.StatusCode = 200;
-                context.Response.ReasonPhrase = "OK";
-                return context.Response.WriteAsync(Name);
+                context.Response.StatusCode = 503;
+                context.Response.ReasonPhrase = "No servers found with this host name";
+                return context.Response.WriteAsync(string.Empty);
             }
 
-            context.Response.StatusCode = 503;
-            context.Response.ReasonPhrase = "OK";
-            return context.Response.WriteAsync(Name);
+            var ipAddresses = allIpAddresses.Where(i => i.Healthy == true).ToList();
+
+            if (ipAddresses.Count == 0 || Healthy != true)
+            {
+                context.Response.StatusCode = 503;
+                context.Response.ReasonPhrase = "No healthy servers";
+                return context.Response.WriteAsync(string.Empty);
+            }
+
+            var ipAddressIndex = Interlocked.Increment(ref _lastIpAddressIndex) % ipAddresses.Count;
+            var ipAddress = ipAddresses[ipAddressIndex];
+
+            var request = new Request
+            {
+                IpAddress = ipAddress.Address,
+                PortNumber = Port,
+                Method = context.Request.Method,
+                PathAndQuery = context.Request.Path.ToString(),
+                Headers = context.Request.Headers
+                    .Where(h => h.Value != null && h.Value.Length > 0)
+                    .Select(h => new Tuple<string, string>(h.Key, h.Value[0]))
+                    .ToArray()
+            };
+
+            if (context.Request.QueryString.HasValue)
+                request.PathAndQuery += "?" + context.Request.QueryString.Value;
+
+            var contentLengthHeader = context.Request.Headers["Content-Length"];
+            if (contentLengthHeader != null && context.Request.Body != null && context.Request.Body.CanRead)
+            {
+                var contentLength = int.Parse(contentLengthHeader);
+                request.Content = new byte[contentLength];
+                context.Request.Body.Read(request.Content, 0, contentLength);
+            }
+
+            Response response;
+            ipAddress.IncrementRequestCount();
+            ipAddress.IncrementConnectionCount();
+            try
+            {
+                response = Send(request);
+            }
+            finally
+            {
+                ipAddress.DecrementConnectionCount();
+            }
+
+            context.Response.StatusCode = response.StatusCode;
+            context.Response.ReasonPhrase = response.ReasonPhrase;
+
+            if (response.Headers != null)
+                foreach (var header in response.Headers)
+                    context.Response.Headers[header.Item1] = header.Item2;
+
+            return context.Response.WriteAsync(response.Content);
         }
 
         private void CheckHealth()
@@ -157,28 +217,35 @@ namespace Gravity.Server.ProcessingNodes
 
             for (var i = 0; i < IpAddresses.Length; i++)
             {
-                var request = new Request
+                try
                 {
-                    IpAddress = IpAddresses[i].Address,
-                    PortNumber = HealthCheckPort,
-                    Method = HealthCheckMethod,
-                    PathAndQuery = HealthCheckPath,
-                    Headers = new[]
+                    var request = new Request
                     {
-                        new Tuple<string, string>("Host", host)
+                        IpAddress = IpAddresses[i].Address,
+                        PortNumber = HealthCheckPort,
+                        Method = HealthCheckMethod,
+                        PathAndQuery = HealthCheckPath,
+                        Headers = new[]
+                        {
+                            new Tuple<string, string>("Host", host)
+                        }
+                    };
+
+                    var response = Send(request);
+
+                    if (response.StatusCode == 200)
+                    {
+                        healthy = true;
+                        IpAddresses[i].SetHealthy();
                     }
-                };
-
-                var response = Send(request);
-
-                if (response.StatusCode == 200)
-                {
-                    healthy = true;
-                    IpAddresses[i].SetHealthy();
+                    else
+                    {
+                        IpAddresses[i].SetUnhealthy("Status code " + response.StatusCode);
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    IpAddresses[i].SetUnhealthy("Status code " + response.StatusCode);
+                    IpAddresses[i].SetUnhealthy(ex.Message);
                 }
             }
 
@@ -245,12 +312,21 @@ namespace Gravity.Server.ProcessingNodes
 
             public Connection GetConnection()
             {
-                lock (_pool)
+                while (true)
                 {
-                    if (_pool.Count > 0)
-                        return _pool.Dequeue();
-                }
+                    lock (_pool)
+                    {
+                        if (_pool.Count > 0)
+                        {
+                            var connection = _pool.Dequeue();
+                            if (connection.IsConnected)
+                                return connection;
 
+                            connection.Dispose();
+                        }
+                        else break;
+                    }
+                }
                 return new Connection(_endpoint);
             }
 
@@ -292,7 +368,10 @@ namespace Gravity.Server.ProcessingNodes
 
             public bool IsConnected
             {
-                get { return false; }
+                get
+                {
+                    return _tcpClient.Connected;
+                }
             }
 
             public Response Send(Request request)

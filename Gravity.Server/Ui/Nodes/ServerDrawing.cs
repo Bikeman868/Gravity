@@ -20,7 +20,7 @@ namespace Gravity.Server.Ui.Nodes
 
             var details = new List<string>();
 
-            if (server.Healthy.HasValue && (ipAddresses == null || ipAddresses.Length != 1))
+            if (server.Healthy.HasValue)
             {
                 if (server.Healthy.Value)
                 {
@@ -29,7 +29,7 @@ namespace Gravity.Server.Ui.Nodes
                 else
                 {
                     details.Add("Health check failed");
-                    details.Add(server.UnhealthyReason);
+                    AddUnhealthyReason(server.UnhealthyReason, details);
                 }
             }
 
@@ -60,6 +60,29 @@ namespace Gravity.Server.Ui.Nodes
             }
         }
 
+        private static void AddUnhealthyReason(string unhealthyReason, List<string> details)
+        {
+            details.Add("Health check failed");
+
+            while (unhealthyReason.Length > 30)
+            {
+                var i = unhealthyReason.IndexOf(' ', 25);
+                if (i < 0)
+                {
+                    details.Add(unhealthyReason.Substring(0, 30));
+                    unhealthyReason = unhealthyReason.Substring(30);
+                }
+                else
+                {
+                    details.Add(unhealthyReason.Substring(0, i));
+                    unhealthyReason = unhealthyReason.Substring(i + 1);
+                }
+            }
+
+            if (unhealthyReason.Length > 0)
+                details.Add(unhealthyReason);
+        }
+
         private class IpAddressDrawing : NodeDrawing
         {
             public IpAddressDrawing(
@@ -80,8 +103,7 @@ namespace Gravity.Server.Ui.Nodes
                     }
                     else
                     {
-                        details.Add("Health check failed");
-                        details.Add(ipAddress.UnhealthyReason);
+                        AddUnhealthyReason(ipAddress.UnhealthyReason, details);
                     }
                 }
                 details.Add(ipAddress.RequestCount + " requests");
