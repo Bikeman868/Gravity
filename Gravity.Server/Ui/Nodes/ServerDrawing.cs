@@ -14,16 +14,23 @@ namespace Gravity.Server.Ui.Nodes
             ServerNode server) 
             : base(drawing, "Server", 2, server.Name)
         {
-            SetCssClass(server.Disabled ? "disabled" : (server.Healthy ? "server_healthy" : "server_unhealthy"));
+            SetCssClass(server.Disabled ? "disabled" : (server.Healthy == false ? "server_unhealthy" : "server_healthy" ));
             
             var ipAddresses = server.IpAddresses;
 
             var details = new List<string>();
 
-            if (!server.Healthy && (ipAddresses == null || ipAddresses.Length != 1))
+            if (server.Healthy.HasValue && (ipAddresses == null || ipAddresses.Length != 1))
             {
-                details.Add("Health check failed");
-                details.Add(server.UnhealthyReason);
+                if (server.Healthy.Value)
+                {
+                    details.Add("Health check passed");
+                }
+                else
+                {
+                    details.Add("Health check failed");
+                    details.Add(server.UnhealthyReason);
+                }
             }
 
             details.Add("Host " + (server.Host ?? string.Empty));
@@ -61,20 +68,24 @@ namespace Gravity.Server.Ui.Nodes
                 ServerIpAddress ipAddress)
                 : base(drawing, ipAddress.Address.ToString(), 3)
             {
-                CssClass = ipAddress.Healthy ? "server_ip_address_healthy" : "server_ip_address_unhealthy";
+                CssClass = ipAddress.Healthy == false ? "server_ip_address_unhealthy": "server_ip_address_healthy";
 
                 var details = new List<string>();
 
-                if (ipAddress != null)
+                if (ipAddress.Healthy.HasValue)
                 {
-                    if (!ipAddress.Healthy)
+                    if (ipAddress.Healthy.Value)
+                    {
+                        details.Add("Health check passed");
+                    }
+                    else
                     {
                         details.Add("Health check failed");
                         details.Add(ipAddress.UnhealthyReason);
                     }
-                    details.Add(ipAddress.RequestCount + " requests");
-                    details.Add(ipAddress.ConnectionCount + " connections");
                 }
+                details.Add(ipAddress.RequestCount + " requests");
+                details.Add(ipAddress.ConnectionCount + " connections");
 
                 AddDetails(details);
             }

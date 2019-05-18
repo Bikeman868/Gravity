@@ -13,8 +13,8 @@ namespace Gravity.Server.DataStructures
         private long _connectionCount;
         public long ConnectionCount { get { return _connectionCount; } }
 
-        private bool _healthy;
-        public bool Healthy { get { return _healthy; } }
+        private bool? _healthy;
+        public bool? Healthy { get { return _healthy; } }
 
         private string _unhealthyReason;
         public string UnhealthyReason { get { return _unhealthyReason; } }

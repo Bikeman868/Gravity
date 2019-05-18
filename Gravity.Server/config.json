@@ -38,13 +38,14 @@
                 {
                     "name": "I",
                     "disabled": false,
-                    "host": "192.168.0.1", 
-                    "healthCheckHost": "mycompany.com" },
+                    "host": "owinframework.net" 
+                },
                 {
                     "name": "M",
-                    "disabled": false,
-                    "host": "localhost", 
-                    "healthCheckHost": "mycompany.com" }
+                    "disabled": true,
+                    "host": "localhost",
+                    "healthCheckHost": "mycompany.com"
+                }
             ],
             "cors": [
                 { "name": "L", "output": "K" }

@@ -16,7 +16,7 @@ namespace Gravity.Server.Ui.Shapes
             if (Text.Length > 0)
             {
                 var minimumHeight = DiagramComponent.SvgTextLineSpacing * Text.Length * TextSize + TopMargin + BottomMargin;
-                var minimumWidth = Text.Max(t => t.Length) * DiagramComponent.SvgTextCharacterSpacing * TextSize + LeftMargin + RightMargin;
+                var minimumWidth = Text.Max(t => t == null ? 0 : t.Length) * DiagramComponent.SvgTextCharacterSpacing * TextSize + LeftMargin + RightMargin;
 
                 if (Height < minimumHeight) Height = minimumHeight;
                 if (Width < minimumWidth) Width = minimumWidth;

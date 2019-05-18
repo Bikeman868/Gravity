@@ -25,11 +25,11 @@ namespace Gravity.Server.ProcessingNodes
         public int HealthCheckPort { get; set; }
         public string HealthCheckPath { get; set; }
 
-        public bool Healthy { get; private set; }
+        public bool? Healthy { get; private set; }
         public string UnhealthyReason { get; private set; }
 
         public ServerIpAddress[] IpAddresses;
-        private Dictionary<IPEndPoint, ConnectionPool> _connections;
+        private readonly Dictionary<IPEndPoint, ConnectionPool> _endpoints;
 
         private readonly Thread _heathCheckThread;
         private DateTime _nextDnsLookup;
@@ -40,12 +40,11 @@ namespace Gravity.Server.ProcessingNodes
             ConnectionTimeout = TimeSpan.FromSeconds(5);
             RequestTimeout = TimeSpan.FromMinutes(1);
 
-            Healthy = true;
             HealthCheckPort = 80;
             HealthCheckMethod = "GET";
             HealthCheckPath = "/";
 
-            _connections = new Dictionary<IPEndPoint, ConnectionPool>();
+            _endpoints = new Dictionary<IPEndPoint, ConnectionPool>();
 
             _heathCheckThread = new Thread(() =>
             {
@@ -73,22 +72,29 @@ namespace Gravity.Server.ProcessingNodes
                 IsBackground = true,
                 Priority = ThreadPriority.AboveNormal
             };
-            _heathCheckThread.Start();
         }
 
         public void Dispose()
         {
             _heathCheckThread.Abort();
             _heathCheckThread.Join(TimeSpan.FromSeconds(10));
+
+            lock (_endpoints)
+            {
+                foreach (var endpoint in _endpoints.Values)
+                    endpoint.Dispose();
+                _endpoints.Clear();
+            }
         }
 
         void INode.Bind(INodeGraph nodeGraph)
         {
+            _heathCheckThread.Start();
         }
 
         Task INode.ProcessRequest(IOwinContext context)
         {
-            if (Healthy)
+            if (Healthy.HasValue && Healthy.Value)
             {
                 context.Response.StatusCode = 200;
                 context.Response.ReasonPhrase = "OK";
@@ -153,7 +159,7 @@ namespace Gravity.Server.ProcessingNodes
             {
                 var request = new Request
                 {
-                    IpAddress = IpAddresses[i].Address.ToString(),
+                    IpAddress = IpAddresses[i].Address,
                     PortNumber = HealthCheckPort,
                     Method = HealthCheckMethod,
                     PathAndQuery = HealthCheckPath,
@@ -187,37 +193,44 @@ namespace Gravity.Server.ProcessingNodes
 
         private Response Send(Request request)
         {
-            if (request.IpAddress == "127.0.0.1")
-                return new Response
-                {
-                    StatusCode = 200,
-                    ReasonPhrase = "OK",
-                    Headers = new[]
-                    {
-                        new Tuple<string, string>("Content-Length", "7")
-                    },
-                    Content = Encoding.UTF8.GetBytes("Success")
-                };
+            var endpoint = new IPEndPoint(request.IpAddress, request.PortNumber);
 
-            return new Response
+            ConnectionPool connectionPool;
+            lock (_endpoints)
             {
-                StatusCode = 404,
-                ReasonPhrase = "Not found",
-                Headers = new[]
+                if (!_endpoints.TryGetValue(endpoint, out connectionPool))
                 {
-                    new Tuple<string, string>("Content-Length", "0")
+                    connectionPool = new ConnectionPool(endpoint, ConnectionTimeout, RequestTimeout);
+                    _endpoints.Add(endpoint, connectionPool);
                 }
-            };
+            }
+
+            var connection = connectionPool.GetConnection();
+            try
+            {
+                return connection.Send(request);
+            }
+            finally
+            {
+                connectionPool.ReuseConnection(connection);
+            }
         }
 
         private class ConnectionPool: IDisposable
         {
             private readonly IPEndPoint _endpoint;
+            private readonly TimeSpan _connectionTimeout;
+            private readonly TimeSpan _requestTimeout;
             private readonly Queue<Connection> _pool;
 
-            public ConnectionPool(IPEndPoint endpoint)
+            public ConnectionPool(
+                IPEndPoint endpoint,
+                TimeSpan connectionTimeout, 
+                TimeSpan requestTimeout)
             {
                 _endpoint = endpoint;
+                _connectionTimeout = connectionTimeout;
+                _requestTimeout = requestTimeout;
                 _pool = new Queue<Connection>();
             }
 
@@ -241,14 +254,17 @@ namespace Gravity.Server.ProcessingNodes
                 return new Connection(_endpoint);
             }
 
-            void ReuseConnection(Connection connection)
+            public void ReuseConnection(Connection connection)
             {
-                lock (_pool)
+                if (connection.IsConnected)
                 {
-                    if (_pool.Count < 1000)
+                    lock (_pool)
                     {
-                        _pool.Enqueue(connection);
-                        return;
+                        if (_pool.Count < 500)
+                        {
+                            _pool.Enqueue(connection);
+                            return;
+                        }
                     }
                 }
 
@@ -263,7 +279,8 @@ namespace Gravity.Server.ProcessingNodes
 
             public Connection(IPEndPoint endpoint)
             {
-                _tcpClient = new TcpClient(endpoint);
+                _tcpClient = new TcpClient();
+                _tcpClient.Connect(endpoint);
                 _stream = _tcpClient.GetStream();
             }
 
@@ -271,6 +288,11 @@ namespace Gravity.Server.ProcessingNodes
             {
                 _stream.Close();
                 _tcpClient.Close();
+            }
+
+            public bool IsConnected
+            {
+                get { return false; }
             }
 
             public Response Send(Request request)
@@ -288,7 +310,7 @@ namespace Gravity.Server.ProcessingNodes
                 buffer.Append(request.PathAndQuery);
                 buffer.Append(' ');
                 buffer.Append("HTTP/1.1");
-                buffer.Append('\n');
+                buffer.Append("\r\n");
 
                 if (request.Headers != null)
                 {
@@ -297,11 +319,11 @@ namespace Gravity.Server.ProcessingNodes
                         buffer.Append(header.Item1);
                         buffer.Append(": ");
                         buffer.Append(header.Item2);
-                        buffer.Append('\n');
+                        buffer.Append("\r\n");
                     }
                 }
 
-                buffer.Append('\n');
+                buffer.Append("\r\n");
 
                 var bytes = Encoding.ASCII.GetBytes(buffer.ToString());
                 _stream.Write(bytes, 0, bytes.Length);
@@ -314,20 +336,101 @@ namespace Gravity.Server.ProcessingNodes
             {
                 var result = new Response
                 {
-                    StatusCode = 200,
-                    ReasonPhrase = "",
-                    Headers = new Tuple<string,string>[0],
-                    Content = new byte[0]
+                    StatusCode = 444,
+                    ReasonPhrase = "Invalid response"
                 };
 
+                var line = new StringBuilder();
+                var headerLines = new List<string>();
+                //var buffer = new byte[65535];
+                var buffer = new byte[10];
+                var contentLength = 0;
+                var contentIndex = 0;
+                var header = true;
+                var beginning = true;
 
+                Action parseHeaders = () =>
+                {
+                    var firstSpaceIndex = headerLines[0].IndexOf(' ');
+                    var secondSpaceIndex = headerLines[0].IndexOf(' ', firstSpaceIndex + 1);
+                    result.StatusCode = int.Parse(headerLines[0].Substring(firstSpaceIndex + 1, secondSpaceIndex - firstSpaceIndex));
+                    result.ReasonPhrase = headerLines[0].Substring(secondSpaceIndex + 1);
+
+                    result.Headers = new Tuple<string, string>[headerLines.Count - 1];
+                    for (var j = 1; j < headerLines.Count; j++)
+                    {
+                        var headerLine = headerLines[j];
+
+                        var colonPos = headerLine.IndexOf(':');
+                        var name = headerLine.Substring(0, colonPos).Trim();
+                        var value = headerLine.Substring(colonPos + 1).Trim();
+                        result.Headers[j - 1] = new Tuple<string, string>(name, value);
+
+                        if (string.Equals(name, "Content-Length", StringComparison.OrdinalIgnoreCase))
+                            contentLength = int.Parse(value);
+                    }
+
+                    if (contentLength > 0) result.Content = new byte[contentLength];
+                };
+
+                while (true)
+                {
+                    var readCount = _stream.Read(buffer, 0, buffer.Length);
+                    if (readCount == 0) break;
+
+                    if (header)
+                    {
+                        for (var i = 0; i < readCount; i++)
+                        {
+                            var c = (char) buffer[i];
+
+                            if (c == '\r') continue;
+
+                            if (c == '\n')
+                            {
+                                if (beginning) continue;
+
+                                if (line.Length == 0)
+                                {
+                                    parseHeaders();
+                                    header = false;
+
+                                    if (i < readCount - 1)
+                                    {
+                                        contentIndex = readCount - i - 1;
+                                        Array.Copy(buffer, i + 1, result.Content, 0, contentIndex);
+                                    }
+                                    break;
+                                }
+
+                                headerLines.Add(line.ToString());
+                                line.Clear();
+                                continue;
+                            }
+
+                            line.Append(c);
+                            beginning = false;
+                        }
+                    }
+                    else
+                    {
+                        if (result.Content != null)
+                        {
+                            Array.Copy(buffer, 0, result.Content, contentIndex, readCount);
+                            contentIndex += readCount;
+                        }
+                    }
+
+                    if (readCount < buffer.Length)
+                        break;
+                }
                 return result;
             }
         }
 
         private class Request
         {
-            public string IpAddress;
+            public IPAddress IpAddress;
             public int PortNumber;
             public string Method;
             public string PathAndQuery;
