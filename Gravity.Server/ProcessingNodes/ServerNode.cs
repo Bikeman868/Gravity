@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,7 +27,9 @@ namespace Gravity.Server.ProcessingNodes
 
         public bool Healthy { get; private set; }
         public string UnhealthyReason { get; private set; }
+
         public ServerIpAddress[] IpAddresses;
+        private Dictionary<IPEndPoint, ConnectionPool> _connections;
 
         private readonly Thread _heathCheckThread;
         private DateTime _nextDnsLookup;
@@ -41,6 +44,8 @@ namespace Gravity.Server.ProcessingNodes
             HealthCheckPort = 80;
             HealthCheckMethod = "GET";
             HealthCheckPath = "/";
+
+            _connections = new Dictionary<IPEndPoint, ConnectionPool>();
 
             _heathCheckThread = new Thread(() =>
             {
@@ -203,6 +208,121 @@ namespace Gravity.Server.ProcessingNodes
                     new Tuple<string, string>("Content-Length", "0")
                 }
             };
+        }
+
+        private class ConnectionPool: IDisposable
+        {
+            private readonly IPEndPoint _endpoint;
+            private readonly Queue<Connection> _pool;
+
+            public ConnectionPool(IPEndPoint endpoint)
+            {
+                _endpoint = endpoint;
+                _pool = new Queue<Connection>();
+            }
+
+            public void Dispose()
+            {
+                lock (_pool)
+                {
+                    while (_pool.Count > 0)
+                        _pool.Dequeue().Dispose();
+                }
+            }
+
+            public Connection GetConnection()
+            {
+                lock (_pool)
+                {
+                    if (_pool.Count > 0)
+                        return _pool.Dequeue();
+                }
+
+                return new Connection(_endpoint);
+            }
+
+            void ReuseConnection(Connection connection)
+            {
+                lock (_pool)
+                {
+                    if (_pool.Count < 1000)
+                    {
+                        _pool.Enqueue(connection);
+                        return;
+                    }
+                }
+
+                connection.Dispose();
+            }
+        }
+
+        private class Connection: IDisposable
+        {
+            private readonly TcpClient _tcpClient;
+            private readonly NetworkStream _stream;
+
+            public Connection(IPEndPoint endpoint)
+            {
+                _tcpClient = new TcpClient(endpoint);
+                _stream = _tcpClient.GetStream();
+            }
+
+            public void Dispose()
+            {
+                _stream.Close();
+                _tcpClient.Close();
+            }
+
+            public Response Send(Request request)
+            {
+                SendHttp(request);
+                return ReceiveHttp();
+            }
+
+            private void SendHttp(Request request)
+            {
+                var buffer = new StringBuilder();
+
+                buffer.Append(request.Method);
+                buffer.Append(' ');
+                buffer.Append(request.PathAndQuery);
+                buffer.Append(' ');
+                buffer.Append("HTTP/1.1");
+                buffer.Append('\n');
+
+                if (request.Headers != null)
+                {
+                    foreach (var header in request.Headers)
+                    {
+                        buffer.Append(header.Item1);
+                        buffer.Append(": ");
+                        buffer.Append(header.Item2);
+                        buffer.Append('\n');
+                    }
+                }
+
+                buffer.Append('\n');
+
+                var bytes = Encoding.ASCII.GetBytes(buffer.ToString());
+                _stream.Write(bytes, 0, bytes.Length);
+
+                if (request.Content != null && request.Content.Length > 0)
+                    _stream.Write(request.Content, 0, request.Content.Length);
+            }
+
+            private Response ReceiveHttp()
+            {
+                var result = new Response
+                {
+                    StatusCode = 200,
+                    ReasonPhrase = "",
+                    Headers = new Tuple<string,string>[0],
+                    Content = new byte[0]
+                };
+
+
+                return result;
+            }
         }
 
         private class Request
