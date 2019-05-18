@@ -38,7 +38,7 @@ namespace Gravity.Server.DataStructures
                 {
                     try
                     {
-                        Thread.Sleep(1000);
+                        Thread.Sleep(100);
                         var graph = _current;
                         if (graph != null)
                         {

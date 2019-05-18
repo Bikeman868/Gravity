@@ -73,6 +73,7 @@ namespace Gravity.Server.Ui.Nodes
 
                 if (output != null)
                 {
+                    if (output.Disabled) details.Add("Disabled");
                     details.Add(output.RequestCount + " requests");
                     details.Add(output.ConnectionCount + " connections");
                 }
