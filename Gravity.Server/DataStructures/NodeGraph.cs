@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Gravity.Server.Configuration;
 using Gravity.Server.Interfaces;
 using Gravity.Server.ProcessingNodes;
@@ -18,16 +19,58 @@ namespace Gravity.Server.DataStructures
         private readonly IExpressionParser _expressionParser;
         private readonly IDisposable _configuration;
         private INodeGraph _current;
+        private Thread _thread;
 
         public NodeGraph(
             IConfiguration configuration,
             IExpressionParser expressionParser)
         {
             _expressionParser = expressionParser;
+
             _configuration = configuration.Register(
                 "/gravity/nodeGraph", 
                 Configure, 
                 new NodeGraphConfiguration());
+
+            _thread = new Thread(() =>
+            {
+                while (true)
+                {
+                    try
+                    {
+                        Thread.Sleep(1000);
+                        var graph = _current;
+                        if (graph != null)
+                        {
+                            var nodes = graph.GetNodes(n => n);
+                            foreach (var node in nodes)
+                            {
+                                try
+                                {
+                                    node.UpdateAvailability();
+                                }
+                                catch
+                                {
+                                }
+                            }
+                        }
+                    }
+                    catch (ThreadAbortException)
+                    {
+                        return;
+                    }
+                    catch
+                    {
+                    }
+                }
+            })
+            {
+                Name = "Update availability",
+                IsBackground = true,
+                Priority = ThreadPriority.BelowNormal
+            };
+
+            _thread.Start();
         }
 
         public void Configure(NodeGraphConfiguration configuration)

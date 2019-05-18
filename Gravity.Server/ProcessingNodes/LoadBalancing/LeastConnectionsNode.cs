@@ -11,6 +11,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
         public string Name { get; set; }
         public string[] Outputs { get; set; }
         public bool Disabled { get; set; }
+        public bool Available { get; private set; }
 
         public NodeOutput[] OutputNodes;
 
@@ -25,6 +26,26 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
                 Name = name,
                 Node = nodeGraph.NodeByName(name),
             }).ToArray();
+        }
+
+        void INode.UpdateAvailability()
+        {
+            var nodes = OutputNodes;
+            var available = false;
+
+            if (!Disabled && nodes != null)
+            {
+                for (var i = 0; i < nodes.Length; i++)
+                {
+                    var node = nodes[i];
+                    node.Disabled = node.Node == null || !node.Node.Available;
+
+                    if (!node.Disabled)
+                        available = true;
+                }
+            }
+
+            Available = available;
         }
 
         Task INode.ProcessRequest(IOwinContext context)

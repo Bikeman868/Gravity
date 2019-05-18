@@ -26,6 +26,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         public bool? Healthy { get; private set; }
         public string UnhealthyReason { get; private set; }
+        public bool Available { get; private set; }
 
         public ServerIpAddress[] IpAddresses;
         private readonly Dictionary<IPEndPoint, ConnectionPool> _endpoints;
@@ -94,6 +95,17 @@ namespace Gravity.Server.ProcessingNodes.Server
         void INode.Bind(INodeGraph nodeGraph)
         {
             _heathCheckThread.Start();
+        }
+
+        void INode.UpdateAvailability()
+        {
+            if (Disabled || IpAddresses == null)
+            {
+                Available = false;
+                return;
+            }
+
+            Available = Healthy != false;
         }
 
         Task INode.ProcessRequest(IOwinContext context)

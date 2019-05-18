@@ -15,6 +15,7 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
         public string AllowedMethods { get; set; }
         public bool AllowCredentials { get; set; }
         public string ExposedHeaders { get; set; }
+        public bool Available { get; private set; }
 
         private INode _nextNode;
 
@@ -25,6 +26,17 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
         void INode.Bind(INodeGraph nodeGraph)
         {
             _nextNode = nodeGraph.NodeByName(OutputNode);
+        }
+
+        void INode.UpdateAvailability()
+        {
+            if (Disabled || _nextNode == null)
+            {
+                Available = false;
+                return;
+            }
+
+            Available = _nextNode.Available;
         }
 
         Task INode.ProcessRequest(IOwinContext context)

@@ -11,6 +11,7 @@ namespace Gravity.Server.ProcessingNodes.Transform
         public string OutputNode { get; set; }
         public string RequestScript { get; set; }
         public string ResponseScript { get; set; }
+        public bool Available { get; private set; }
 
         private INode _nextNode;
         private IRequestTransform _requestTransform;
@@ -23,6 +24,17 @@ namespace Gravity.Server.ProcessingNodes.Transform
         void INode.Bind(INodeGraph nodeGraph)
         {
             _nextNode = nodeGraph.NodeByName(OutputNode);
+        }
+
+        void INode.UpdateAvailability()
+        {
+            if (Disabled || _nextNode == null)
+            {
+                Available = false;
+                return;
+            }
+
+            Available = _nextNode.Available;
         }
 
         Task INode.ProcessRequest(IOwinContext context)

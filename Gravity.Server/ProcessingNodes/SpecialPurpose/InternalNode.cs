@@ -8,12 +8,17 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
     {
         public string Name { get; set; }
         public bool Disabled { get; set; }
+        public bool Available { get { return !Disabled; } }
 
         public void Dispose()
         {
         }
 
         void INode.Bind(INodeGraph nodeGraph)
+        {
+        }
+
+        void INode.UpdateAvailability()
         {
         }
 

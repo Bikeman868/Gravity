@@ -14,6 +14,7 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
         public string ContentFile { get; set; }
         public string[] HeaderNames { get; set; }
         public string[] HeaderValues { get; set; }
+        public bool Available { get { return !Disabled; } }
 
         public void Dispose()
         {
@@ -25,6 +26,10 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
             {
                 // TODO: Load the file
             }
+        }
+
+        void INode.UpdateAvailability()
+        {
         }
 
         Task INode.ProcessRequest(IOwinContext context)

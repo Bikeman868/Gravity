@@ -12,6 +12,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
         public string Name { get; set; }
         public bool Disabled { get; set; }
         public RouterOutputConfiguration[] Outputs { get; set; }
+        public bool Available { get; private set; }
 
         private readonly IExpressionParser _expressionParser;
 
@@ -61,6 +62,26 @@ namespace Gravity.Server.ProcessingNodes.Routing
                     return output;
                 })
             .ToArray();
+        }
+
+        void INode.UpdateAvailability()
+        {
+            if (Disabled || _outputs == null)
+            {
+                Available = false;
+                return;
+            }
+
+            for (var i = 0; i < _outputs.Length; i++)
+            {
+                if (_outputs[i].Node != null && _outputs[i].Node.Available)
+                {
+                    Available = true;
+                    return;
+                }
+            }
+
+            Available = false;
         }
 
         Task INode.ProcessRequest(IOwinContext context)
