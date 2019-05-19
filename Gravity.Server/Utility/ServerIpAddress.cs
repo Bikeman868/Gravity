@@ -1,14 +1,12 @@
 ﻿using System.Net;
 using System.Threading;
 
-namespace Gravity.Server.DataStructures
+namespace Gravity.Server.Utility
 {
     internal class ServerIpAddress
     {
         public IPAddress Address { get; set; }
-
-        private long _requestCount;
-        public long RequestCount { get { return _requestCount; } }
+        public TrafficAnalytics TrafficAnalytics { get; private set; }
 
         private long _connectionCount;
         public long ConnectionCount { get { return _connectionCount; } }
@@ -19,9 +17,9 @@ namespace Gravity.Server.DataStructures
         private string _unhealthyReason;
         public string UnhealthyReason { get { return _unhealthyReason; } }
 
-        public void IncrementRequestCount()
+        public ServerIpAddress()
         {
-            Interlocked.Increment(ref _requestCount);
+            TrafficAnalytics = new TrafficAnalytics();
         }
 
         public void IncrementConnectionCount()

@@ -55,5 +55,9 @@ namespace Gravity.Server.Configuration
             ExposedHeaders = "Location";
             AllowCredentials = true;
         }
+
+        public override void Sanitize()
+        {
+        }
     }
 }

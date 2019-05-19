@@ -18,5 +18,9 @@ namespace Gravity.Server.Configuration
 
         [JsonProperty("headers")]
         public ResponseHeaderConfiguration[] Headers { get; set; }
+
+        public override void Sanitize()
+        {
+        }
     }
 }

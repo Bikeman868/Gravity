@@ -13,5 +13,9 @@ namespace Gravity.Server.Configuration
 
         [JsonIgnore()] 
         public INode Node;
+
+        public virtual void Sanitize()
+        {
+        }
     }
 }

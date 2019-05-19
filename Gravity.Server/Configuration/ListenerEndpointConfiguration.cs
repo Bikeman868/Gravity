@@ -1,4 +1,6 @@
-﻿using Gravity.Server.DataStructures;
+﻿using System;
+using System.Net;
+using Gravity.Server.Utility;
 using Newtonsoft.Json;
 
 namespace Gravity.Server.Configuration
@@ -19,5 +21,19 @@ namespace Gravity.Server.Configuration
 
         [JsonIgnore]
         public NodeOutput ProcessingNode { get; set; }
+
+        public ListenerEndpointConfiguration Sanitize()
+        {
+            if (PortNumber > 65535) throw new ArgumentOutOfRangeException("PortNumber", PortNumber, "port number must be less than 65536");
+
+            if (IpAddress != "*")
+            {
+                IPAddress ipAddress;
+                if (!IPAddress.TryParse(IpAddress, out ipAddress))
+                    throw new ArgumentOutOfRangeException("IpAddress", IpAddress, "invalid IP address format");
+            }
+
+            return this;
+        }
     }
 }

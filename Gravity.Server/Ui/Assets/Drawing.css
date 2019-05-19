@@ -49,11 +49,11 @@ g.transform > text { stroke:#696969; fill:#696969; }
 g.cors > rect { stroke: #6A5ACD; fill: #e2e2f8; }
 g.cors > text { stroke:#696969; fill:#696969; }
 
-g.round_robbin > rect { stroke:#808080; fill:#F5F5DC; }
-g.round_robbin > text { stroke:#696969; fill:#696969; }
+g.round_robin > rect { stroke:#808080; fill:#F5F5DC; }
+g.round_robin > text { stroke:#696969; fill:#696969; }
 
-g.round_robbin_output > rect { stroke:#d8d874; fill:#f9f9eb; }
-g.round_robbin_output > text { stroke:#000000; fill:#000000; }
+g.round_robin_output > rect { stroke:#d8d874; fill:#f9f9eb; }
+g.round_robin_output > text { stroke:#000000; fill:#000000; }
 
 g.sticky_session > rect { stroke:#808080; fill:#F5F5DC; }
 g.sticky_session > text { stroke:#000000; fill:#000000; }
@@ -80,5 +80,5 @@ line.connection_light { stroke-width: 0.9; stroke: #009900; }
 line.connection_medium { stroke-width: 1.6; stroke: #009900; }
 line.connection_heavy { stroke-width: 2.8; stroke: #009900; }
 
-g.disabled > rect { stroke:#d0d0d0; fill:#fefefe; opacity: 0.6; }
+g.disabled > rect { stroke:#808080; fill:#fefefe; opacity: 0.6; }
 g.disabled > text { stroke:#d0d0d0; fill:#d0d0d0; }

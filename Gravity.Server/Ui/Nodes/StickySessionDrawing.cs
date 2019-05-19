@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Gravity.Server.DataStructures;
 using Gravity.Server.ProcessingNodes;
 using Gravity.Server.ProcessingNodes.LoadBalancing;
 using Gravity.Server.Ui.Shapes;
+using Gravity.Server.Utility;
 
 namespace Gravity.Server.Ui.Nodes
 {
@@ -77,7 +77,7 @@ namespace Gravity.Server.Ui.Nodes
                     var details = new List<string>();
 
                     details.Add(output.SessionCount + " sessions");
-                    details.Add(output.RequestCount + " requests");
+                    details.Add(output.TrafficAnalytics.LifetimeRequestCount + " requests");
                     details.Add(output.ConnectionCount + " connections");
 
                     AddDetails(details, null, output.Disabled ? "disabled" : string.Empty);

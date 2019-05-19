@@ -29,5 +29,9 @@ namespace Gravity.Server.Configuration
         /// </summary>
         [JsonProperty("responseScript")]
         public string ResponseScript { get; set; }
+
+        public override void Sanitize()
+        {
+        }
     }
 }

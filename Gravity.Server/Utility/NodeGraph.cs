@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using Gravity.Server.Configuration;
 using Gravity.Server.Interfaces;
-using Gravity.Server.ProcessingNodes;
 using Gravity.Server.ProcessingNodes.LoadBalancing;
 using Gravity.Server.ProcessingNodes.Routing;
 using Gravity.Server.ProcessingNodes.Server;
@@ -12,7 +11,7 @@ using Gravity.Server.ProcessingNodes.SpecialPurpose;
 using Gravity.Server.ProcessingNodes.Transform;
 using OwinFramework.Interfaces.Builder;
 
-namespace Gravity.Server.DataStructures
+namespace Gravity.Server.Utility
 {
     internal class NodeGraph: INodeGraph
     {

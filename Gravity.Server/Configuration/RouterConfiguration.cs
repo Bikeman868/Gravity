@@ -6,5 +6,9 @@ namespace Gravity.Server.Configuration
     {
         [JsonProperty("routes")]
         public RouterOutputConfiguration[] Outputs { get; set; }
+
+        public override void Sanitize()
+        {
+        }
     }
 }

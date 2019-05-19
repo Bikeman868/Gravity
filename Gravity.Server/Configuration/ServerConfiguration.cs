@@ -63,5 +63,8 @@ namespace Gravity.Server.Configuration
             HealthCheckPort = 80;
         }
 
+        public override void Sanitize()
+        {
+        }
     }
 }

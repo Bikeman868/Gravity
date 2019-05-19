@@ -22,7 +22,11 @@ namespace Gravity.Server.Ui.Nodes
             details.Add("Send to node " + listener.NodeName);
 
             if (listener.ProcessingNode != null)
-                details.Add(listener.ProcessingNode.RequestCount + " requests");
+            {
+                details.Add(listener.ProcessingNode.TrafficAnalytics.LifetimeRequestCount + " requests");
+                details.Add(listener.ProcessingNode.TrafficAnalytics.RequestTime.TotalMilliseconds.ToString("n2") + " ms");
+                details.Add(listener.ProcessingNode.TrafficAnalytics.RequestsPerMinute.ToString("n2") + " /min");
+            }
 
             AddDetails(details, null, listener.Disabled ? "disabled" : string.Empty);
         }

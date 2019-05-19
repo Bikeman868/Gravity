@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
-using Gravity.Server.DataStructures;
 using Gravity.Server.Interfaces;
+using Gravity.Server.ProcessingNodes;
 using Gravity.Server.ProcessingNodes.Routing;
+using Gravity.Server.Utility;
 using Ioc.Modules;
 using OwinFramework.Interfaces.Builder;
 using OwinFramework.Interfaces.Utility;
@@ -26,6 +27,7 @@ namespace Gravity.Server
             {
                 new IocRegistration().Init<INodeGraph, NodeGraph>(),
                 new IocRegistration().Init<IExpressionParser, ExpressionParser>(),
+                new IocRegistration().Init<IRequestListener, RequestListener>(),
             });
 
             _registrations.AddRange(new[]

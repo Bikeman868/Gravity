@@ -25,26 +25,22 @@ namespace Gravity.Server.Ui
     [IsComponent("dashboard_diagram")]
     internal class DashboardDiagramComponent: DiagramComponent
     {
+        private readonly IRequestListener _requestListener;
         private readonly INodeGraph _nodeGraph;
 
-        private readonly IDisposable _listenerConfig;
         private readonly IDisposable _dashboardConfig;
 
-        private ListenerConfiguration _listenerConfiguration;
         private DashboardConfiguration _dashboardConfiguration;
 
         public DashboardDiagramComponent(
             IComponentDependenciesFactory dependencies,
             IConfiguration configuration,
+            IRequestListener requestListener,
             INodeGraph nodeGraph) 
             : base(dependencies)
         {
+            _requestListener = requestListener;
             _nodeGraph = nodeGraph;
-
-            _listenerConfig = configuration.Register(
-                "/gravity/middleware/listener", 
-                c => _listenerConfiguration = c.Sanitize(), 
-                new ListenerConfiguration());
 
             _dashboardConfig = configuration.Register(
                 "/gravity/ui/dashboard",
@@ -66,7 +62,7 @@ namespace Gravity.Server.Ui
         {
             return new DashboardDrawing(
                 _dashboardConfiguration,
-                _listenerConfiguration,
+                _requestListener,
                 _nodeGraph.GetNodes(n => n));
         }
 
@@ -74,7 +70,7 @@ namespace Gravity.Server.Ui
         {
             public DashboardDrawing(
                     DashboardConfiguration dashboardConfiguration,
-                    ListenerConfiguration listenerConfiguration,
+                    IRequestListener requestListener,
                     INode[] nodes)
                 : base(null, "Dashboard", "drawing", false, 1)
             {
@@ -86,12 +82,13 @@ namespace Gravity.Server.Ui
                 var listenerDrawings = new List<ListenerDrawing>();
                 var nodeDrawings = new Dictionary<string, NodeDrawing>(StringComparer.OrdinalIgnoreCase);
 
-                if (listenerConfiguration.Endpoints != null)
+                var endpoints = requestListener.Endpoints;
+                if (endpoints != null)
                 {
                     var x = dashboardConfiguration.Listeners.X;
                     var y = dashboardConfiguration.Listeners.Y;
 
-                    foreach (var endpoint in listenerConfiguration.Endpoints)
+                    foreach (var endpoint in endpoints)
                     {
                         var listenerDrawing = new ListenerDrawing(this, endpoint)
                         {
@@ -128,7 +125,7 @@ namespace Gravity.Server.Ui
 
                         if (internalRequest != null) nodeDrawing = new InternalRequestDrawing(this, internalRequest);
                         else if (response != null) nodeDrawing = new ResponseDrawing(this, response);
-                        else if (roundRobin != null) nodeDrawing = new RoundRobbinDrawing(this, roundRobin);
+                        else if (roundRobin != null) nodeDrawing = new RoundRobinDrawing(this, roundRobin);
                         else if (router != null) nodeDrawing = new RouterDrawing(this, router);
                         else if (server != null) nodeDrawing = new ServerDrawing(this, server);
                         else if (stickySession != null) nodeDrawing = new StickySessionDrawing(this, stickySession);

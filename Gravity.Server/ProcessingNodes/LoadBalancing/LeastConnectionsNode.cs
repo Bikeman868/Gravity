@@ -1,54 +1,13 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
-using Gravity.Server.DataStructures;
-using Gravity.Server.Interfaces;
 using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes.LoadBalancing
 {
-    internal class LeastConnectionsNode: INode
+    internal class LeastConnectionsNode: LoadBalancerNode
     {
-        public string Name { get; set; }
-        public string[] Outputs { get; set; }
-        public bool Disabled { get; set; }
-        public bool Offline { get; private set; }
-
-        public NodeOutput[] OutputNodes;
-
-        public void Dispose()
-        {
-        }
-
-        void INode.Bind(INodeGraph nodeGraph)
-        {
-            OutputNodes = Outputs.Select(name => new NodeOutput
-            {
-                Name = name,
-                Node = nodeGraph.NodeByName(name),
-            }).ToArray();
-        }
-
-        void INode.UpdateStatus()
-        {
-            var nodes = OutputNodes;
-            var offline = true;
-
-            if (!Disabled && nodes != null)
-            {
-                for (var i = 0; i < nodes.Length; i++)
-                {
-                    var node = nodes[i];
-                    node.Disabled = node.Node == null || node.Node.Offline;
-
-                    if (!node.Disabled)
-                        offline = false;
-                }
-            }
-
-            Offline = offline;
-        }
-
-        Task INode.ProcessRequest(IOwinContext context)
+        public override Task ProcessRequest(IOwinContext context)
         {
             if (Disabled)
             {
@@ -69,11 +28,12 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
                 return context.Response.WriteAsync(string.Empty);
             }
 
-            output.IncrementRequestCount();
             output.IncrementConnectionCount();
+            var startTime = output.TrafficAnalytics.BeginRequest();
 
             return output.Node.ProcessRequest(context).ContinueWith(t =>
             {
+                output.TrafficAnalytics.EndRequest(startTime);
                 output.DecrementConnectionCount();
             });
         }

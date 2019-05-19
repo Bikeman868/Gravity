@@ -2,36 +2,36 @@
 using Gravity.Server.ProcessingNodes;
 using Gravity.Server.Ui.Shapes;
 using System.Collections.Generic;
-using Gravity.Server.DataStructures;
 using Gravity.Server.ProcessingNodes.LoadBalancing;
+using Gravity.Server.Utility;
 
 namespace Gravity.Server.Ui.Nodes
 {
-    internal class RoundRobbinDrawing: NodeDrawing
+    internal class RoundRobinDrawing: NodeDrawing
     {
         private readonly DrawingElement _drawing;
-        private readonly RoundRobinNode _roundRobbin;
+        private readonly RoundRobinNode _roundRobin;
         private readonly OutputDrawing[] _outputDrawings;
 
-        public RoundRobbinDrawing(
+        public RoundRobinDrawing(
             DrawingElement drawing, 
-            RoundRobinNode roundRobbin) 
-            : base(drawing, "Round robin", "round_robbin", roundRobbin.Offline, 2, roundRobbin.Name)
+            RoundRobinNode roundRobin) 
+            : base(drawing, "Round robin", "round_robin", roundRobin.Offline, 2, roundRobin.Name)
         {
             _drawing = drawing;
-            _roundRobbin = roundRobbin;
+            _roundRobin = roundRobin;
 
-            if (roundRobbin.Disabled)
+            if (roundRobin.Disabled)
                 Title.CssClass += " disabled";
 
-            if (roundRobbin.Outputs != null)
+            if (roundRobin.Outputs != null)
             {
-                _outputDrawings = new OutputDrawing[roundRobbin.Outputs.Length];
+                _outputDrawings = new OutputDrawing[roundRobin.Outputs.Length];
 
-                for (var i = 0; i < roundRobbin.Outputs.Length; i++)
+                for (var i = 0; i < roundRobin.Outputs.Length; i++)
                 {
-                    var outputNodeName = roundRobbin.Outputs[i];
-                    var output = roundRobbin.OutputNodes[i];
+                    var outputNodeName = roundRobin.Outputs[i];
+                    var output = roundRobin.OutputNodes[i];
                     _outputDrawings[i] = new OutputDrawing(drawing, outputNodeName, output);
                 }
 
@@ -42,11 +42,11 @@ namespace Gravity.Server.Ui.Nodes
 
         public override void AddLines(IDictionary<string, NodeDrawing> nodeDrawings)
         {
-            if (_roundRobbin.Outputs == null) return;
+            if (_roundRobin.Outputs == null) return;
 
-            for (var i = 0; i < _roundRobbin.Outputs.Length; i++)
+            for (var i = 0; i < _roundRobin.Outputs.Length; i++)
             {
-                var outputNodeName = _roundRobbin.Outputs[i];
+                var outputNodeName = _roundRobin.Outputs[i];
                 var outputDrawing = _outputDrawings[i];
 
                 NodeDrawing nodeDrawing;
@@ -54,7 +54,7 @@ namespace Gravity.Server.Ui.Nodes
                 {
                     _drawing.AddChild(new ConnectedLineDrawing(outputDrawing.TopRightSideConnection, nodeDrawing.TopLeftSideConnection)
                     {
-                        CssClass = _roundRobbin.Disabled ? "connection_disabled" : "connection_light"
+                        CssClass = _roundRobin.Disabled ? "connection_disabled" : "connection_light"
                     });
                 }
             }
@@ -66,13 +66,15 @@ namespace Gravity.Server.Ui.Nodes
                 DrawingElement drawing,
                 string label,
                 NodeOutput output)
-                : base(drawing, "Output", "round_robbin_output", output == null || output.Disabled, 3, label)
+                : base(drawing, "Output", "round_robin_output", output == null || output.Disabled, 3, label)
             {
                 if (output != null)
                 {
                     var details = new List<string>();
 
-                    details.Add(output.RequestCount + " requests");
+                    details.Add(output.TrafficAnalytics.LifetimeRequestCount + " requests");
+                    details.Add(output.TrafficAnalytics.RequestTime.TotalMilliseconds.ToString("n2") + " ms");
+                    details.Add(output.TrafficAnalytics.RequestsPerMinute.ToString("n2") + " /min");
                     details.Add(output.ConnectionCount + " connections");
 
                     AddDetails(details, null, output.Disabled ? "disabled" : string.Empty);

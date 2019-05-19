@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
-using Gravity.Server.DataStructures;
 using Gravity.Server.ProcessingNodes;
 using Gravity.Server.ProcessingNodes.Server;
 using Gravity.Server.Ui.Shapes;
+using Gravity.Server.Utility;
 
 namespace Gravity.Server.Ui.Nodes
 {
@@ -51,7 +51,7 @@ namespace Gravity.Server.Ui.Nodes
                 for (var i = 0; i < ipAddresses.Length; i++)
                 {
                     var ipAddress = ipAddresses[i];
-                    _ipAddressDrawings[i] = new IpAddressDrawing(drawing, ipAddress.Address.ToString(), ipAddress);
+                    _ipAddressDrawings[i] = new IpAddressDrawing(drawing, ipAddress);
                 }
 
                 foreach (var outputDrawing in _ipAddressDrawings)
@@ -86,9 +86,13 @@ namespace Gravity.Server.Ui.Nodes
         {
             public IpAddressDrawing(
                 DrawingElement drawing,
-                string label,
                 ServerIpAddress ipAddress)
-                : base(drawing, ipAddress.Address.ToString(), ipAddress.Healthy == false ? "server_ip_address_unhealthy": "server_ip_address_healthy", false, 3)
+                : base(
+                    drawing, 
+                    ipAddress.Address.ToString(), 
+                    ipAddress.Healthy == false ? "server_ip_address_unhealthy": "server_ip_address_healthy", 
+                    false, 
+                    3)
             {
                 var details = new List<string>();
 
@@ -103,7 +107,9 @@ namespace Gravity.Server.Ui.Nodes
                         AddUnhealthyReason(ipAddress.UnhealthyReason, details);
                     }
                 }
-                details.Add(ipAddress.RequestCount + " requests");
+                details.Add(ipAddress.TrafficAnalytics.LifetimeRequestCount + " requests");
+                details.Add(ipAddress.TrafficAnalytics.RequestTime.TotalMilliseconds.ToString("n1") + " ms");
+                details.Add(ipAddress.TrafficAnalytics.RequestsPerMinute.ToString("n1") + " /min");
                 details.Add(ipAddress.ConnectionCount + " connections");
 
                 AddDetails(details);

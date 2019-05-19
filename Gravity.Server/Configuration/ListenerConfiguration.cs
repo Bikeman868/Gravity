@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Gravity.Server.Utility;
+using Newtonsoft.Json;
 
 namespace Gravity.Server.Configuration
 {
@@ -26,6 +27,11 @@ namespace Gravity.Server.Configuration
                             NodeName = "A"
                         }
                     };
+                }
+                else
+                {
+                    for (var i = 0; i < Endpoints.Length; i++)
+                        Endpoints[i] = Endpoints[i].Sanitize();
                 }
             }
             catch

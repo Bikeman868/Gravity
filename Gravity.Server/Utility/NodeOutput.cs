@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using Gravity.Server.Interfaces;
 
-namespace Gravity.Server.DataStructures
+namespace Gravity.Server.Utility
 {
     internal class NodeOutput
     {
@@ -9,8 +9,7 @@ namespace Gravity.Server.DataStructures
         public INode Node { get; set; }
         public bool Disabled { get; set; }
 
-        private long _requestCount;
-        public long RequestCount { get { return _requestCount; } }
+        public TrafficAnalytics TrafficAnalytics { get; private set; }
 
         private long _connectionCount;
         public long ConnectionCount { get { return _connectionCount; } }
@@ -18,9 +17,9 @@ namespace Gravity.Server.DataStructures
         private long _sessionCount;
         public long SessionCount { get { return _sessionCount; } }
 
-        public void IncrementRequestCount()
+        public NodeOutput()
         {
-            Interlocked.Increment(ref _requestCount);
+            TrafficAnalytics = new TrafficAnalytics();
         }
 
         public void IncrementConnectionCount()

@@ -3,22 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Gravity.Server.DataStructures;
-using Gravity.Server.Interfaces;
+using Gravity.Server.Utility;
 using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes.LoadBalancing
 {
-    internal class StickySessionNode: INode
+    internal class StickySessionNode: LoadBalancerNode
     {
-        public string Name { get; set; }
-        public string[] Outputs { get; set; }
-        public bool Disabled { get; set; }
         public string SessionCookie { get; set; }
         public TimeSpan SessionDuration { get; set; }
-        public bool Offline { get; private set; }
-
-        public NodeOutput[] OutputNodes;
 
         private readonly Dictionary<string, NodeOutput> _sessionNodes;
         private readonly List<Tuple<string, DateTime>> _sessionExpiry;
@@ -75,42 +68,13 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
             _cleanupThread.Start();
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             _cleanupThread.Abort();
             _cleanupThread.Join(TimeSpan.FromSeconds(10));
         }
 
-        void INode.Bind(INodeGraph nodeGraph)
-        {
-            OutputNodes = Outputs.Select(name => new NodeOutput
-            {
-                Name = name,
-                Node = nodeGraph.NodeByName(name),
-            }).ToArray();
-        }
-
-        void INode.UpdateStatus()
-        {
-            var nodes = OutputNodes;
-            var offline = true;
-
-            if (!Disabled && nodes != null && !string.IsNullOrEmpty(SessionCookie))
-            {
-                for (var i = 0; i < nodes.Length; i++)
-                {
-                    var node = nodes[i];
-                    node.Disabled = node.Node == null || node.Node.Offline;
-
-                    if (!node.Disabled)
-                        offline = false;
-                }
-            }
-
-            Offline = offline;
-        }
-
-        Task INode.ProcessRequest(IOwinContext context)
+        public override Task ProcessRequest(IOwinContext context)
         {
             if (Disabled)
             {
@@ -127,6 +91,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
             }
 
             var sessionId = context.Request.Cookies[SessionCookie];
+            long startTime;
 
             if (string.IsNullOrEmpty(sessionId))
             {
@@ -143,11 +108,12 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
                     return context.Response.WriteAsync(string.Empty);
                 }
 
-                output.IncrementRequestCount();
+                startTime = output.TrafficAnalytics.BeginRequest();
                 output.IncrementConnectionCount();
 
                 return output.Node.ProcessRequest(context).ContinueWith(t =>
                 {
+                    output.TrafficAnalytics.EndRequest(startTime);
                     output.DecrementConnectionCount();
 
                     var setCookieHeaders = context.Response.Headers.FirstOrDefault(h => h.Key == "Set-Cookie");
@@ -200,11 +166,12 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
                 return context.Response.WriteAsync(string.Empty);
             }
 
-            sessionOutput.IncrementRequestCount();
+            startTime = sessionOutput.TrafficAnalytics.BeginRequest();
             sessionOutput.IncrementConnectionCount();
 
             return sessionOutput.Node.ProcessRequest(context).ContinueWith(t =>
             {
+                sessionOutput.TrafficAnalytics.EndRequest(startTime);
                 sessionOutput.DecrementConnectionCount();
             });
         }

@@ -4,8 +4,8 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Gravity.Server.DataStructures;
 using Gravity.Server.Interfaces;
+using Gravity.Server.Utility;
 using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes.Server
@@ -49,13 +49,28 @@ namespace Gravity.Server.ProcessingNodes.Server
 
             _heathCheckThread = new Thread(() =>
             {
+                var counter = 0;
                 while (true)
                 {
                     try
                     {
                         Thread.Sleep(1000);
+
                         if (!Disabled && !string.IsNullOrEmpty(Host))
                             CheckHealth();
+
+                        if (++counter == 5)
+                        {
+                            counter = 0;
+                            var ipAddresses = IpAddresses;
+                            if (ipAddresses != null)
+                            {
+                                for (var i = 0; i < ipAddresses.Length; i++)
+                                {
+                                    ipAddresses[i].TrafficAnalytics.Recalculate();
+                                }
+                            }
+                        }
                     }
                     catch (ThreadAbortException)
                     {
@@ -151,14 +166,15 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
 
             Response response;
-            ipAddress.IncrementRequestCount();
             ipAddress.IncrementConnectionCount();
+            var startTime = ipAddress.TrafficAnalytics.BeginRequest();
             try
             {
                 response = Send(request);
             }
             finally
             {
+                ipAddress.TrafficAnalytics.EndRequest(startTime);
                 ipAddress.DecrementConnectionCount();
             }
 

@@ -4,6 +4,9 @@ namespace Gravity.Server.Configuration
 {
     internal class NodeGraphConfiguration
     {
+        [JsonProperty("trafficIndicator")]
+        public TrafficIndicatorConfiguration TrafficIndicator { get; set; }
+
         [JsonProperty("cors")]
         public CorsConfiguration[] CorsNodes { get; set; }
 
@@ -44,8 +47,25 @@ namespace Gravity.Server.Configuration
             }
             else
             {
+                if (CorsNodes != null) foreach (var node in CorsNodes) node.Sanitize();
+                if (InternalNodes != null) foreach (var node in InternalNodes) node.Sanitize();
+                if (LeastConnectionsNodes != null) foreach (var node in LeastConnectionsNodes) node.Sanitize();
+                if (RoundRobinNodes != null) foreach (var node in RoundRobinNodes) node.Sanitize();
+                if (ResponseNodes != null) foreach (var node in ResponseNodes) node.Sanitize();
+                if (RouterNodes != null) foreach (var node in RouterNodes) node.Sanitize();
+                if (ServerNodes != null) foreach (var node in ServerNodes) node.Sanitize();
+                if (StickySessionNodes != null) foreach (var node in StickySessionNodes) node.Sanitize();
+                if (TransformNodes != null) foreach (var node in TransformNodes) node.Sanitize();
+
                 // Check for circular graphs
+
             }
+
+            if (TrafficIndicator == null)
+                TrafficIndicator = new TrafficIndicatorConfiguration();
+
+            TrafficIndicator.Sanitize();
+
             return this;
         }
     }

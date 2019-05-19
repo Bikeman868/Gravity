@@ -1,6 +1,17 @@
 ﻿{
     "gravity": {
+        "listener": {
+            "endpoints": [
+                { "ipAddress": "*", "port": 0, "node": "A" },
+                { "ipAddress": "192.168.3.1", "port": 80, "node": "L" },
+                { "ipAddress": "192.168.3.1", "port": 443, "node": "J" }
+            ]
+        },
         "nodeGraph": {
+            "trafficIndicator": {
+                "comment": "Traffic thresholds are in requests/min and are exclusive upper bounds",
+                "thresholds": [ 1, 20, 200, 5000 ]
+            },
             "routers": [
                 {
                     "name": "N",
@@ -31,7 +42,7 @@
             "internalEndpoints": [
                 {
                     "name": "B",
-                    "disabled":  true
+                    "disabled": false
                 }
             ],
             "roundRobin": [
@@ -41,7 +52,7 @@
                 {
                     "name": "I",
                     "disabled": false,
-                    "host": "owinframework.net" 
+                    "host": "owinframework.net"
                 },
                 {
                     "name": "M",
@@ -56,7 +67,7 @@
             "responses": [
                 {
                     "name": "D",
-                    "disabled":  true,
+                    "disabled": false,
                     "statusCode": 200,
                     "reasonPhrase": "OK",
                     "content": "Server D",
@@ -66,7 +77,7 @@
                 },
                 {
                     "name": "E",
-                    "disabled":  true,
+                    "disabled": false,
                     "statusCode": 200,
                     "reasonPhrase": "OK",
                     "content": "Server E",
@@ -85,7 +96,7 @@
                 },
                 {
                     "name": "G",
-                    "disabled":  true,
+                    "disabled": false,
                     "statusCode": 404,
                     "reasonPhrase": "Not found"
                 }
@@ -106,14 +117,14 @@
                     "disabled": false
                 }
             ],
-            "transforms": [ 
-                { "name": "A", "output": "N"},
-                { "name": "J", "output": "H"}
+            "transforms": [
+                { "name": "A", "output": "N" },
+                { "name": "J", "output": "H" }
             ]
         },
         "ui": {
             "dashboard": {
-                "listeners": { "x": 0, "y": 50, "xSpacing": 0, "ySpacing": 70 },
+                "listeners": { "x": 0, "y": 50, "xSpacing": 0, "ySpacing": 150 },
                 "nodes": [
                     { "name": "A", "x": 300, "y": 50 },
                     { "name": "B", "x": 700, "y": 80 },
@@ -122,11 +133,11 @@
                     { "name": "E", "x": 950, "y": 300 },
                     { "name": "F", "x": 950, "y": 380 },
                     { "name": "G", "x": 700, "y": 150 },
-                    { "name": "H", "x": 550, "y": 700 },
-                    { "name": "I", "x": 850, "y": 500 },
-                    { "name": "J", "x": 300, "y": 700 },
-                    { "name": "K", "x": 550, "y": 500 },
-                    { "name": "L", "x": 300, "y": 500 },
+                    { "name": "H", "x": 550, "y": 800 },
+                    { "name": "I", "x": 850, "y": 550 },
+                    { "name": "J", "x": 300, "y": 800 },
+                    { "name": "K", "x": 550, "y": 550 },
+                    { "name": "L", "x": 300, "y": 550 },
                     { "name": "M", "x": 800, "y": 830 },
                     { "name": "N", "x": 450, "y": 50 }
                 ]
@@ -134,11 +145,6 @@
         },
         "middleware": {
             "listener": {
-                "endpoints": [
-                    { "ipAddress": "*", "port": 0, "node": "A" },
-                    { "ipAddress": "192.168.3.1", "port": 80, "node": "L" },
-                    { "ipAddress": "192.168.3.1", "port": 443, "node": "J" }
-                ]
             },
             "pages": {
             },
