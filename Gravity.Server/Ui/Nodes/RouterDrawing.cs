@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Gravity.Server.Configuration;
-using Gravity.Server.ProcessingNodes;
 using Gravity.Server.ProcessingNodes.Routing;
 using Gravity.Server.Ui.Shapes;
 
@@ -50,7 +49,7 @@ namespace Gravity.Server.Ui.Nodes
                 {
                     _drawing.AddChild(new ConnectedLineDrawing(outputDrawing.TopRightSideConnection, nodeDrawing.TopLeftSideConnection)
                     {
-                        CssClass = _router.Disabled ? "connection_disabled" : "connection_light"
+                        CssClass = _router.Offline ? "connection_none" : "connection_unknown"
                     });
                 }
             }

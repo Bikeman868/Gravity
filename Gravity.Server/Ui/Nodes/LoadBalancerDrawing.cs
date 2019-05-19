@@ -1,0 +1,127 @@
+﻿using Gravity.Server.Ui.Shapes;
+using System.Collections.Generic;
+using Gravity.Server.ProcessingNodes.LoadBalancing;
+using Gravity.Server.Utility;
+
+namespace Gravity.Server.Ui.Nodes
+{
+    internal class LoadBalancerDrawing: NodeDrawing
+    {
+        private readonly DrawingElement _drawing;
+        private readonly LoadBalancerNode _loadBalancer;
+        private readonly OutputDrawing[] _outputDrawings;
+        private readonly double[] _trafficIndicatorThresholds;
+
+        public LoadBalancerDrawing(
+            DrawingElement drawing, 
+            LoadBalancerNode loadBalancer,
+            double[] trafficIndicatorThresholds,
+            string title,
+            string cssClass,
+            List<string> details,
+            bool showConnections,
+            bool showSessions,
+            bool showTraffic)
+            : base(drawing, title, cssClass, loadBalancer.Offline, 2, loadBalancer.Name)
+        {
+            _drawing = drawing;
+            _loadBalancer = loadBalancer;
+            _trafficIndicatorThresholds = trafficIndicatorThresholds;
+
+            if (details != null)
+                AddDetails(details, null, loadBalancer.Offline ? "disabled" : string.Empty);
+
+            if (loadBalancer.Offline)
+                Title.CssClass += " disabled";
+
+            if (loadBalancer.Outputs != null)
+            {
+                _outputDrawings = new OutputDrawing[loadBalancer.Outputs.Length];
+
+                for (var i = 0; i < loadBalancer.Outputs.Length; i++)
+                {
+                    var outputNodeName = loadBalancer.Outputs[i];
+                    var output = loadBalancer.OutputNodes[i];
+                    _outputDrawings[i] = new OutputDrawing(
+                        drawing, 
+                        outputNodeName, 
+                        output, 
+                        cssClass + "_output",
+                        showConnections,
+                        showSessions,
+                        showTraffic);
+                }
+
+                foreach (var outputDrawing in _outputDrawings)
+                    AddChild(outputDrawing);
+            }
+        }
+
+        public override void AddLines(IDictionary<string, NodeDrawing> nodeDrawings)
+        {
+            if (_loadBalancer.Outputs == null) return;
+
+            for (var i = 0; i < _loadBalancer.Outputs.Length; i++)
+            {
+                var outputNodeName = _loadBalancer.Outputs[i];
+                var outputNode = _loadBalancer.OutputNodes[i];
+                var outputDrawing = _outputDrawings[i];
+
+                NodeDrawing nodeDrawing;
+                if (nodeDrawings.TryGetValue(outputNodeName, out nodeDrawing))
+                {
+                    var css = "connection_none";
+
+                    if (!outputNode.Disabled)
+                    {
+                        var requestsPerMinute = outputNode.TrafficAnalytics.RequestsPerMinute;
+                        if (requestsPerMinute < _trafficIndicatorThresholds[0]) css = "connection_none";
+                        else if (requestsPerMinute < _trafficIndicatorThresholds[1]) css = "connection_light";
+                        else if (requestsPerMinute < _trafficIndicatorThresholds[2]) css = "connection_medium";
+                        else if (requestsPerMinute < _trafficIndicatorThresholds[3]) css = "connection_heavy";
+                    }
+
+                    _drawing.AddChild(new ConnectedLineDrawing(outputDrawing.TopRightSideConnection, nodeDrawing.TopLeftSideConnection)
+                    {
+                        CssClass = css
+                    });
+                }
+            }
+        }
+
+        private class OutputDrawing : NodeDrawing
+        {
+            public OutputDrawing(
+                DrawingElement drawing,
+                string label,
+                NodeOutput output,
+                string cssClass,
+                bool showConnections,
+                bool showSessions,
+                bool showTraffic)
+                : base(drawing, "Output", cssClass, output == null || output.Disabled, 3, label)
+            {
+                if (output != null)
+                {
+                    var details = new List<string>();
+
+                    if (showTraffic)
+                    {
+                        details.Add(output.TrafficAnalytics.LifetimeRequestCount + " requests");
+                        details.Add(output.TrafficAnalytics.RequestTime.TotalMilliseconds.ToString("n2") + " ms");
+                        details.Add(output.TrafficAnalytics.RequestsPerMinute.ToString("n2") + " /min");
+                    }
+
+                    if (showConnections)
+                        details.Add(output.ConnectionCount + " connections");
+
+                    if (showSessions)
+                        details.Add(output.SessionCount + " sessions");
+
+                    if (details.Count > 0)
+                        AddDetails(details, null, output.Disabled ? "disabled" : string.Empty);
+                }
+            }
+        }
+    }
+}

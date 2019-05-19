@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Gravity.Server.ProcessingNodes;
 using Gravity.Server.ProcessingNodes.Transform;
 using Gravity.Server.Ui.Shapes;
 
@@ -29,7 +28,7 @@ namespace Gravity.Server.Ui.Nodes
             {
                 _drawing.AddChild(new ConnectedLineDrawing(TopRightSideConnection, nodeDrawing.TopLeftSideConnection)
                 {
-                    CssClass = _transform.Disabled ? "connection_disabled" : "connection_light"
+                    CssClass = _transform.Offline ? "connection_none" : "connection_unknown"
                 });
             }
         }

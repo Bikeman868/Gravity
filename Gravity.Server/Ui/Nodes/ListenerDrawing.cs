@@ -8,14 +8,17 @@ namespace Gravity.Server.Ui.Nodes
     {
         private readonly DrawingElement _drawing;
         private readonly ListenerEndpointConfiguration _listener;
+        private readonly double[] _trafficIndicatorThresholds;
 
         public ListenerDrawing(
             DrawingElement drawing, 
-            ListenerEndpointConfiguration listener)
+            ListenerEndpointConfiguration listener,
+            double[] trafficIndicatorThresholds)
             : base(drawing, "Listener " + listener.IpAddress + ":" + listener.PortNumber, "listener", listener.Disabled)
         {
             _drawing = drawing;
             _listener = listener;
+            _trafficIndicatorThresholds = trafficIndicatorThresholds;
 
             var details = new List<string>();
 
@@ -36,9 +39,20 @@ namespace Gravity.Server.Ui.Nodes
             NodeDrawing nodeDrawing;
             if (nodeDrawings.TryGetValue(_listener.NodeName, out nodeDrawing))
             {
+                var css = "connection_none";
+
+                if (!_listener.Disabled && _listener.ProcessingNode != null)
+                {
+                    var requestsPerMinute = _listener.ProcessingNode.TrafficAnalytics.RequestsPerMinute;
+                    if (requestsPerMinute < _trafficIndicatorThresholds[0]) css = "connection_none";
+                    else if (requestsPerMinute < _trafficIndicatorThresholds[1]) css = "connection_light";
+                    else if (requestsPerMinute < _trafficIndicatorThresholds[2]) css = "connection_medium";
+                    else if (requestsPerMinute < _trafficIndicatorThresholds[3]) css = "connection_heavy";
+                }
+
                 _drawing.AddChild(new ConnectedLineDrawing(TopRightSideConnection, nodeDrawing.TopLeftSideConnection)
                 {
-                    CssClass = _listener.Disabled ? "connection_disabled" : "connection_light"
+                    CssClass = css
                 });
             }
         }

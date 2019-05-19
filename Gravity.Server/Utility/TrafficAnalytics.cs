@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Web;
 
 namespace Gravity.Server.Utility
 {
@@ -62,7 +61,7 @@ namespace Gravity.Server.Utility
                 if (currentInterval.RequestCount > 0)
                 {
                     currentInterval.StartTicks = requests[0].Item1;
-                    currentInterval.EndTicks = requests[currentInterval.RequestCount - 1].Item2;
+                    currentInterval.EndTicks = requests[requests.Count - 1].Item2;
                     currentInterval.ElapsedSum = requests.Sum(request => request.Item2 - request.Item1);
                 }
             }
@@ -72,10 +71,12 @@ namespace Gravity.Server.Utility
 
             var requestCount = _intervals.Sum(i => i.RequestCount);
             var tickCount =  _intervals.Sum(i => i.ElapsedSum);
-            var elapsedTicks = _intervals[_intervals.Count - 1].EndTicks - _intervals[0].StartTicks;
+
+            var firstInterval = _intervals.FirstOrDefault(i => i.RequestCount > 0);
+            var elapsedTicks = firstInterval == null ? 0 : Timer.TimeNow - firstInterval.StartTicks;
             var elapsedSeconds = Timer.TicksToSeconds(elapsedTicks);
 
-            Interlocked.Exchange(ref _ticksPerRequest, requestCount > 0 ? tickCount / requestCount : 0L);
+            _ticksPerRequest = requestCount > 0 ? tickCount / requestCount : 0L;
             _requestsPerMinute = elapsedSeconds > 0 ? 60 * requestCount / elapsedSeconds : 0;
         }
 

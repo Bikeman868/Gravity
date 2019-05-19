@@ -1,5 +1,4 @@
-﻿using Gravity.Server.Utility;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace Gravity.Server.Configuration
 {

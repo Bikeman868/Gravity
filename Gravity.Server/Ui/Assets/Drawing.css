@@ -75,7 +75,8 @@ g.button > text { stroke:#ffffff; fill:#ffffff; }
 
 g.list  >  rect { stroke:#808080; fill:#F5F5DC; opacity:0.8; }
 
-line.connection_disabled { stroke-width: 1.0; stroke: #ff0066; }
+line.connection_unknown { stroke-width: 0.9; stroke: #000000; }
+line.connection_none { stroke-width: 0.8; stroke: #ff0066; }
 line.connection_light { stroke-width: 0.9; stroke: #009900; }
 line.connection_medium { stroke-width: 1.6; stroke: #009900; }
 line.connection_heavy { stroke-width: 2.8; stroke: #009900; }

@@ -4,9 +4,6 @@ namespace Gravity.Server.Configuration
 {
     internal class NodeGraphConfiguration
     {
-        [JsonProperty("trafficIndicator")]
-        public TrafficIndicatorConfiguration TrafficIndicator { get; set; }
-
         [JsonProperty("cors")]
         public CorsConfiguration[] CorsNodes { get; set; }
 
@@ -60,11 +57,6 @@ namespace Gravity.Server.Configuration
                 // Check for circular graphs
 
             }
-
-            if (TrafficIndicator == null)
-                TrafficIndicator = new TrafficIndicatorConfiguration();
-
-            TrafficIndicator.Sanitize();
 
             return this;
         }

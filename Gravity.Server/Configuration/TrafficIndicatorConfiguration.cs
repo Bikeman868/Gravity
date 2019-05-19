@@ -1,5 +1,4 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace Gravity.Server.Configuration
 {
@@ -9,12 +8,12 @@ namespace Gravity.Server.Configuration
         /// The requests/min at which the lines go the next thickness
         /// </summary>
         [JsonProperty("thresholds")]
-        public float[] Thresholds { get; set; }
+        public double[] Thresholds { get; set; }
 
         public void Sanitize()
         {
             if (Thresholds == null || Thresholds.Length != 4)
-                Thresholds = new[]{ 1f, 5f, 50f, 200f };
+                Thresholds = new[]{ 1d, 5d, 50d, 200d };
         }
     }
 }

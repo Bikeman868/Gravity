@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Gravity.Server.ProcessingNodes;
 using Gravity.Server.ProcessingNodes.SpecialPurpose;
 using Gravity.Server.Ui.Shapes;
 
@@ -48,7 +47,7 @@ namespace Gravity.Server.Ui.Nodes
             {
                 _drawing.AddChild(new ConnectedLineDrawing(TopRightSideConnection, nodeDrawing.TopLeftSideConnection)
                 {
-                    CssClass = _corsNode.Disabled ? "connection_disabled" : "connection_light"
+                    CssClass = _corsNode.Offline ? "connection_none" : "connection_unknown"
                 });
             }
         }

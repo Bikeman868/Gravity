@@ -11,6 +11,9 @@ namespace Gravity.Server.Configuration
         [JsonProperty("nodes")]
         public NodeConfiguration[] Nodes { get; set; }
 
+        [JsonProperty("trafficIndicator")]
+        public TrafficIndicatorConfiguration TrafficIndicator { get; set; }
+
         public DashboardConfiguration Sanitize()
         {
             if (Nodes == null)
@@ -39,6 +42,10 @@ namespace Gravity.Server.Configuration
 
                 Nodes = nodes.ToArray();
             }
+
+            if (TrafficIndicator == null)
+                TrafficIndicator = new TrafficIndicatorConfiguration();
+            TrafficIndicator.Sanitize();
 
             return this;
         }

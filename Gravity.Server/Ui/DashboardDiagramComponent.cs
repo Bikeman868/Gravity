@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Gravity.Server.Configuration;
 using Gravity.Server.Interfaces;
-using Gravity.Server.ProcessingNodes;
 using Gravity.Server.ProcessingNodes.LoadBalancing;
 using Gravity.Server.ProcessingNodes.Routing;
 using Gravity.Server.ProcessingNodes.Server;
@@ -13,7 +12,6 @@ using Gravity.Server.Ui.Nodes;
 using Gravity.Server.Ui.Shapes;
 using OwinFramework.Interfaces.Builder;
 using OwinFramework.Pages.Core.Attributes;
-using OwinFramework.Pages.Core.Enums;
 using OwinFramework.Pages.Core.Interfaces.Builder;
 using OwinFramework.Pages.Core.Interfaces.Runtime;
 
@@ -90,7 +88,10 @@ namespace Gravity.Server.Ui
 
                     foreach (var endpoint in endpoints)
                     {
-                        var listenerDrawing = new ListenerDrawing(this, endpoint)
+                        var listenerDrawing = new ListenerDrawing(
+                            this, 
+                            endpoint, 
+                            dashboardConfiguration.TrafficIndicator.Thresholds)
                         {
                             Left = x,
                             Top = y,
@@ -125,12 +126,12 @@ namespace Gravity.Server.Ui
 
                         if (internalRequest != null) nodeDrawing = new InternalRequestDrawing(this, internalRequest);
                         else if (response != null) nodeDrawing = new ResponseDrawing(this, response);
-                        else if (roundRobin != null) nodeDrawing = new RoundRobinDrawing(this, roundRobin);
+                        else if (roundRobin != null) nodeDrawing = new RoundRobinDrawing(this, roundRobin, dashboardConfiguration.TrafficIndicator.Thresholds);
                         else if (router != null) nodeDrawing = new RouterDrawing(this, router);
                         else if (server != null) nodeDrawing = new ServerDrawing(this, server);
-                        else if (stickySession != null) nodeDrawing = new StickySessionDrawing(this, stickySession);
+                        else if (stickySession != null) nodeDrawing = new StickySessionDrawing(this, stickySession, dashboardConfiguration.TrafficIndicator.Thresholds);
                         else if (transform != null) nodeDrawing = new TransformDrawing(this, transform);
-                        else if (leastConnections != null) nodeDrawing = new LeastConnectionsDrawing(this, leastConnections);
+                        else if (leastConnections != null) nodeDrawing = new LeastConnectionsDrawing(this, leastConnections, dashboardConfiguration.TrafficIndicator.Thresholds);
                         else if (cors != null) nodeDrawing = new CorsDrawing(this, cors);
                         else nodeDrawing = new NodeDrawing(this, node.Name, "", true);
 

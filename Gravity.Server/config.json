@@ -8,10 +8,6 @@
             ]
         },
         "nodeGraph": {
-            "trafficIndicator": {
-                "comment": "Traffic thresholds are in requests/min and are exclusive upper bounds",
-                "thresholds": [ 1, 20, 200, 5000 ]
-            },
             "routers": [
                 {
                     "name": "N",
@@ -125,6 +121,10 @@
         "ui": {
             "dashboard": {
                 "listeners": { "x": 0, "y": 50, "xSpacing": 0, "ySpacing": 150 },
+                "trafficIndicator": {
+                    "comment": "Traffic thresholds are in requests/min and are exclusive upper bounds",
+                    "thresholds": [ 1, 20, 200, 5000 ]
+                },
                 "nodes": [
                     { "name": "A", "x": 300, "y": 50 },
                     { "name": "B", "x": 700, "y": 80 },
