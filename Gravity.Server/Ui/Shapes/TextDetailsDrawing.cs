@@ -2,10 +2,14 @@ namespace Gravity.Server.Ui.Shapes
 {
     internal class TextDetailsDrawing : TextDrawing
     {
-        public TextDetailsDrawing()
+        public TextDetailsDrawing(string cssClasses)
         {
-            CssClass = "details";
             TextSize = 9f / 12f;
+
+            if (string.IsNullOrEmpty(cssClasses))
+                CssClass = "details";
+            else
+                CssClass += "details " + cssClasses;
         }
     }
 }

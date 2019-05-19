@@ -21,7 +21,7 @@ namespace Gravity.Server.Ui.Nodes
             _drawing = drawing;
             _router = router;
 
-            SetCssClass(router.Disabled ? "disabled" : "router");
+            SetCssClass("router", router.Disabled);
 
             var details = new List<string>();
 
@@ -35,7 +35,7 @@ namespace Gravity.Server.Ui.Nodes
                     AddChild(outputDrawing);
             }
 
-            AddDetails(details);
+            AddDetails(details, null, router.Disabled ? "disabled" : string.Empty);
         }
 
         public override void AddLines(IDictionary<string, NodeDrawing> nodeDrawings)

@@ -15,7 +15,7 @@ namespace Gravity.Server.Ui.Nodes
             ServerNode server) 
             : base(drawing, "Server", 2, server.Name)
         {
-            SetCssClass(server.Disabled ? "disabled" : (server.Healthy == false ? "server_unhealthy" : "server_healthy" ));
+            SetCssClass(server.Healthy == false ? "server_unhealthy" : "server_healthy", server.Disabled);
             
             var ipAddresses = server.IpAddresses;
 
@@ -44,7 +44,7 @@ namespace Gravity.Server.Ui.Nodes
                 (server.HealthCheckPort == 80 ? "" : ":" + server.HealthCheckPort) + 
                 server.HealthCheckPath);
 
-            AddDetails(details);
+            AddDetails(details, null, server.Disabled ? "disabled" : string.Empty);
 
             if (ipAddresses != null)
             {

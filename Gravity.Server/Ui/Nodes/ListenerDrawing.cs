@@ -17,7 +17,7 @@ namespace Gravity.Server.Ui.Nodes
             _drawing = drawing;
             _listener = listener;
 
-            SetCssClass(listener.Disabled ? "disabled" : "listener");
+            SetCssClass("listener", listener.Disabled);
 
             var details = new List<string>();
 
@@ -26,7 +26,7 @@ namespace Gravity.Server.Ui.Nodes
             if (listener.ProcessingNode != null)
                 details.Add(listener.ProcessingNode.RequestCount + " requests");
 
-            AddDetails(details);
+            AddDetails(details, null, listener.Disabled ? "disabled" : string.Empty);
         }
 
         public override void AddLines(IDictionary<string, NodeDrawing> nodeDrawings)

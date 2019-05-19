@@ -12,7 +12,7 @@ namespace Gravity.Server.Ui.Nodes
             ResponseNode response) 
             : base(drawing, "Response", 2, response.Name)
         {
-            SetCssClass(response.Disabled ? "disabled" : "responder");
+            SetCssClass("responder", response.Disabled);
 
             var details = new List<string>();
 
@@ -31,7 +31,7 @@ namespace Gravity.Server.Ui.Nodes
             else if (!string.IsNullOrWhiteSpace(response.Content))
                 details.Add(response.Content);
 
-            AddDetails(details);
+            AddDetails(details, null, response.Disabled ? "disabled" : string.Empty);
         }
     }
 }

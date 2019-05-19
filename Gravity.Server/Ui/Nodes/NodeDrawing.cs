@@ -14,6 +14,7 @@ namespace Gravity.Server.Ui.Nodes
         protected readonly DrawingElement Header;
         protected readonly DrawingElement Title;
         protected readonly DrawingElement Label;
+        protected readonly TextDrawing LabelText;
         protected SvgUnit ChildSpacing;
 
         public NodeDrawing(
@@ -54,7 +55,7 @@ namespace Gravity.Server.Ui.Nodes
                     FixedSize = true,
                 };
 
-                var labelText = new TextDrawing
+                LabelText = new TextDrawing
                 {
                     Text = new[] {label}, 
                     CssClass = "label"
@@ -66,10 +67,10 @@ namespace Gravity.Server.Ui.Nodes
                     Label.Height = 16;
                     Label.TopMargin = 3;
                     Label.LeftMargin = 2;
-                    labelText.TextSize = 9f / 12f;
+                    LabelText.TextSize = 9f / 12f;
                 }
-                
-                Label.AddChild(labelText);
+
+                Label.AddChild(LabelText);
                 Header.AddChild(Label);
             }
             else
@@ -112,10 +113,21 @@ namespace Gravity.Server.Ui.Nodes
             ConnectionPoints = new[] { TopLeftSideConnection, TopRightSideConnection, BottomMiddleConnection };
         }
 
-        protected void SetCssClass(string cssClass)
+        protected void SetCssClass(string cssClass, bool disabled)
         {
-            CssClass = cssClass;
-            if (Header != null) Header.CssClass = cssClass;
+            if (disabled)
+            {
+                CssClass = cssClass + " disabled";
+                if (Label != null) Label.CssClass += " disabled";
+                if (LabelText != null) LabelText.CssClass += " disabled";
+                if (Title != null) Title.CssClass += " disabled";
+            }
+            else
+            {
+                CssClass = cssClass;
+            }
+
+            if (Header != null) Header.CssClass = CssClass;
         }
 
         protected PopupBoxDrawing AddHeaderButton(DrawingElement page, string caption)
@@ -130,12 +142,15 @@ namespace Gravity.Server.Ui.Nodes
             ArrangeChildrenVertically(ChildSpacing);
         }
 
-        protected void AddDetails(List<string> details, DrawingElement parent = null)
+        protected void AddDetails(List<string> details, DrawingElement parent = null, string cssClasses = null)
         {
             if (details.Count > 0)
             {
                 parent = parent ?? this;
-                parent.AddChild(new TextDetailsDrawing { Text = details.ToArray() });
+                parent.AddChild(new TextDetailsDrawing(cssClasses)
+                {
+                    Text = details.ToArray()
+                });
             }
         }
 

@@ -5,11 +5,14 @@ namespace Gravity.Server.Ui.Shapes
 {
     internal class TitledListDrawing : TitledDrawing
     {
-        public TitledListDrawing(string title, IEnumerable<string> list, int headingLevel = 3)
+        public TitledListDrawing(string title, IEnumerable<string> list, int headingLevel = 3, string cssClasses = null)
             : base(title, headingLevel)
         {
             CssClass = "list";
-            AddChild(new TextDetailsDrawing { Text = list.ToArray() });
+            AddChild(new TextDetailsDrawing(cssClasses)
+            {
+                Text = list.ToArray()
+            });
         }
 
         protected override void ArrangeChildren()

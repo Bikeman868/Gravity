@@ -21,7 +21,10 @@ namespace Gravity.Server.Ui.Nodes
             _drawing = drawing;
             _roundRobbin = roundRobbin;
 
-            SetCssClass(roundRobbin.Disabled ? "disabled" : "round_robbin");
+            SetCssClass("round_robbin", roundRobbin.Disabled);
+
+            if (roundRobbin.Disabled)
+                Title.CssClass += " disabled";
 
             if (roundRobbin.Outputs != null)
             {
@@ -67,18 +70,17 @@ namespace Gravity.Server.Ui.Nodes
                 NodeOutput output)
                 : base(drawing, "Output", 3, label)
             {
-                CssClass = "round_robbin_output";
-
-                var details = new List<string>();
+                SetCssClass("round_robbin_output", output == null || output.Disabled);
 
                 if (output != null)
                 {
-                    if (output.Disabled) details.Add("Disabled");
+                    var details = new List<string>();
+
                     details.Add(output.RequestCount + " requests");
                     details.Add(output.ConnectionCount + " connections");
-                }
 
-                AddDetails(details);
+                    AddDetails(details, null, output.Disabled ? "disabled" : string.Empty);
+                }
             }
         }
     }

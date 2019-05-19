@@ -21,14 +21,14 @@ namespace Gravity.Server.Ui.Nodes
             _drawing = drawing;
             _stickySession = stickySession;
             
-            SetCssClass(stickySession.Disabled ? "disabled" : "sticky_session");
+            SetCssClass("sticky_session", stickySession.Disabled);
 
             var details = new List<string>();
 
             details.Add("Cookie: " + stickySession.SessionCookie);
             details.Add("Lifetime: " + stickySession.SessionDuration);
 
-            AddDetails(details);
+            AddDetails(details, null, stickySession.Disabled ? "disabled" : string.Empty);
 
             if (stickySession.Outputs != null)
             {
@@ -74,19 +74,18 @@ namespace Gravity.Server.Ui.Nodes
                 NodeOutput output)
                 : base(drawing, "Output", 3, label)
             {
-                CssClass = "sticky_session_output";
-
-                var details = new List<string>();
+                SetCssClass("sticky_session_output", output == null || output.Disabled);
 
                 if (output != null)
                 {
-                    if (output.Disabled) details.Add("Disabled");
+                    var details = new List<string>();
+
                     details.Add(output.SessionCount + " sessions");
                     details.Add(output.RequestCount + " requests");
                     details.Add(output.ConnectionCount + " connections");
-                }
 
-                AddDetails(details);
+                    AddDetails(details, null, output.Disabled ? "disabled" : string.Empty);
+                }
             }
         }
     }

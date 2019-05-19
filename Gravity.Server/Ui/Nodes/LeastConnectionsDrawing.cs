@@ -21,7 +21,7 @@ namespace Gravity.Server.Ui.Nodes
             _drawing = drawing;
             _leastConnections = leastConnections;
             
-            SetCssClass(leastConnections.Disabled ? "disabled" : "least_connections");
+            SetCssClass("least_connections", leastConnections.Disabled);
 
             if (leastConnections.Outputs != null)
             {
@@ -67,18 +67,17 @@ namespace Gravity.Server.Ui.Nodes
                 NodeOutput output)
                 : base(drawing, "Output", 3, label)
             {
-                CssClass = "least_connections_output";
-
-                var details = new List<string>();
+                SetCssClass("least_connections_output", output == null || output.Disabled);
 
                 if (output != null)
                 {
-                    if (output.Disabled) details.Add("Disabled");
+                    var details = new List<string>();
+
                     details.Add(output.RequestCount + " requests");
                     details.Add(output.ConnectionCount + " connections");
-                }
 
-                AddDetails(details);
+                    AddDetails(details, null, output.Disabled ? "disabled" : string.Empty);
+                }
             }
         }
     }
