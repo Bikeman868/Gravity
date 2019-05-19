@@ -16,13 +16,11 @@ namespace Gravity.Server.Ui.Nodes
         public StickySessionDrawing(
             DrawingElement drawing, 
             StickySessionNode stickySession) 
-            : base(drawing, "Sticky session", 2, stickySession.Name)
+            : base(drawing, "Sticky session", "sticky_session", stickySession.Offline, 2, stickySession.Name)
         {
             _drawing = drawing;
             _stickySession = stickySession;
             
-            SetCssClass("sticky_session", stickySession.Offline);
-
             var details = new List<string>();
 
             details.Add("Cookie: " + stickySession.SessionCookie);
@@ -72,10 +70,8 @@ namespace Gravity.Server.Ui.Nodes
                 DrawingElement drawing,
                 string label,
                 NodeOutput output)
-                : base(drawing, "Output", 3, label)
+                : base(drawing, "Output", "sticky_session_output", output == null || output.Disabled, 3, label)
             {
-                SetCssClass("sticky_session_output", output == null || output.Disabled);
-
                 if (output != null)
                 {
                     var details = new List<string>();

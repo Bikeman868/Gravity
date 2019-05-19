@@ -13,12 +13,8 @@ g.details > text { font-size: 9px; }
 g.drawing > rect { stroke:#676798; fill:#ffffff; opacity: 0; }
 g.drawing > text { stroke:#000000; fill:#000000; }
 
-g.disabled > rect { stroke:#d0d0d0; fill:#fefefe; opacity: 0.6; }
-g.disabled > text { stroke:#d0d0d0; fill:#d0d0d0; }
-
 g.label > rect { stroke:#808080; fill:#fcfcfc; opacity: 0.6; }
 g.label > text { stroke:#808080; fill:#808080; }
-
 
 g.listener > rect { stroke:#009900; fill:#e6ffe6; }
 g.listener > text { stroke:#000000; fill:#000000; }
@@ -83,3 +79,6 @@ line.connection_disabled { stroke-width: 1.0; stroke: #ff0066; }
 line.connection_light { stroke-width: 0.9; stroke: #009900; }
 line.connection_medium { stroke-width: 1.6; stroke: #009900; }
 line.connection_heavy { stroke-width: 2.8; stroke: #009900; }
+
+g.disabled > rect { stroke:#d0d0d0; fill:#fefefe; opacity: 0.6; }
+g.disabled > text { stroke:#d0d0d0; fill:#d0d0d0; }

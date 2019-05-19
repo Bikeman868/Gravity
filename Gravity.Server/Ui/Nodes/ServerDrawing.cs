@@ -13,10 +13,8 @@ namespace Gravity.Server.Ui.Nodes
         public ServerDrawing(
             DrawingElement drawing, 
             ServerNode server) 
-            : base(drawing, "Server", 2, server.Name)
+            : base(drawing, "Server", server.Healthy == false ? "server_unhealthy" : "server_healthy", server.Disabled, 2, server.Name)
         {
-            SetCssClass(server.Healthy == false ? "server_unhealthy" : "server_healthy", server.Disabled);
-            
             var ipAddresses = server.IpAddresses;
 
             var details = new List<string>();
@@ -90,10 +88,8 @@ namespace Gravity.Server.Ui.Nodes
                 DrawingElement drawing,
                 string label,
                 ServerIpAddress ipAddress)
-                : base(drawing, ipAddress.Address.ToString(), 3)
+                : base(drawing, ipAddress.Address.ToString(), ipAddress.Healthy == false ? "server_ip_address_unhealthy": "server_ip_address_healthy", false, 3)
             {
-                SetCssClass(ipAddress.Healthy == false ? "server_ip_address_unhealthy": "server_ip_address_healthy", false);
-
                 var details = new List<string>();
 
                 if (ipAddress.Healthy.HasValue)

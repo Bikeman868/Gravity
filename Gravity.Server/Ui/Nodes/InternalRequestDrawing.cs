@@ -9,9 +9,8 @@ namespace Gravity.Server.Ui.Nodes
         public InternalRequestDrawing(
             DrawingElement drawing, 
             InternalNode internalRequest) 
-            : base(drawing, "Internal", 2, internalRequest.Name)
+            : base(drawing, "Internal", "internal", internalRequest.Offline, 2, internalRequest.Name)
         {
-            SetCssClass("internal", internalRequest.Offline);
         }
     }
 }

@@ -16,13 +16,11 @@ namespace Gravity.Server.Ui.Nodes
         public LeastConnectionsDrawing(
             DrawingElement drawing, 
             LeastConnectionsNode leastConnections) 
-            : base(drawing, "Least connections", 2, leastConnections.Name)
+            : base(drawing, "Least connections", "least_connections", leastConnections.Offline, 2, leastConnections.Name)
         {
             _drawing = drawing;
             _leastConnections = leastConnections;
             
-            SetCssClass("least_connections", leastConnections.Offline);
-
             if (leastConnections.Outputs != null)
             {
                 _outputDrawings = new OutputDrawing[leastConnections.Outputs.Length];
@@ -65,10 +63,8 @@ namespace Gravity.Server.Ui.Nodes
                 DrawingElement drawing,
                 string label,
                 NodeOutput output)
-                : base(drawing, "Output", 3, label)
+                : base(drawing, "Output", "least_connections_output", output == null || output.Disabled, 3, label)
             {
-                SetCssClass("least_connections_output", output == null || output.Disabled);
-
                 if (output != null)
                 {
                     var details = new List<string>();

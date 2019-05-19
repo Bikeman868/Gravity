@@ -16,12 +16,10 @@ namespace Gravity.Server.Ui.Nodes
         public RouterDrawing(
             DrawingElement drawing, 
             RoutingNode router) 
-            : base(drawing, "Router", 2, router.Name)
+            : base(drawing, "Router", "router", router.Offline, 2, router.Name)
         {
             _drawing = drawing;
             _router = router;
-
-            SetCssClass("router", router.Offline);
 
             var details = new List<string>();
 
@@ -65,10 +63,8 @@ namespace Gravity.Server.Ui.Nodes
                 RouterOutputConfiguration routerOutput,
                 string label,
                 bool disabled)
-                : base(drawing, "Output", 3, label)
+                : base(drawing, "Output", "router_output", disabled, 3, label)
             {
-                SetCssClass("router_output", disabled);
-
                 var details = new List<string>();
 
                 if (routerOutput.Rules != null && routerOutput.Rules.Length > 0)

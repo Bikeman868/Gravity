@@ -10,10 +10,8 @@ namespace Gravity.Server.Ui.Nodes
         public ResponseDrawing(
             DrawingElement drawing, 
             ResponseNode response) 
-            : base(drawing, "Response", 2, response.Name)
+            : base(drawing, "Response", "responder", response.Offline, 2, response.Name)
         {
-            SetCssClass("responder", response.Offline);
-
             var details = new List<string>();
 
             details.Add(response.StatusCode + " " + response.ReasonPhrase);

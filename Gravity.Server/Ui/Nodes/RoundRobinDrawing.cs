@@ -16,12 +16,10 @@ namespace Gravity.Server.Ui.Nodes
         public RoundRobbinDrawing(
             DrawingElement drawing, 
             RoundRobinNode roundRobbin) 
-            : base(drawing, "Round robin", 2, roundRobbin.Name)
+            : base(drawing, "Round robin", "round_robbin", roundRobbin.Offline, 2, roundRobbin.Name)
         {
             _drawing = drawing;
             _roundRobbin = roundRobbin;
-
-            SetCssClass("round_robbin", roundRobbin.Offline);
 
             if (roundRobbin.Disabled)
                 Title.CssClass += " disabled";
@@ -68,10 +66,8 @@ namespace Gravity.Server.Ui.Nodes
                 DrawingElement drawing,
                 string label,
                 NodeOutput output)
-                : base(drawing, "Output", 3, label)
+                : base(drawing, "Output", "round_robbin_output", output == null || output.Disabled, 3, label)
             {
-                SetCssClass("round_robbin_output", output == null || output.Disabled);
-
                 if (output != null)
                 {
                     var details = new List<string>();

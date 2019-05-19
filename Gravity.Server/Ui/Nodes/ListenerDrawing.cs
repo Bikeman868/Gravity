@@ -12,12 +12,10 @@ namespace Gravity.Server.Ui.Nodes
         public ListenerDrawing(
             DrawingElement drawing, 
             ListenerEndpointConfiguration listener)
-            : base(drawing, "Listener " + listener.IpAddress + ":" + listener.PortNumber)
+            : base(drawing, "Listener " + listener.IpAddress + ":" + listener.PortNumber, "listener", listener.Disabled)
         {
             _drawing = drawing;
             _listener = listener;
-
-            SetCssClass("listener", listener.Disabled);
 
             var details = new List<string>();
 

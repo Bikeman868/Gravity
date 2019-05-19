@@ -76,14 +76,12 @@ namespace Gravity.Server.Ui
                     DashboardConfiguration dashboardConfiguration,
                     ListenerConfiguration listenerConfiguration,
                     INode[] nodes)
-                : base(null, "Dashboard", 1)
+                : base(null, "Dashboard", "drawing", false, 1)
             {
                 LeftMargin = 20;
                 RightMargin = 20;
                 TopMargin = 20;
                 BottomMargin = 20;
-
-                SetCssClass("drawing", false);
 
                 var listenerDrawings = new List<ListenerDrawing>();
                 var nodeDrawings = new Dictionary<string, NodeDrawing>(StringComparer.OrdinalIgnoreCase);
@@ -137,7 +135,7 @@ namespace Gravity.Server.Ui
                         else if (transform != null) nodeDrawing = new TransformDrawing(this, transform);
                         else if (leastConnections != null) nodeDrawing = new LeastConnectionsDrawing(this, leastConnections);
                         else if (cors != null) nodeDrawing = new CorsDrawing(this, cors);
-                        else nodeDrawing = new NodeDrawing(this, node.Name);
+                        else nodeDrawing = new NodeDrawing(this, node.Name, "", true);
 
                         var nodeName = node.Name;
                         var nodeDrawingConfig = dashboardConfiguration.Nodes.FirstOrDefault(n => n.NodeName == nodeName);

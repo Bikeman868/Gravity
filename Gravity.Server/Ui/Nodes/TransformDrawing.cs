@@ -13,12 +13,10 @@ namespace Gravity.Server.Ui.Nodes
         public TransformDrawing(
             DrawingElement drawing, 
             TransformNode transform) 
-            : base(drawing, "Transform", 2, transform.Name)
+            : base(drawing, "Transform", "transform", transform.Offline, 2, transform.Name)
         {
             _drawing = drawing;
             _transform = transform;
-
-            SetCssClass("transform", transform.Offline);
         }
 
         public override void AddLines(IDictionary<string, NodeDrawing> nodeDrawings)

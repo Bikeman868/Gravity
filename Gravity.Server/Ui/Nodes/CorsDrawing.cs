@@ -13,12 +13,10 @@ namespace Gravity.Server.Ui.Nodes
         public CorsDrawing(
             DrawingElement drawing, 
             CorsNode corsNode) 
-            : base(drawing, "CORS/CORB", 2, corsNode.Name)
+            : base(drawing, "CORS/CORB", "cors", corsNode.Offline, 2, corsNode.Name)
         {
             _drawing = drawing;
             _corsNode = corsNode;
-
-            SetCssClass("cors", corsNode.Offline);
 
             var details = new List<string>();
 

@@ -20,11 +20,15 @@ namespace Gravity.Server.Ui.Nodes
         public NodeDrawing(
             DrawingElement drawing, 
             string title, 
+            string cssClass,
+            bool disabled,
             int headingLevel = 2,
             string label = null)
         {
             CornerRadius = 3f;
             ChildSpacing = 5f;
+
+            CssClass = disabled ? "disabled " + cssClass : cssClass;
 
             AddChild(new SpacerDrawing(15, 20));
 
@@ -36,7 +40,8 @@ namespace Gravity.Server.Ui.Nodes
                 BottomMargin = 0,
                 Left = 0,
                 Top = 0,
-                FixedPosition = true
+                FixedPosition = true,
+                CssClass = CssClass
             };
             AddChild(Header);
 
@@ -44,7 +49,7 @@ namespace Gravity.Server.Ui.Nodes
             {
                 Label = new RectangleDrawing
                 {
-                    CssClass = "label",
+                    CssClass = disabled ? "disabled label" : "label",
                     CornerRadius = CornerRadius,
                     LeftMargin = 3,
                     TopMargin = 3,
@@ -58,7 +63,7 @@ namespace Gravity.Server.Ui.Nodes
                 LabelText = new TextDrawing
                 {
                     Text = new[] {label}, 
-                    CssClass = "label"
+                    CssClass = disabled ? "disabled label" : "label"
                 };
 
                 if (headingLevel == 3)
@@ -83,6 +88,8 @@ namespace Gravity.Server.Ui.Nodes
                 Text = new[] { title }
             }
             .HeadingLevel(headingLevel);
+
+            if (disabled) Title.CssClass = "disabled " + Title.CssClass;
 
             Header.AddChild(Title);
 
@@ -111,23 +118,6 @@ namespace Gravity.Server.Ui.Nodes
             });
 
             ConnectionPoints = new[] { TopLeftSideConnection, TopRightSideConnection, BottomMiddleConnection };
-        }
-
-        protected void SetCssClass(string cssClass, bool disabled)
-        {
-            if (disabled)
-            {
-                CssClass = cssClass + " disabled";
-                if (Label != null) Label.CssClass += " disabled";
-                if (LabelText != null) LabelText.CssClass += " disabled";
-                if (Title != null) Title.CssClass += " disabled";
-            }
-            else
-            {
-                CssClass = cssClass;
-            }
-
-            if (Header != null) Header.CssClass = CssClass;
         }
 
         protected PopupBoxDrawing AddHeaderButton(DrawingElement page, string caption)
