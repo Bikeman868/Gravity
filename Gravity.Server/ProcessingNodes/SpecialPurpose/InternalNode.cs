@@ -8,7 +8,7 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
     {
         public string Name { get; set; }
         public bool Disabled { get; set; }
-        public bool Available { get { return !Disabled; } }
+        public bool Offline { get { return Disabled; } }
 
         public void Dispose()
         {
@@ -18,7 +18,7 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
         {
         }
 
-        void INode.UpdateAvailability()
+        void INode.UpdateStatus()
         {
         }
 

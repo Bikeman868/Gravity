@@ -26,7 +26,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         public bool? Healthy { get; private set; }
         public string UnhealthyReason { get; private set; }
-        public bool Available { get; private set; }
+        public bool Offline { get; private set; }
 
         public ServerIpAddress[] IpAddresses;
         private readonly Dictionary<IPEndPoint, ConnectionPool> _endpoints;
@@ -40,11 +40,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             Port = 80;
             ConnectionTimeout = TimeSpan.FromSeconds(5);
             ResponseTimeout = TimeSpan.FromMinutes(1);
-#if DEBUG
-            DnsLookupInterval = TimeSpan.FromSeconds(10);
-#else
-            DnsLookupInterval = TimeSpan.FromMinutes(10);
-#endif
+            DnsLookupInterval = TimeSpan.FromSeconds(5);
             HealthCheckPort = 80;
             HealthCheckMethod = "GET";
             HealthCheckPath = "/";
@@ -97,15 +93,15 @@ namespace Gravity.Server.ProcessingNodes.Server
             _heathCheckThread.Start();
         }
 
-        void INode.UpdateAvailability()
+        void INode.UpdateStatus()
         {
             if (Disabled || IpAddresses == null)
             {
-                Available = false;
+                Offline = true;
                 return;
             }
 
-            Available = Healthy != false;
+            Offline = Healthy == false;
         }
 
         Task INode.ProcessRequest(IOwinContext context)

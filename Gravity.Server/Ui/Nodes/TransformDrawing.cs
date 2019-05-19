@@ -18,7 +18,7 @@ namespace Gravity.Server.Ui.Nodes
             _drawing = drawing;
             _transform = transform;
 
-            SetCssClass("transform", transform.Disabled);
+            SetCssClass("transform", transform.Offline);
         }
 
         public override void AddLines(IDictionary<string, NodeDrawing> nodeDrawings)

@@ -17,16 +17,27 @@ namespace Gravity.Server.Interfaces
         bool Disabled { get; set; }
 
         /// <summary>
-        /// Returns true if this node has a valid path to deliver requests
+        /// Returns true if this node can not process requests
         /// </summary>
-        bool Available { get; }
+        bool Offline { get; }
 
         /// <summary>
-        /// Queries the downstream and updates the Available flag
+        /// Called frequently in a background thread so that nodes
+        /// can maintain their status correctly without having to
+        /// update on every request they process
         /// </summary>
-        void UpdateAvailability();
+        void UpdateStatus();
 
+        /// <summary>
+        /// This method is called after all nodes are consturcted
+        /// and added to the node graph. This is an oportunity
+        /// for nodes to get references to other nodes in the graph
+        /// </summary>
         void Bind(INodeGraph nodeGraph);
+
+        /// <summary>
+        /// Runtime request processing
+        /// </summary>
         Task ProcessRequest(IOwinContext context);
     }
 }

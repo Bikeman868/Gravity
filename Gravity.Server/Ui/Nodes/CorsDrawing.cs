@@ -18,7 +18,7 @@ namespace Gravity.Server.Ui.Nodes
             _drawing = drawing;
             _corsNode = corsNode;
 
-            SetCssClass("cors", corsNode.Disabled);
+            SetCssClass("cors", corsNode.Offline);
 
             var details = new List<string>();
 
@@ -37,7 +37,7 @@ namespace Gravity.Server.Ui.Nodes
             if (!string.IsNullOrEmpty(corsNode.ExposedHeaders))
                 details.Add("Expose " + corsNode.ExposedHeaders);
 
-            AddDetails(details, null, _corsNode.Disabled ? "disabled" : string.Empty);
+            AddDetails(details, null, _corsNode.Offline ? "disabled" : string.Empty);
         }
 
         public override void AddLines(IDictionary<string, NodeDrawing> nodeDrawings)

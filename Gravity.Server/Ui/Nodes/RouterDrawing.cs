@@ -21,21 +21,21 @@ namespace Gravity.Server.Ui.Nodes
             _drawing = drawing;
             _router = router;
 
-            SetCssClass("router", router.Disabled);
+            SetCssClass("router", router.Offline);
 
             var details = new List<string>();
 
             if (router.Outputs != null)
             {
                 _outputDrawings = router.Outputs
-                    .Select(o => new RouterOutputDrawing(drawing, o, o.RouteTo))
+                    .Select(o => new RouterOutputDrawing(drawing, o, o.RouteTo, router.Offline))
                     .ToArray();
 
                 foreach (var outputDrawing in _outputDrawings)
                     AddChild(outputDrawing);
             }
 
-            AddDetails(details, null, router.Disabled ? "disabled" : string.Empty);
+            AddDetails(details, null, router.Offline ? "disabled" : string.Empty);
         }
 
         public override void AddLines(IDictionary<string, NodeDrawing> nodeDrawings)
@@ -63,13 +63,13 @@ namespace Gravity.Server.Ui.Nodes
             public RouterOutputDrawing(
                 DrawingElement drawing,
                 RouterOutputConfiguration routerOutput,
-                string label)
+                string label,
+                bool disabled)
                 : base(drawing, "Output", 3, label)
             {
-                CssClass = "router_output";
+                SetCssClass("router_output", disabled);
 
                 var details = new List<string>();
-
 
                 if (routerOutput.Rules != null && routerOutput.Rules.Length > 0)
                 {
@@ -87,7 +87,7 @@ namespace Gravity.Server.Ui.Nodes
                     }
                 }
 
-                AddDetails(details);
+                AddDetails(details, null, disabled ? "disabled" : string.Empty);
             }
         }
     }

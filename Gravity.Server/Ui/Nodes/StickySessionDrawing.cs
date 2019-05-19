@@ -21,14 +21,14 @@ namespace Gravity.Server.Ui.Nodes
             _drawing = drawing;
             _stickySession = stickySession;
             
-            SetCssClass("sticky_session", stickySession.Disabled);
+            SetCssClass("sticky_session", stickySession.Offline);
 
             var details = new List<string>();
 
             details.Add("Cookie: " + stickySession.SessionCookie);
             details.Add("Lifetime: " + stickySession.SessionDuration);
 
-            AddDetails(details, null, stickySession.Disabled ? "disabled" : string.Empty);
+            AddDetails(details, null, stickySession.Offline ? "disabled" : string.Empty);
 
             if (stickySession.Outputs != null)
             {

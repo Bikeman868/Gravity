@@ -11,7 +11,7 @@ namespace Gravity.Server.Ui.Nodes
             InternalNode internalRequest) 
             : base(drawing, "Internal", 2, internalRequest.Name)
         {
-            SetCssClass("internal", internalRequest.Disabled);
+            SetCssClass("internal", internalRequest.Offline);
         }
     }
 }

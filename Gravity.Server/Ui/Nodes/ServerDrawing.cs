@@ -92,7 +92,7 @@ namespace Gravity.Server.Ui.Nodes
                 ServerIpAddress ipAddress)
                 : base(drawing, ipAddress.Address.ToString(), 3)
             {
-                CssClass = ipAddress.Healthy == false ? "server_ip_address_unhealthy": "server_ip_address_healthy";
+                SetCssClass(ipAddress.Healthy == false ? "server_ip_address_unhealthy": "server_ip_address_healthy", false);
 
                 var details = new List<string>();
 

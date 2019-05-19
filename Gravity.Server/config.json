@@ -3,7 +3,7 @@
         "nodeGraph": {
             "routers": [
                 {
-                    "name": "A",
+                    "name": "N",
                     "routes": [
                         {
                             "to": "B",
@@ -29,7 +29,10 @@
                 }
             ],
             "internalEndpoints": [
-                { "name": "B" }
+                {
+                    "name": "B",
+                    "disabled":  true
+                }
             ],
             "roundRobin": [
                 { "name": "C", "outputs": [ "D", "E", "I" ] }
@@ -53,6 +56,7 @@
             "responses": [
                 {
                     "name": "D",
+                    "disabled":  true,
                     "statusCode": 200,
                     "reasonPhrase": "OK",
                     "content": "Server D",
@@ -62,6 +66,7 @@
                 },
                 {
                     "name": "E",
+                    "disabled":  true,
                     "statusCode": 200,
                     "reasonPhrase": "OK",
                     "content": "Server E",
@@ -80,6 +85,7 @@
                 },
                 {
                     "name": "G",
+                    "disabled":  true,
                     "statusCode": 404,
                     "reasonPhrase": "Not found"
                 }
@@ -101,6 +107,7 @@
                 }
             ],
             "transforms": [ 
+                { "name": "A", "output": "N"},
                 { "name": "J", "output": "H"}
             ]
         },
@@ -109,18 +116,19 @@
                 "listeners": { "x": 0, "y": 50, "xSpacing": 0, "ySpacing": 70 },
                 "nodes": [
                     { "name": "A", "x": 300, "y": 50 },
-                    { "name": "B", "x": 550, "y": 80 },
-                    { "name": "C", "x": 550, "y": 230 },
-                    { "name": "D", "x": 800, "y": 220 },
-                    { "name": "E", "x": 800, "y": 300 },
-                    { "name": "F", "x": 800, "y": 380 },
-                    { "name": "G", "x": 550, "y": 150 },
+                    { "name": "B", "x": 700, "y": 80 },
+                    { "name": "C", "x": 700, "y": 230 },
+                    { "name": "D", "x": 950, "y": 220 },
+                    { "name": "E", "x": 950, "y": 300 },
+                    { "name": "F", "x": 950, "y": 380 },
+                    { "name": "G", "x": 700, "y": 150 },
                     { "name": "H", "x": 550, "y": 700 },
-                    { "name": "I", "x": 800, "y": 500 },
+                    { "name": "I", "x": 850, "y": 500 },
                     { "name": "J", "x": 300, "y": 700 },
                     { "name": "K", "x": 550, "y": 500 },
                     { "name": "L", "x": 300, "y": 500 },
-                    { "name": "M", "x": 800, "y": 800 }
+                    { "name": "M", "x": 800, "y": 830 },
+                    { "name": "N", "x": 450, "y": 50 }
                 ]
             }
         },

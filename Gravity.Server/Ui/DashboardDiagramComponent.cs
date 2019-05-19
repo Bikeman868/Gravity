@@ -83,7 +83,7 @@ namespace Gravity.Server.Ui
                 TopMargin = 20;
                 BottomMargin = 20;
 
-                CssClass = "drawing";
+                SetCssClass("drawing", false);
 
                 var listenerDrawings = new List<ListenerDrawing>();
                 var nodeDrawings = new Dictionary<string, NodeDrawing>(StringComparer.OrdinalIgnoreCase);

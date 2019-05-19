@@ -16,7 +16,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
         public bool Disabled { get; set; }
         public string SessionCookie { get; set; }
         public TimeSpan SessionDuration { get; set; }
-        public bool Available { get; private set; }
+        public bool Offline { get; private set; }
 
         public NodeOutput[] OutputNodes;
 
@@ -90,24 +90,24 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
             }).ToArray();
         }
 
-        void INode.UpdateAvailability()
+        void INode.UpdateStatus()
         {
             var nodes = OutputNodes;
-            var available = false;
+            var offline = true;
 
             if (!Disabled && nodes != null && !string.IsNullOrEmpty(SessionCookie))
             {
                 for (var i = 0; i < nodes.Length; i++)
                 {
                     var node = nodes[i];
-                    node.Disabled = node.Node == null || !node.Node.Available;
+                    node.Disabled = node.Node == null || node.Node.Offline;
 
                     if (!node.Disabled)
-                        available = true;
+                        offline = false;
                 }
             }
 
-            Available = available;
+            Offline = offline;
         }
 
         Task INode.ProcessRequest(IOwinContext context)

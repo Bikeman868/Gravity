@@ -21,7 +21,7 @@ namespace Gravity.Server.Ui.Nodes
             _drawing = drawing;
             _leastConnections = leastConnections;
             
-            SetCssClass("least_connections", leastConnections.Disabled);
+            SetCssClass("least_connections", leastConnections.Offline);
 
             if (leastConnections.Outputs != null)
             {

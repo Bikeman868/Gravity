@@ -47,7 +47,7 @@ namespace Gravity.Server.DataStructures
                             {
                                 try
                                 {
-                                    node.UpdateAvailability();
+                                    node.UpdateStatus();
                                 }
                                 catch
                                 {

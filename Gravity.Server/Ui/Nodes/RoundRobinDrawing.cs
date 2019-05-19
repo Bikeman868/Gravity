@@ -21,7 +21,7 @@ namespace Gravity.Server.Ui.Nodes
             _drawing = drawing;
             _roundRobbin = roundRobbin;
 
-            SetCssClass("round_robbin", roundRobbin.Disabled);
+            SetCssClass("round_robbin", roundRobbin.Offline);
 
             if (roundRobbin.Disabled)
                 Title.CssClass += " disabled";
