@@ -30,6 +30,18 @@ namespace Gravity.Server.Configuration
         [JsonProperty("responseScript")]
         public string ResponseScript { get; set; }
 
+        /// <summary>
+        /// Defines request transformation logic contained in a file
+        /// </summary>
+        [JsonProperty("requestScriptFile")]
+        public string RequestScriptFile { get; set; }
+
+        /// <summary>
+        /// Defines response transfoormation logic contained in a file
+        /// </summary>
+        [JsonProperty("responseScriptFile")]
+        public string ResponseScriptFile { get; set; }
+
         public override void Sanitize()
         {
         }

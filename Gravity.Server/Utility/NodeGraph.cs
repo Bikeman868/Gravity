@@ -10,21 +10,25 @@ using Gravity.Server.ProcessingNodes.Server;
 using Gravity.Server.ProcessingNodes.SpecialPurpose;
 using Gravity.Server.ProcessingNodes.Transform;
 using OwinFramework.Interfaces.Builder;
+using OwinFramework.Interfaces.Utility;
 
 namespace Gravity.Server.Utility
 {
     internal class NodeGraph: INodeGraph
     {
         private readonly IExpressionParser _expressionParser;
+        private readonly IHostingEnvironment _hostingEnvironment;
         private readonly IDisposable _configuration;
         private INodeGraph _current;
         private Thread _thread;
 
         public NodeGraph(
             IConfiguration configuration,
-            IExpressionParser expressionParser)
+            IExpressionParser expressionParser,
+            IHostingEnvironment hostingEnvironment)
         {
             _expressionParser = expressionParser;
+            _hostingEnvironment = hostingEnvironment;
 
             _configuration = configuration.Register(
                 "/gravity/nodeGraph", 
@@ -299,13 +303,16 @@ namespace Gravity.Server.Utility
             {
                 foreach (var transformNodeConfiguration in configuration.TransformNodes)
                 {
-                    var node = new TransformNode
+                    var node = new TransformNode(_hostingEnvironment)
                     {
                         Name = transformNodeConfiguration.Name,
                         Disabled = transformNodeConfiguration.Disabled,
                         OutputNode = transformNodeConfiguration.OutputNode,
-                        //RequestScript = transformNodeConfiguration.RequestScript,
-                        //ResponseScript = transformNodeConfiguration.ResponseScript,
+                        ScriptLanguage = transformNodeConfiguration.ScriptLanguage,
+                        RequestScript = transformNodeConfiguration.RequestScript,
+                        ResponseScript = transformNodeConfiguration.ResponseScript,
+                        RequestScriptFile = transformNodeConfiguration.RequestScriptFile,
+                        ResponseScriptFile = transformNodeConfiguration.ResponseScriptFile,
                     };
                     transformNodeConfiguration.Node = node;
                     nodes.Add(node);
