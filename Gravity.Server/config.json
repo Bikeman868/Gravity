@@ -117,7 +117,7 @@
                 {
                     "name": "A",
                     "output": "N" ,
-                    "requestScript": "dfagad"
+                    "requestScript": "<rewrite><rules name='root'></rules></rewrite>"
                 },
                 { "name": "J", "output": "H" }
             ]

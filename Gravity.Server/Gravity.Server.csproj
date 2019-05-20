@@ -115,7 +115,7 @@
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Interfaces\Conditions\IValueGetter.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Interfaces\Conditions\Scope.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Interfaces\ICustomTypeRegistrar.cs" />
-    <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Interfaces\IFactory.cs" />
+    <Compile Include="Interfaces\IFactory.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Interfaces\Operations\IAbsoluteUrlOperation.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Interfaces\Operations\ILowerCaseOperation.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Interfaces\Operations\IOperation.cs" />
@@ -133,6 +133,7 @@
     <Compile Include="ProcessingNodes\Transform\IScriptParser.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Parser.cs" />
     <Compile Include="Ui\Nodes\LoadBalancerDrawing.cs" />
+    <Compile Include="Utility\Factory.cs" />
     <Compile Include="Utility\Timer.cs" />
     <Compile Include="ProcessingNodes\Routing\ExpressionParser.cs" />
     <Compile Include="Utility\ServerIpAddress.cs" />

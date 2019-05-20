@@ -1,7 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿using System.IO;
+using System.Text;
+using System.Threading.Tasks;
 using Gravity.Server.Configuration;
 using Gravity.Server.Interfaces;
-using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules;
 using Microsoft.Owin;
 using OwinFramework.Interfaces.Utility;
 
@@ -10,6 +11,7 @@ namespace Gravity.Server.ProcessingNodes.Transform
     internal class TransformNode: INode
     {
         private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly IFactory _factory;
 
         public string Name { get; set; }
         public bool Disabled { get; set; }
@@ -26,9 +28,11 @@ namespace Gravity.Server.ProcessingNodes.Transform
         private IResponseTransform _responseTransform;
 
         public TransformNode(
-            IHostingEnvironment hostingEnvironment)
+            IHostingEnvironment hostingEnvironment,
+            IFactory factory)
         {
             _hostingEnvironment = hostingEnvironment;
+            _factory = factory;
         }
 
         public void Dispose()
@@ -38,26 +42,69 @@ namespace Gravity.Server.ProcessingNodes.Transform
         void INode.Bind(INodeGraph nodeGraph)
         {
             _nextNode = nodeGraph.NodeByName(OutputNode);
-            var rewriteRuleParser = (IScriptParser)(new Parser());
 
             if (!string.IsNullOrEmpty(RequestScript))
             {
-                switch (ScriptLanguage)
+                using (var stream = new MemoryStream())
                 {
-                    //case ScriptLanguage.UrlRewriteModule:
-                    //    _requestTransform = rewriteRuleParser.ParseRequestScript(RequestScript);
-                    //    break;
+                    var writer = new StreamWriter(stream);
+                    writer.Write(RequestScript);
+                    writer.Flush();
+                    stream.Position = 0;
+
+                    ParseRequestStream(stream, writer.Encoding);
+                }
+            }
+            else if (!string.IsNullOrEmpty(RequestScriptFile))
+            {
+                var filePath = _hostingEnvironment.MapPath(RequestScriptFile);
+                using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    ParseRequestStream(stream, Encoding.UTF8);
                 }
             }
 
             if (!string.IsNullOrEmpty(ResponseScript))
             {
-                switch (ScriptLanguage)
+                using (var stream = new MemoryStream())
                 {
-                    //case ScriptLanguage.UrlRewriteModule:
-                    //    _responseTransform = rewriteRuleParser.ParseResponseScript(ResponseScript);
-                    //    break;
+                    var writer = new StreamWriter(stream);
+                    writer.Write(ResponseScript);
+                    writer.Flush();
+                    stream.Position = 0;
+
+                    ParseResponseStream(stream, writer.Encoding);
                 }
+            }
+            else if (!string.IsNullOrEmpty(ResponseScriptFile))
+            {
+                var filePath = _hostingEnvironment.MapPath(ResponseScriptFile);
+                using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    ParseResponseStream(stream, Encoding.UTF8);
+                }
+            }
+        }
+
+        private void ParseRequestStream(Stream stream, Encoding encoding)
+        {
+            switch (ScriptLanguage)
+            {
+                case ScriptLanguage.UrlRewriteModule:
+                    var rewriteRuleParser = (IScriptParser)(new UrlRewriteRules.Parser(_factory));
+                    _requestTransform = rewriteRuleParser.ParseRequestScript(stream, encoding);
+                    break;
+            }
+        }
+
+        private void ParseResponseStream(Stream stream, Encoding encoding)
+        {
+            switch (ScriptLanguage)
+            {
+                case ScriptLanguage.UrlRewriteModule:
+                    var rewriteRuleParser = (IScriptParser)(new UrlRewriteRules.Parser(_factory));
+                    _responseTransform = rewriteRuleParser.ParseResponseScript(stream, encoding);
+                    break;
             }
         }
 

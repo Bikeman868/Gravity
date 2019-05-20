@@ -28,6 +28,7 @@ namespace Gravity.Server
                 new IocRegistration().Init<INodeGraph, NodeGraph>(),
                 new IocRegistration().Init<IExpressionParser, ExpressionParser>(),
                 new IocRegistration().Init<IRequestListener, RequestListener>(),
+                new IocRegistration().Init<IFactory, Factory>(),
             });
 
             _registrations.AddRange(new[]

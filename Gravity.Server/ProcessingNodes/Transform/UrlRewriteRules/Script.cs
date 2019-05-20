@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+using Gravity.Server.Interfaces;
 using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
-using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Operations;
 using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Rules;
 using Microsoft.Owin;
 
@@ -15,8 +15,13 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
     {
         private readonly IFactory _factory;
 
-        public Script(Stream stream, Encoding encoding)
+        public Script(
+            IFactory factory, 
+            Stream stream, 
+            Encoding encoding)
         {
+            _factory = factory;
+
             XDocument document;
             try
             {
@@ -37,14 +42,14 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
 
             var context = new ParserContext();
 
-            foreach (var element in xmlRoot.Elements())
-            {
-                if (element.Name.LocalName.ToLower() == "rewritemaps")
-                    ParseRewriteMaps(element, context);
+            //foreach (var element in xmlRoot.Elements())
+            //{
+            //    if (element.Name.LocalName.ToLower() == "rewritemaps")
+            //        ParseRewriteMaps(element, context);
 
-                else if (element.Name.LocalName.ToLower() == "rules")
-                    ParseRulesElement(element, context, "Root");
-            }
+            //    else if (element.Name.LocalName.ToLower() == "rules")
+            //        ParseRulesElement(element, context, "Root");
+            //}
         }
 
         void IRequestTransform.Transform(IOwinContext context)

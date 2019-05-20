@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using Gravity.Server;
 using Gravity.Server.Middleware;
+using Gravity.Server.Utility;
 using Ioc.Modules;
 using Microsoft.Owin;
 using Ninject;
@@ -30,6 +31,7 @@ namespace Gravity.Server
                .ProbeBinFolderAssemblies()
                .Add(Assembly.GetExecutingAssembly());
             var ninject = new StandardKernel(new Ioc.Modules.Ninject.Module(packageLocator));
+            Factory.IocContainer = t => ninject.Get(t);
 
             var hostingEnvironment = ninject.Get<IHostingEnvironment>();
             var configFile = new FileInfo(hostingEnvironment.MapPath("config.json"));

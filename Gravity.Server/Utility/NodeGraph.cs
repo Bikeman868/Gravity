@@ -18,17 +18,21 @@ namespace Gravity.Server.Utility
     {
         private readonly IExpressionParser _expressionParser;
         private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly IFactory _factory;
         private readonly IDisposable _configuration;
+
         private INodeGraph _current;
         private Thread _thread;
 
         public NodeGraph(
             IConfiguration configuration,
             IExpressionParser expressionParser,
-            IHostingEnvironment hostingEnvironment)
+            IHostingEnvironment hostingEnvironment,
+            IFactory factory)
         {
             _expressionParser = expressionParser;
             _hostingEnvironment = hostingEnvironment;
+            _factory = factory;
 
             _configuration = configuration.Register(
                 "/gravity/nodeGraph", 
@@ -303,7 +307,7 @@ namespace Gravity.Server.Utility
             {
                 foreach (var transformNodeConfiguration in configuration.TransformNodes)
                 {
-                    var node = new TransformNode(_hostingEnvironment)
+                    var node = new TransformNode(_hostingEnvironment, _factory)
                     {
                         Name = transformNodeConfiguration.Name,
                         Disabled = transformNodeConfiguration.Disabled,
