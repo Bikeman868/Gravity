@@ -11,14 +11,17 @@ namespace Gravity.Server.Ui.Nodes
         private readonly DrawingElement _drawing;
         private readonly RoutingNode _router;
         private readonly RouterOutputDrawing[] _outputDrawings;
+        private readonly double[] _trafficIndicatorThresholds;
 
         public RouterDrawing(
             DrawingElement drawing, 
-            RoutingNode router) 
+            RoutingNode router,
+            double[] trafficIndicatorThresholds)
             : base(drawing, "Router", "router", router.Offline, 2, router.Name)
         {
             _drawing = drawing;
             _router = router;
+            _trafficIndicatorThresholds = trafficIndicatorThresholds;
 
             var details = new List<string>();
 
@@ -41,15 +44,27 @@ namespace Gravity.Server.Ui.Nodes
 
             for (var i = 0; i < _router.Outputs.Length; i++)
             {
-                var output = _router.Outputs[i];
+                var outputConfiguration = _router.Outputs[i];
+                var outputNode = _router.OutputNodes[i];
                 var outputDrawing = _outputDrawings[i];
 
                 NodeDrawing nodeDrawing;
-                if (nodeDrawings.TryGetValue(output.RouteTo, out nodeDrawing))
+                if (nodeDrawings.TryGetValue(outputConfiguration.RouteTo, out nodeDrawing))
                 {
+                    var css = "connection_none";
+
+                    if (!outputNode.Disabled)
+                    {
+                        var requestsPerMinute = outputNode.TrafficAnalytics.RequestsPerMinute;
+                        if (requestsPerMinute < _trafficIndicatorThresholds[0]) css = "connection_none";
+                        else if (requestsPerMinute < _trafficIndicatorThresholds[1]) css = "connection_light";
+                        else if (requestsPerMinute < _trafficIndicatorThresholds[2]) css = "connection_medium";
+                        else if (requestsPerMinute < _trafficIndicatorThresholds[3]) css = "connection_heavy";
+                    }
+
                     _drawing.AddChild(new ConnectedLineDrawing(outputDrawing.TopRightSideConnection, nodeDrawing.TopLeftSideConnection)
                     {
-                        CssClass = _router.Offline ? "connection_none" : "connection_unknown"
+                        CssClass = css
                     });
                 }
             }

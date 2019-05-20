@@ -127,7 +127,7 @@ namespace Gravity.Server.Ui
                         if (internalRequest != null) nodeDrawing = new InternalRequestDrawing(this, internalRequest);
                         else if (response != null) nodeDrawing = new ResponseDrawing(this, response);
                         else if (roundRobin != null) nodeDrawing = new RoundRobinDrawing(this, roundRobin, dashboardConfiguration.TrafficIndicator.Thresholds);
-                        else if (router != null) nodeDrawing = new RouterDrawing(this, router);
+                        else if (router != null) nodeDrawing = new RouterDrawing(this, router, dashboardConfiguration.TrafficIndicator.Thresholds);
                         else if (server != null) nodeDrawing = new ServerDrawing(this, server);
                         else if (stickySession != null) nodeDrawing = new StickySessionDrawing(this, stickySession, dashboardConfiguration.TrafficIndicator.Thresholds);
                         else if (transform != null) nodeDrawing = new TransformDrawing(this, transform);

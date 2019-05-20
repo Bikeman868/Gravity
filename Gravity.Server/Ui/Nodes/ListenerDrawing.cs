@@ -39,7 +39,7 @@ namespace Gravity.Server.Ui.Nodes
             NodeDrawing nodeDrawing;
             if (nodeDrawings.TryGetValue(_listener.NodeName, out nodeDrawing))
             {
-                var css = "connection_none";
+                var css = "connection_unknown";
 
                 if (!_listener.Disabled && _listener.ProcessingNode != null)
                 {

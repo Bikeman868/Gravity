@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Gravity.Server.Utility;
+using Newtonsoft.Json;
 
 namespace Gravity.Server.Configuration
 {
@@ -12,5 +13,8 @@ namespace Gravity.Server.Configuration
 
         [JsonProperty("logic")]
         public RuleLogic RuleLogic { get; set; }
+
+        [JsonIgnore]
+        public NodeOutput ProcessingNode { get; set; }
     }
 }

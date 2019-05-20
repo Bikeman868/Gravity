@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Gravity.Server.Configuration;
 using Gravity.Server.Interfaces;
+using Gravity.Server.Utility;
 using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes.Routing
@@ -13,10 +14,12 @@ namespace Gravity.Server.ProcessingNodes.Routing
         public bool Disabled { get; set; }
         public RouterOutputConfiguration[] Outputs { get; set; }
         public bool Offline { get; private set; }
+        public NodeOutput[] OutputNodes;
 
         private readonly IExpressionParser _expressionParser;
 
-        private Output[] _outputs;
+        private Route[] _routes;
+        private DateTime _nextTrafficUpdate;
 
         public RoutingNode(
             IExpressionParser expressionParser)
@@ -30,67 +33,105 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
         void INode.Bind(INodeGraph nodeGraph)
         {
-            _outputs = Outputs.Select(o =>
+            _routes = new Route[Outputs.Length];
+            OutputNodes = new NodeOutput[Outputs.Length];
+
+            for (var i = 0; i < Outputs.Length; i++)
+            {
+                var outputConfiguration = Outputs[i];
+
+                OutputNodes[i] = new NodeOutput
                 {
-                    var output = new Output
-                    {
-                        RuleLogic = o.RuleLogic,
-                        Node = nodeGraph.NodeByName(o.RouteTo),
-                    };
+                    Name = outputConfiguration.RouteTo,
+                    Node = nodeGraph.NodeByName(outputConfiguration.RouteTo),
+                };
 
-                    if (o.Rules != null && o.Rules.Length > 0)
-                    {
-                        output.Rules = o.Rules
-                            .Select(r =>
+                _routes[i] = new Route
+                {
+                    RuleLogic = outputConfiguration.RuleLogic,
+                };
+
+                if (outputConfiguration.Rules != null && outputConfiguration.Rules.Length > 0)
+                {
+                    _routes[i].Rules = outputConfiguration.Rules
+                        .Select(r =>
+                        {
+                            var equals = r.Condition.IndexOf('=');
+                            if (equals < 0)
+                                throw new Exception("Routing expression must contain 'expr = expr'. You have '" +
+                                                    r.Condition + "'");
+
+                            var leftSide = r.Condition.Substring(0, equals);
+                            var rightSide = r.Condition.Substring(equals + 1);
+
+                            return new Rule
                             {
-                                var equals = r.Condition.IndexOf('=');
-                                if (equals < 0)
-                                    throw new Exception("Routing expression must contain 'expr = expr'. You have '" +
-                                                        r.Condition + "'");
-
-                                var leftSide = r.Condition.Substring(0, equals);
-                                var rightSide = r.Condition.Substring(equals + 1);
-
-                                return new Rule
-                                {
-                                    Expression1 = _expressionParser.Parse<string>(leftSide),
-                                    Expression2 = _expressionParser.Parse<string>(rightSide),
-                                };
-                            })
-                            .ToArray();
-                    }
-                    return output;
-                })
-            .ToArray();
+                                Expression1 = _expressionParser.Parse<string>(leftSide),
+                                Expression2 = _expressionParser.Parse<string>(rightSide),
+                            };
+                        })
+                        .ToArray();
+                }
+            }
         }
 
         void INode.UpdateStatus()
         {
-            if (Disabled || _outputs == null)
-            {
-                Offline = true;
-                return;
-            }
+            var nodes = OutputNodes;
+            var routes = _routes;
+            var offline = true;
 
-            for (var i = 0; i < _outputs.Length; i++)
+            if (routes != null && nodes != null)
             {
-                if (_outputs[i].Node != null && !_outputs[i].Node.Offline)
+
+                if (!Disabled)
                 {
-                    Offline = false;
-                    return;
+                    for (var i = 0; i < routes.Length; i++)
+                    {
+                        if (OutputNodes[i].Node != null && !OutputNodes[i].Node.Offline)
+                        {
+                            offline = false;
+                            break;
+                        }
+                    }
+                }
+
+                var now = DateTime.UtcNow;
+                if (now > _nextTrafficUpdate)
+                {
+                    _nextTrafficUpdate = now.AddSeconds(3);
+                    for (var i = 0; i < nodes.Length; i++)
+                    {
+                        var node = nodes[i];
+                        node.TrafficAnalytics.Recalculate();
+                    }
                 }
             }
 
-            Offline = true;
+            Offline = offline;
         }
 
         Task INode.ProcessRequest(IOwinContext context)
         {
-            for (var i = 0; i < Outputs.Length; i++)
+            for (var i = 0; i < _routes.Length; i++)
             {
-                var output = _outputs[i];
-                if (output.IsMatch(context))
-                    return output.Node.ProcessRequest(context);
+                var route = _routes[i];
+                if (route.IsMatch(context))
+                {
+                    var output = OutputNodes[i];
+                    var node = output.Node;
+                    if (node != null)
+                    {
+                        var startTime = output.TrafficAnalytics.BeginRequest();
+                        var task = node.ProcessRequest(context);
+                        if (task == null)
+                            return null;
+                        return task.ContinueWith(t =>
+                            {
+                                output.TrafficAnalytics.EndRequest(startTime);
+                            });
+                    }
+                }
             }
 
             context.Response.StatusCode = 404;
@@ -98,11 +139,10 @@ namespace Gravity.Server.ProcessingNodes.Routing
             return context.Response.WriteAsync(string.Empty);
         }
 
-        private class Output
+        private class Route
         {
             public Rule[] Rules;
             public RuleLogic RuleLogic;
-            public INode Node;
 
             public bool IsMatch(IOwinContext context)
             {
