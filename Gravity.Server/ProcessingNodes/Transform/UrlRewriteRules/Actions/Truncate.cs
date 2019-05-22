@@ -1,10 +1,9 @@
-﻿using System;
-using System.Linq;
-using UrlRewrite.Interfaces;
-using UrlRewrite.Interfaces.Actions;
-using UrlRewrite.Interfaces.Rules;
+﻿using System.Linq;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Actions;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Rules;
 
-namespace UrlRewrite.Actions
+namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
 {
     /// <summary>
     /// Truncates the path of the URL to specified number of elements

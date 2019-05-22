@@ -1,11 +1,10 @@
 ﻿using System;
-using UrlRewrite.Interfaces;
-using UrlRewrite.Interfaces.Actions;
-using UrlRewrite.Interfaces.Conditions;
-using UrlRewrite.Interfaces.Rules;
-using UrlRewrite.Utilities;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Actions;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Conditions;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Rules;
 
-namespace UrlRewrite.Actions
+namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
 {
     internal class Append : Action, IAppendAction
     {
@@ -25,9 +24,9 @@ namespace UrlRewrite.Actions
                 switch (scope)
                 {
                     case Scope.Header:
-                        throw new UrlRewriteException("When appending the request headers you must specify the name of the header to replace");
+                        throw new Exception("When appending the request headers you must specify the name of the header to replace");
                     case Scope.ServerVariable:
-                        throw new UrlRewriteException("When appending server variables you must specify the name of the server variable to replace");
+                        throw new Exception("When appending server variables you must specify the name of the server variable to replace");
                     case Scope.Parameter:
                         _scope = Scope.QueryString;
                         break;

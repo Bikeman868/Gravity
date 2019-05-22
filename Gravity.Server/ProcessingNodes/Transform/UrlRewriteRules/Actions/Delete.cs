@@ -1,11 +1,10 @@
 ﻿using System;
-using UrlRewrite.Interfaces;
-using UrlRewrite.Interfaces.Actions;
-using UrlRewrite.Interfaces.Conditions;
-using UrlRewrite.Interfaces.Rules;
-using UrlRewrite.Utilities;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Actions;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Conditions;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Rules;
 
-namespace UrlRewrite.Actions
+namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
 {
     internal class Delete : Action, IDeleteAction
     {
@@ -23,7 +22,7 @@ namespace UrlRewrite.Actions
                 switch (scope)
                 {
                     case Scope.Header:
-                        throw new UrlRewriteException("When deleting a request header you must specify the name of the header to delete");
+                        throw new Exception("When deleting a request header you must specify the name of the header to delete");
                     case Scope.Parameter:
                         _scope = Scope.QueryString;
                         break;

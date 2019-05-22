@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using UrlRewrite.Interfaces;
-using UrlRewrite.Interfaces.Actions;
-using UrlRewrite.Interfaces.Conditions;
-using UrlRewrite.Interfaces.Rules;
-using UrlRewrite.Utilities;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Actions;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Conditions;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Rules;
 
-namespace UrlRewrite.Actions
+namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
 {
     internal class Keep : Action, IKeepAction
     {
@@ -23,7 +22,7 @@ namespace UrlRewrite.Actions
             {
                 _scopeIndex = null;
                 _scopeIndexValue = null;
-                throw new UrlRewriteException("The keep action requires a comma separated list of the scope indexes to keep");
+                throw new Exception("The keep action requires a comma separated list of the scope indexes to keep");
             }
 
             switch (scope)
@@ -40,7 +39,7 @@ namespace UrlRewrite.Actions
                     _scope = Scope.Parameter;
                     break;
                 default:
-                    throw new UrlRewriteException("You can not have a scope of " + scope + " with the <keep> action");
+                    throw new Exception("You can not have a scope of " + scope + " with the <keep> action");
             }
 
             _scopeIndex = scopeIndex

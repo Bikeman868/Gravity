@@ -1,9 +1,8 @@
-﻿using System.IO;
-using UrlRewrite.Interfaces;
-using UrlRewrite.Interfaces.Actions;
-using UrlRewrite.Interfaces.Rules;
+﻿using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Actions;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Rules;
 
-namespace UrlRewrite.Actions
+namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
 {
     internal class AbortRequest: Action, IAbortAction
     {

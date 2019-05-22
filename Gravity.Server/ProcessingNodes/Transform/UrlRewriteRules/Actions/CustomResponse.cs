@@ -1,11 +1,9 @@
-﻿using System.IO;
-using System.Web;
-using System.Xml.Linq;
-using UrlRewrite.Interfaces;
-using UrlRewrite.Interfaces.Actions;
-using UrlRewrite.Interfaces.Rules;
+﻿using System.Xml.Linq;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Actions;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Rules;
 
-namespace UrlRewrite.Actions
+namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
 {
     internal class CustomResponse : Action, ICustomResponse
     {
@@ -44,12 +42,6 @@ namespace UrlRewrite.Actions
             out bool stopProcessing,
             out bool endRequest)
         {
-            if (requestInfo.ExecutionMode != ExecutionMode.TraceOnly)
-            {
-                requestInfo.Context.Response.StatusDescription = _statusLine;
-                requestInfo.Context.Response.Write(_responseLine);
-            }
-
             stopProcessing = _stopProcessing;
             endRequest = _endRequest;
         }

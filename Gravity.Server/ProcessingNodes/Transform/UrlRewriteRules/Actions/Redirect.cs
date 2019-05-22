@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Linq;
 using System.Xml.Linq;
-using UrlRewrite.Interfaces;
-using UrlRewrite.Interfaces.Actions;
-using UrlRewrite.Interfaces.Rules;
-using UrlRewrite.Utilities;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Actions;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Rules;
 
-namespace UrlRewrite.Actions
+namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
 {
     internal class Redirect : Action, IRedirectAction
     {
@@ -19,12 +18,6 @@ namespace UrlRewrite.Actions
             out bool stopProcessing,
             out bool endRequest)
         {
-            if (requestInfo.ExecutionMode != ExecutionMode.TraceOnly)
-            {
-                var url = requestInfo.NewUrlString;
-                requestInfo.DeferredActions.Add(ri => _redirectAction(ri, url));
-            }
-
             stopProcessing = _stopProcessing;
             endRequest = _endRequest;
         }
@@ -42,7 +35,7 @@ namespace UrlRewrite.Actions
                 case "permanent":
                 case "301":
                     _code = "301";
-                    _redirectAction = (ri, url) => ri.Context.Response.RedirectPermanent(url);
+                    //_redirectAction = (ri, url) => ri.Context.Response.RedirectPermanent(url);
                     break;
                 case "found":
                 case "302":
@@ -69,7 +62,7 @@ namespace UrlRewrite.Actions
                     _redirectAction = (ri, url) => ri.Context.Response.Redirect(url);
                     break;
                 default:
-                    throw new UrlRewriteException(
+                    throw new Exception(
                         "Unknown redirectType=\"" 
                         + _code 
                         + "\". Supported values are permanent, found, seeOther, temporary, 301, 302, 303 and 307");

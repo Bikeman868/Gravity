@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using UrlRewrite.Interfaces;
-using UrlRewrite.Interfaces.Actions;
-using UrlRewrite.Interfaces.Conditions;
-using UrlRewrite.Interfaces.Rules;
-using UrlRewrite.Utilities;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Actions;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Conditions;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Rules;
 
-namespace UrlRewrite.Actions
+namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
 {
     internal class Insert : Action, IInsertAction
     {
@@ -23,13 +21,13 @@ namespace UrlRewrite.Actions
             _valueGetter = valueGetter;
 
             if (string.IsNullOrEmpty(scopeIndex))
-                throw new UrlRewriteException("When inserting into the path the index of the element to insert before must be provided");
+                throw new Exception("When inserting into the path the index of the element to insert before must be provided");
             
             if (scope != Scope.PathElement)
-                throw new UrlRewriteException("You can only insert into the path scope");
+                throw new Exception("You can only insert into the path scope");
 
             if (!int.TryParse(scopeIndex, out _scopeIndexValue))
-                throw new UrlRewriteException("The index of the path element to insert must be a number");
+                throw new Exception("The index of the path element to insert must be a number");
 
             if (_scopeIndexValue == 0)
                 _action = (requestInfo, value) =>
