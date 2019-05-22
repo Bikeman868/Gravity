@@ -51,9 +51,13 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
                             if (hasSession)
                             {
                                 output.DecrementSessionCount();
-                                lock(_sessionNodes) _sessionNodes.Remove(sessionId);
+                                lock (_sessionNodes) _sessionNodes.Remove(sessionId);
                             }
                         }
+                    }
+                    catch (ThreadAbortException)
+                    {
+                        return;
                     }
                     catch
                     { }

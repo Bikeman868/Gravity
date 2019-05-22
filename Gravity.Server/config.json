@@ -42,7 +42,7 @@
                 }
             ],
             "roundRobin": [
-                { "name": "C", "outputs": [ "D", "E", "I" ] }
+                { "name": "C", "outputs": [ "D", "E", "O" ] }
             ],
             "servers": [
                 {
@@ -116,10 +116,25 @@
             "transforms": [
                 {
                     "name": "A",
-                    "output": "N" ,
-                    "requestScript": "<rewrite><rules name='root'></rules></rewrite>"
+                    "output": "N"
                 },
-                { "name": "J", "output": "H" }
+                {
+                    "name": "J",
+                    "output": "H"
+                },
+                {
+                    "name": "O",
+                    "output": "I",
+                    "requestScript": [
+                        "<rewrite>",
+                        "  <rules name='root'>",
+                        "    <rule name='set-headers'>",
+                        "      <rewrite to='header' toIndex='X-Forwarded-For' from='serverVariable' fromIndex='LocalIpAddress'/>",
+                        "      <rewrite to='header' toIndex='X-Real-IP' from='serverVariable' fromIndex='LocalIpAddress'/>",
+                        "    </rule>",
+                        "  </rules></rewrite>"
+                    ]
+                }
             ]
         },
         "ui": {
@@ -138,12 +153,13 @@
                     { "name": "F", "x": 950, "y": 380 },
                     { "name": "G", "x": 700, "y": 150 },
                     { "name": "H", "x": 550, "y": 800 },
-                    { "name": "I", "x": 850, "y": 550 },
+                    { "name": "I", "x": 1000, "y": 550 },
                     { "name": "J", "x": 300, "y": 800 },
                     { "name": "K", "x": 550, "y": 550 },
                     { "name": "L", "x": 300, "y": 550 },
                     { "name": "M", "x": 800, "y": 830 },
-                    { "name": "N", "x": 450, "y": 50 }
+                    { "name": "N", "x": 450, "y": 50 },
+                    { "name": "O", "x": 850, "y": 500 }
                 ]
             }
         },

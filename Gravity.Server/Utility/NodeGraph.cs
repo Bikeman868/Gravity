@@ -303,6 +303,12 @@ namespace Gravity.Server.Utility
 
         private void ConfigureTransformNodes(NodeGraphConfiguration configuration, List<INode> nodes)
         {
+            Func<string[], string> joinScript = s =>
+            {
+                if (s == null || s.Length == 0) return null;
+                return string.Join(Environment.NewLine, s);
+            };
+
             if (configuration.TransformNodes != null)
             {
                 foreach (var transformNodeConfiguration in configuration.TransformNodes)
@@ -313,8 +319,8 @@ namespace Gravity.Server.Utility
                         Disabled = transformNodeConfiguration.Disabled,
                         OutputNode = transformNodeConfiguration.OutputNode,
                         ScriptLanguage = transformNodeConfiguration.ScriptLanguage,
-                        RequestScript = transformNodeConfiguration.RequestScript,
-                        ResponseScript = transformNodeConfiguration.ResponseScript,
+                        RequestScript = joinScript(transformNodeConfiguration.RequestScript),
+                        ResponseScript = joinScript(transformNodeConfiguration.ResponseScript),
                         RequestScriptFile = transformNodeConfiguration.RequestScriptFile,
                         ResponseScriptFile = transformNodeConfiguration.ResponseScriptFile,
                     };

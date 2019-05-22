@@ -123,7 +123,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
                 }
                 else
                 {
-                    const string key = "SPLIT_PATH";
+                    const string key = "gravity.SplitPath";
 
                     object splitPath;
                     if (!context.Environment.TryGetValue(key, out splitPath))

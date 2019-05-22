@@ -4,6 +4,6 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Ru
 {
     public interface IRuleElement
     {
-        string ToString(IOwinContext context);
+        string ToString(IRequestInfo requestInfo);
     }
 }

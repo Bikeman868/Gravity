@@ -14,6 +14,6 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Ru
         IRuleList Add(IRule rule);
 
         string Name { get; }
-        IRuleListResult Evaluate(IOwinContext context);
+        IRuleListResult Evaluate(IRequestInfo requestInfo);
     }
 }

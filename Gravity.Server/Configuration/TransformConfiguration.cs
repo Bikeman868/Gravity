@@ -21,14 +21,14 @@ namespace Gravity.Server.Configuration
         /// it is forwarded to the real servers
         /// </summary>
         [JsonProperty("requestScript")]
-        public string RequestScript { get; set; }
+        public string[] RequestScript { get; set; }
 
         /// <summary>
         /// Defines transfoormation logic to apply to response from the real
         /// servers before returning it to the original caller
         /// </summary>
         [JsonProperty("responseScript")]
-        public string ResponseScript { get; set; }
+        public string[] ResponseScript { get; set; }
 
         /// <summary>
         /// Defines request transformation logic contained in a file

@@ -11,5 +11,10 @@ namespace Gravity.Server.Utility
         {
             return (T)IocContainer(typeof (T));
         }
+
+        object IFactory.Create(Type t)
+        {
+            return IocContainer(t);
+        }
     }
 }
