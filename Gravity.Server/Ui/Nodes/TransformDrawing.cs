@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Gravity.Server.ProcessingNodes.Transform;
 using Gravity.Server.Ui.Shapes;
 
@@ -16,6 +18,12 @@ namespace Gravity.Server.Ui.Nodes
         {
             _drawing = drawing;
             _transform = transform;
+
+            if (!string.IsNullOrEmpty(transform.Description))
+            {
+                var details = transform.Description.Split('\n').ToList();
+                AddDetails(details, null, transform.Offline ? "disabled" : string.Empty);
+            }
         }
 
         public override void AddLines(IDictionary<string, NodeDrawing> nodeDrawings)

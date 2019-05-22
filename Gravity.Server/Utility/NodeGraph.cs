@@ -318,6 +318,7 @@ namespace Gravity.Server.Utility
                         Name = transformNodeConfiguration.Name,
                         Disabled = transformNodeConfiguration.Disabled,
                         OutputNode = transformNodeConfiguration.OutputNode,
+                        Description = joinScript(transformNodeConfiguration.Description),
                         ScriptLanguage = transformNodeConfiguration.ScriptLanguage,
                         RequestScript = joinScript(transformNodeConfiguration.RequestScript),
                         ResponseScript = joinScript(transformNodeConfiguration.ResponseScript),

@@ -11,6 +11,12 @@ namespace Gravity.Server.Configuration
         public string OutputNode { get; set; }
 
         /// <summary>
+        /// A description of what this transform does
+        /// </summary>
+        [JsonProperty("description")]
+        public string[] Description { get; set; }
+
+        /// <summary>
         /// The language used to write the scripts ion this node
         /// </summary>
         [JsonProperty("scriptLanguage")]

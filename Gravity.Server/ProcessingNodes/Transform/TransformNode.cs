@@ -21,6 +21,7 @@ namespace Gravity.Server.ProcessingNodes.Transform
         public string ResponseScript { get; set; }
         public string RequestScriptFile { get; set; }
         public string ResponseScriptFile { get; set; }
+        public string Description { get; set; }
         public bool Offline { get; private set; }
 
         private INode _nextNode;

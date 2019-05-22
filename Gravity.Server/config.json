@@ -125,6 +125,10 @@
                 {
                     "name": "O",
                     "output": "I",
+                    "description": [
+                        "Add X-Forwarded-For header",
+                        "Add X-Real-IP header"
+                    ],
                     "requestScript": [
                         "<rewrite>",
                         "  <rules name='root'>",
@@ -153,7 +157,7 @@
                     { "name": "F", "x": 950, "y": 380 },
                     { "name": "G", "x": 700, "y": 150 },
                     { "name": "H", "x": 550, "y": 800 },
-                    { "name": "I", "x": 1000, "y": 550 },
+                    { "name": "I", "x": 1100, "y": 650 },
                     { "name": "J", "x": 300, "y": 800 },
                     { "name": "K", "x": 550, "y": 550 },
                     { "name": "L", "x": 300, "y": 550 },
