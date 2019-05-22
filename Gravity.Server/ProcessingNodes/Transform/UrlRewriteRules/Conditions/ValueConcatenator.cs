@@ -1,13 +1,12 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Collections.Generic;
 using System.Text;
-using UrlRewrite.Interfaces;
-using UrlRewrite.Interfaces.Conditions;
-using UrlRewrite.Interfaces.Operations;
-using UrlRewrite.Interfaces.Rules;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Conditions;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Operations;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Rules;
 
-namespace UrlRewrite.Conditions
+namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
 {
     /// <summary>
     /// Implements IValueGetter by taking a list of IValueGetter and concetenating their output
@@ -81,25 +80,6 @@ namespace UrlRewrite.Conditions
         public string ToString(IRequestInfo requestInfo)
         {
             return ToString();
-        }
-
-        public void Describe(System.IO.TextWriter writer, string indent, string indentText)
-        {
-            if (_values != null && _values.Count > 0)
-            {
-                writer.WriteLine(indent + "Concatenate these values" +
-                                 (_separator == null ? ":" : " separated by '" + _separator + "':"));
-
-                var childIndent = indentText;
-                foreach (var value in _values)
-                    value.Describe(writer, childIndent, indentText);
-
-                if (_operation != null)
-                {
-                    writer.WriteLine(indent + "Perform this operation on the result of concatenation");
-                    _operation.Describe(writer, childIndent, indentText);
-                }
-            }
         }
     }
 }

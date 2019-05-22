@@ -1,6 +1,6 @@
 ﻿using System.IO;
-using UrlRewrite.Interfaces;
-using UrlRewrite.Interfaces.Operations;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Operations;
 
 namespace UrlRewrite.Operations
 {
@@ -26,12 +26,6 @@ namespace UrlRewrite.Operations
         public override string ToString()
         {
             return "ToAbsoluteUrl()";
-        }
-
-        public void Describe(TextWriter writer, string indent, string indentText)
-        {
-            writer.Write(indent);
-            writer.WriteLine("convert to absolute URL");
         }
     }
 }

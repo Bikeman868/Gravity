@@ -1,8 +1,7 @@
-﻿using System.IO;
-using UrlRewrite.Interfaces;
-using UrlRewrite.Interfaces.Operations;
+﻿using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Operations;
 
-namespace UrlRewrite.Operations
+namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Operations
 {
     internal class UpperCaseOperation : IUpperCaseOperation
     {
@@ -24,12 +23,6 @@ namespace UrlRewrite.Operations
         public override string ToString()
         {
             return "ToUpper()";
-        }
-
-        public void Describe(TextWriter writer, string indent, string indentText)
-        {
-            writer.Write(indent);
-            writer.WriteLine("convert to upper case");
         }
     }
 }

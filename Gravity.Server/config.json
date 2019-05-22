@@ -136,7 +136,8 @@
                         "      <rewrite to='header' toIndex='X-Forwarded-For' from='serverVariable' fromIndex='LocalIpAddress'/>",
                         "      <rewrite to='header' toIndex='X-Real-IP' from='serverVariable' fromIndex='LocalIpAddress'/>",
                         "    </rule>",
-                        "  </rules></rewrite>"
+                        "  </rules>",
+                        "</rewrite>"
                     ]
                 }
             ]

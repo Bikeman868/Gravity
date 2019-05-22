@@ -1,12 +1,10 @@
 ﻿using System;
-using System.IO;
 using System.Xml.Linq;
-using UrlRewrite.Interfaces;
-using UrlRewrite.Interfaces.Conditions;
-using UrlRewrite.Interfaces.Rules;
-using UrlRewrite.Utilities;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Conditions;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Rules;
 
-namespace UrlRewrite.Conditions
+namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
 {
     internal class NumberMatch : INumberMatch
     {
@@ -47,7 +45,7 @@ namespace UrlRewrite.Conditions
                     _testFunc = (ruleResult, number) => number > _match;
                     break;
                 default:
-                    throw new UrlRewriteException("Number match does not know how to compare numbers using " + compareOperation);
+                    throw new Exception("Number match does not know how to compare numbers using " + compareOperation);
             }
             return this;
         }
@@ -69,11 +67,6 @@ namespace UrlRewrite.Conditions
         public string ToString(IRequestInfo request)
         {
             return ToString();
-        }
-
-        public void Describe(TextWriter writer, string indent, string indentText)
-        {
-            writer.WriteLine(indent + " If " + ToString());
         }
     }
 }

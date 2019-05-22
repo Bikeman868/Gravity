@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
-using UrlRewrite.Interfaces;
-using UrlRewrite.Interfaces.Conditions;
-using UrlRewrite.Interfaces.Rules;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Conditions;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Rules;
 
-namespace UrlRewrite.Conditions
+namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
 {
     internal class ConditionList : IConditionList
     {
@@ -90,26 +90,15 @@ namespace UrlRewrite.Conditions
         {
             if (_conditions == null || _conditions.Count == 0) return true;
 
-            if (request.ExecutionMode != ExecutionMode.ExecuteOnly)
-                request.Log.TraceConditionListBegin(request, this);
-            
             foreach (var condition in _conditions)
             {
                 var isTrue = condition.Test(request, ruleResult);
 
-                if (request.ExecutionMode != ExecutionMode.ExecuteOnly)
-                    request.Log.TraceCondition(request, condition, isTrue);
-
                 if (isTrue != expected)
                 {
-                    if (request.ExecutionMode != ExecutionMode.ExecuteOnly)
-                        request.Log.TraceConditionListEnd(request, this, false);
                     return false;
                 }
             }
-
-            if (request.ExecutionMode != ExecutionMode.ExecuteOnly)
-                request.Log.TraceConditionListEnd(request, this, true);
 
             return true;
         }
@@ -118,39 +107,17 @@ namespace UrlRewrite.Conditions
         {
             if (_conditions == null || _conditions.Count == 0) return false;
 
-            if (request.ExecutionMode != ExecutionMode.ExecuteOnly)
-                request.Log.TraceConditionListBegin(request, this);
-
             foreach (var condition in _conditions)
             {
                 var isTrue = condition.Test(request, ruleResult);
 
-                if (request.ExecutionMode != ExecutionMode.ExecuteOnly)
-                    request.Log.TraceCondition(request, condition, isTrue);
-
                 if (isTrue == expected)
                 {
-                    if (request.ExecutionMode != ExecutionMode.ExecuteOnly)
-                        request.Log.TraceConditionListEnd(request, this, true);
                     return true;
                 }
             }
 
-            if (request.ExecutionMode != ExecutionMode.ExecuteOnly)
-                request.Log.TraceConditionListEnd(request, this, false);
-
             return false;
-        }
-
-        public void Describe(TextWriter writer, string indent, string indentText)
-        {
-            if (_conditions != null && _conditions.Count > 0)
-            {
-                writer.WriteLine(indent + _logic + " these conditions" + (_trackAllCaptures ? " tracking all captures:" : ":"));
-                indent += indentText;
-                foreach (var condition in _conditions)
-                    condition.Describe(writer, indent, indentText);
-            }
         }
     }
 }

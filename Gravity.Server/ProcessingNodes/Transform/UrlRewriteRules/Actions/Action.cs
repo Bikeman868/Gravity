@@ -23,10 +23,5 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
         {
             return this;
         }
-
-        public virtual void Describe(TextWriter writer, string indent, string indentText)
-        {
-            writer.WriteLine(indent + ToString());
-        }
     }
 }

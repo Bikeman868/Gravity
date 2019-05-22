@@ -1,18 +1,26 @@
 ﻿using System;
 using System.IO;
 using System.Xml.Linq;
-using UrlRewrite.Interfaces;
-using UrlRewrite.Interfaces.Conditions;
-using UrlRewrite.Interfaces.Rules;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Conditions;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Rules;
+using OwinFramework.Interfaces.Utility;
 
-namespace UrlRewrite.Conditions
+namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
 {
     internal class StaticFileMatch : IStaticFileMatch
     {
+        private readonly IHostingEnvironment _hostingEnvironment;
         private IValueGetter _valueGetter;
         private bool _inverted;
         private bool _isDirectory;
         private Func<string, bool> _testFunc;
+
+        public StaticFileMatch(
+            IHostingEnvironment hostingEnvironment)
+        {
+            _hostingEnvironment = hostingEnvironment;
+        }
 
         public IStaticFileMatch Initialize(
             IValueGetter valueGetter,
@@ -42,7 +50,7 @@ namespace UrlRewrite.Conditions
             try
             {
                 if (!Path.IsPathRooted(path))
-                    path = request.Application.Server.MapPath(path);
+                    path = _hostingEnvironment.MapPath(path);
 
                 return _inverted ? !_testFunc(path) : _testFunc(path);
             }

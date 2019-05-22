@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
-using UrlRewrite.Interfaces;
-using UrlRewrite.Interfaces.Conditions;
-using UrlRewrite.Interfaces.Rules;
-using UrlRewrite.Utilities;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Conditions;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Rules;
 
-namespace UrlRewrite.Conditions
+namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
 {
     internal class StringMatch : IStringMatch
     {
@@ -25,7 +24,8 @@ namespace UrlRewrite.Conditions
             string match,
             bool inverted = false,
             bool ignoreCase = true,
-            string matchGroupsName = "C"){
+            string matchGroupsName = "C")
+        {
             _match = match;
             _valueGetter = valueGetter;
             _compareOperation = compareOperation;
@@ -90,7 +90,7 @@ namespace UrlRewrite.Conditions
                     break;
                 }
                 default:
-                    throw new UrlRewriteException("String match does not know how to match using " + compareOperation);
+                    throw new Exception("String match does not know how to match using " + compareOperation);
             }
             return this;
         }
@@ -158,11 +158,6 @@ namespace UrlRewrite.Conditions
             description += (_inverted ? " not" : "") + " " + _compareOperation + " '" + _match + "'";
             description += _ignoreCase ? "" : " (case sensitive)";
             return description;
-        }
-
-        public void Describe(TextWriter writer, string indent, string indentText)
-        {
-            writer.WriteLine(indent + "If " + ToString());
         }
     }
 }

@@ -104,6 +104,11 @@
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Actions\Redirect.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Actions\Replace.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Actions\Truncate.cs" />
+    <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Conditions\ConditionList.cs" />
+    <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Conditions\NumberMatch.cs" />
+    <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Conditions\StaticFileMatch.cs" />
+    <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Conditions\StringMatch.cs" />
+    <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Conditions\ValueConcatenator.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Conditions\ValueGetter.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\CustomTypeRegistrar.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Interfaces\Actions\IAbortAction.cs" />
@@ -144,6 +149,12 @@
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Interfaces\Rules\IRuleList.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Interfaces\Rules\IRuleListResult.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Interfaces\Rules\IRuleResult.cs" />
+    <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Operations\AbsoluteUrlOperation.cs" />
+    <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Operations\LowerCaseOperation.cs" />
+    <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Operations\RewriteMapOperation.cs" />
+    <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Operations\UpperCaseOperation.cs" />
+    <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Operations\UrlDecodeOperation.cs" />
+    <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Operations\UrlEncodeOperation.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Package.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\ParserContext.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\RequestInfo.cs" />
@@ -221,9 +232,7 @@
   <ItemGroup>
     <Content Include="config.json" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="ProcessingNodes\Transform\UrlRewriteRules\Operations\" />
-  </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>

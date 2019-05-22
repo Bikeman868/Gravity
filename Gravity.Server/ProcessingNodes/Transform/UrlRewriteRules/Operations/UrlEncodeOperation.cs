@@ -1,9 +1,9 @@
 ﻿using System.IO;
 using System.Web;
-using UrlRewrite.Interfaces;
-using UrlRewrite.Interfaces.Operations;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Operations;
 
-namespace UrlRewrite.Operations
+namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Operations
 {
     internal class UrlEncodeOperation : IUrlEncodeOperation
     {
@@ -25,12 +25,6 @@ namespace UrlRewrite.Operations
         public override string ToString()
         {
             return "UrlEncode()";
-        }
-
-        public void Describe(TextWriter writer, string indent, string indentText)
-        {
-            writer.Write(indent);
-            writer.WriteLine("url encode");
         }
     }
 }

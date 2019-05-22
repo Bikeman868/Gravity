@@ -22,11 +22,11 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
             _registrations.AddRange(new[]
             {
                 new IocRegistration().Init<IValueGetter, Conditions.ValueGetter>(IocLifetime.MultiInstance),
-            //    new IocRegistration().Init<IStringMatch, Conditions.StringMatch>(IocLifetime.MultiInstance),
-            //    new IocRegistration().Init<INumberMatch, Conditions.NumberMatch>(IocLifetime.MultiInstance),
-            //    new IocRegistration().Init<IConditionList, Conditions.ConditionList>(IocLifetime.MultiInstance),
-            //    new IocRegistration().Init<IValueConcatenator, Conditions.ValueConcatenator>(IocLifetime.MultiInstance),
-            //    new IocRegistration().Init<IStaticFileMatch, Conditions.StaticFileMatch>(IocLifetime.MultiInstance),
+                new IocRegistration().Init<IStringMatch, Conditions.StringMatch>(IocLifetime.MultiInstance),
+                new IocRegistration().Init<INumberMatch, Conditions.NumberMatch>(IocLifetime.MultiInstance),
+                new IocRegistration().Init<IConditionList, Conditions.ConditionList>(IocLifetime.MultiInstance),
+                new IocRegistration().Init<IValueConcatenator, Conditions.ValueConcatenator>(IocLifetime.MultiInstance),
+                new IocRegistration().Init<IStaticFileMatch, Conditions.StaticFileMatch>(IocLifetime.MultiInstance),
             });
 
             _registrations.AddRange(new[]

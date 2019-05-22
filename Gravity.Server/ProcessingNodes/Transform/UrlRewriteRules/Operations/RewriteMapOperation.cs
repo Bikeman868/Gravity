@@ -1,11 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
-using UrlRewrite.Interfaces;
-using UrlRewrite.Interfaces.Operations;
-using UrlRewrite.Utilities;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
+using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Operations;
 
-namespace UrlRewrite.Operations
+namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Operations
 {
     internal class RewriteMapOperation : IRewriteMapOperation
     {
@@ -46,10 +46,10 @@ namespace UrlRewrite.Operations
             }
 
             if (string.IsNullOrWhiteSpace(Name))
-                throw new UrlRewriteException("Rewrite maps must have a name attribute");
+                throw new Exception("Rewrite maps must have a name attribute");
 
             if (Name.Contains(":"))
-                throw new UrlRewriteException("Rewrite map names can not contain : charaters");
+                throw new Exception("Rewrite map names can not contain : charaters");
 
             if (element.HasElements)
             {
