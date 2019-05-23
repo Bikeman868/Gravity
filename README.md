@@ -7,6 +7,13 @@ A reverse proxy and load balancer written with C# and running on OWIN
 This has reached MVP now and has received some testing. If you are interested in
 using this code please beta test and let me know what you find.
 
+## Dashboard
+
+The Gravity dashboard looks like this when using the test configuration checked
+into the source code.
+
+![Gravity dashboard](dashboard.png)
+
 ## Features
 
 This is an OWIN based service. The source code as-is will run on IIS but you can
