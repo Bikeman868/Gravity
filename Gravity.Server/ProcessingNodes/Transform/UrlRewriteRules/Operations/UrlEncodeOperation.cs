@@ -17,7 +17,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Operations
             return ReferenceEquals(value, null) ? string.Empty : HttpUtility.UrlEncode(value);
         }
 
-        public string ToString(IRequestInfo requestInfo)
+        public string ToString(IRuleExecutionContext requestInfo)
         {
             return "UrlEncode()";
         }

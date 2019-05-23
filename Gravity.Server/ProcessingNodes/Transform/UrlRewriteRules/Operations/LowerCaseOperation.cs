@@ -16,7 +16,7 @@ namespace UrlRewrite.Operations
             return ReferenceEquals(value, null) ? string.Empty : value.ToLower();
         }
 
-        public string ToString(IRequestInfo requestInfo)
+        public string ToString(IRuleExecutionContext requestInfo)
         {
             return "ToLower()";
         }

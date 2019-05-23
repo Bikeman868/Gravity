@@ -44,7 +44,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
         }
 
         public override void PerformAction(
-            IRequestInfo requestInfo,
+            IRuleExecutionContext requestInfo,
             IRuleResult ruleResult,
             out bool stopProcessing,
             out bool endRequest)
@@ -78,7 +78,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
             return "list of " + count + " actions";
         }
 
-        public override string ToString(IRequestInfo requestInfo)
+        public override string ToString(IRuleExecutionContext requestInfo)
         {
             return ToString();
         }

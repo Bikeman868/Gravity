@@ -132,7 +132,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
             };
         }
 
-        public bool Test(IRequestInfo request, IRuleResult ruleResult)
+        public bool Test(IRuleExecutionContext request, IRuleResult ruleResult)
         {
             return _inverted
                 ? !_testFunc(ruleResult, _valueGetter.GetString(request, ruleResult))
@@ -152,7 +152,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
             return this;
         }
 
-        public string ToString(IRequestInfo request)
+        public string ToString(IRuleExecutionContext request)
         {
             var description = "request " + _valueGetter.ToString(request);
             description += (_inverted ? " not" : "") + " " + _compareOperation + " '" + _match + "'";

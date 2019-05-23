@@ -22,7 +22,7 @@ the source code.
 
 You can configure a graph of nodes that define how requests are processed and link
 these nodes together in arbirtary ways. Any node can have its 'disabled' property
-set to temporarily turn it off thsi can be useful for example when you want to
+set to temporarily turn it off this can be useful for example when you want to
 remove a server from the load balancer for maintenance or put up a maintenance mssage
 when the whole site is down for maintenance.
 
@@ -31,7 +31,8 @@ checks failed. Active nodes are color coded by their function to make the diagra
 easier to understand at a glance.
 
 The lines on the drawing can be:
-black - when the traffic is not being measured at this point
+
+* black - when the traffic is not being measured at this point
 * red - when there is no traffic on this link
 * thin green - when there is light traffic
 * medium green - when there is moderate traffic

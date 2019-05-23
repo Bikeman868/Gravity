@@ -50,7 +50,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
             return this;
         }
 
-        public bool Test(IRequestInfo request, IRuleResult ruleResult)
+        public bool Test(IRuleExecutionContext request, IRuleResult ruleResult)
         {
             return _inverted
                 ? !_testFunc(ruleResult, _valueGetter.GetInt(request, ruleResult, _defaultValue))
@@ -64,7 +64,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
             return description;
         }
 
-        public string ToString(IRequestInfo request)
+        public string ToString(IRuleExecutionContext request)
         {
             return ToString();
         }

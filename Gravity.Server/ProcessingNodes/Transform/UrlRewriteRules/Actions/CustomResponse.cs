@@ -37,7 +37,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
         }
 
         public override void PerformAction(
-            IRequestInfo requestInfo,
+            IRuleExecutionContext requestInfo,
             IRuleResult ruleResult,
             out bool stopProcessing,
             out bool endRequest)
@@ -51,7 +51,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
             return "Return a custom response";
         }
 
-        public override string ToString(IRequestInfo requestInfo)
+        public override string ToString(IRuleExecutionContext requestInfo)
         {
             return "return a custom response";
         }

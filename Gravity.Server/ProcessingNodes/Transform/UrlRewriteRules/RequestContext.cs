@@ -6,24 +6,24 @@ using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
 {
-    internal class RequestInfo : IRequestInfo
+    internal class RequestContext : IRuleExecutionContext
     {
         public IOwinContext Context { get; private set; }
         public bool UrlIsModified { get; private set; }
 
-        private IList<System.Action<IRequestInfo>> _deferredActions;
+        private IList<System.Action<IRuleExecutionContext>> _deferredActions;
 
-        public RequestInfo(IOwinContext context)
+        public RequestContext(IOwinContext context)
         {
             Context = context;
         }
 
-        public IList<System.Action<IRequestInfo>> DeferredActions
+        public IList<System.Action<IRuleExecutionContext>> DeferredActions
         {
             get
             {
                 if (ReferenceEquals(_deferredActions, null))
-                    _deferredActions = new List<System.Action<IRequestInfo>>();
+                    _deferredActions = new List<System.Action<IRuleExecutionContext>>();
                 return _deferredActions;
             }
         }

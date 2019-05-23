@@ -136,7 +136,7 @@
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Interfaces\Conditions\Scope.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Interfaces\ICustomTypeRegistrar.cs" />
     <Compile Include="Interfaces\IFactory.cs" />
-    <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Interfaces\IRequestInfo.cs" />
+    <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Interfaces\IRuleExecutionContext.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Interfaces\Operations\IAbsoluteUrlOperation.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Interfaces\Operations\ILowerCaseOperation.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Interfaces\Operations\IOperation.cs" />
@@ -157,7 +157,8 @@
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Operations\UrlEncodeOperation.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Package.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\ParserContext.cs" />
-    <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\RequestInfo.cs" />
+    <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\ResponseContext.cs" />
+    <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\RequestContext.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Rules\Rule.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Rules\RuleList.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Rules\RuleListResult.cs" />

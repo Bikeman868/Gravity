@@ -14,6 +14,6 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Ru
             bool isDynamic = false);
 
         string Name { get; }
-        IRuleResult Evaluate(IRequestInfo requestInfo);
+        IRuleResult Evaluate(IRuleExecutionContext requestInfo);
     }
 }

@@ -138,6 +138,17 @@
                         "    </rule>",
                         "  </rules>",
                         "</rewrite>"
+                    ],
+                    "responseScript": [ 
+                        "<rewrite>",
+                        "  <rules name='root'>",
+                        "    <rule name='set-headers'>",
+                        "      <delete scope='header' index='X-Powered-By'/>",
+                        "      <delete scope='header' index='Server'/>",
+                        "      <rewrite to='header' toIndex='X-Powered-By' value='Gravity'/>",
+                        "    </rule>",
+                        "  </rules>",
+                        "</rewrite>"
                     ]
                 }
             ]

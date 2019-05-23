@@ -63,7 +63,8 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
 
         void IRequestTransform.Transform(IOwinContext context)
         {
-            Transform(context);
+            if (_rules != null)
+                _rules.Evaluate(new RequestContext(context));
         }
 
         IOwinContext IResponseTransform.WrapOriginalRequest(IOwinContext originalContext)
@@ -73,15 +74,8 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
 
         void IResponseTransform.Transform(IOwinContext originalContext, IOwinContext wrappedContext)
         {
-        }
-
-        private void Transform(IOwinContext context)
-        {
             if (_rules != null)
-            {
-                var requestInfo = new RequestInfo(context);
-                _rules.Evaluate(requestInfo);
-            }
+                _rules.Evaluate(new ResponseContext(wrappedContext));
         }
 
         #region Constructing instances using factories and custom type registrations

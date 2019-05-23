@@ -5,11 +5,11 @@ using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces
 {
-    public interface IRequestInfo
+    public interface IRuleExecutionContext
     {
         // Contextual properties
         IOwinContext Context { get; }
-        IList<Action<IRequestInfo>> DeferredActions { get; }
+        IList<Action<IRuleExecutionContext>> DeferredActions { get; }
         bool UrlIsModified { get; }
 
         // Information parsed from the incomming request

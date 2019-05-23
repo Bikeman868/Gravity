@@ -14,7 +14,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
         private bool _trackAllCaptures;
 
         private List<ICondition> _conditions;
-        private Func<IRequestInfo, IRuleResult, bool> _testFunc;
+        private Func<IRuleExecutionContext, IRuleResult, bool> _testFunc;
 
         public IConditionList Initialize(CombinationLogic logic, bool trackAllCaptures = false)
         {
@@ -62,7 +62,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
             return this;
         }
 
-        public bool Test(IRequestInfo request, IRuleResult ruleResult)
+        public bool Test(IRuleExecutionContext request, IRuleResult ruleResult)
         {
             if (_trackAllCaptures)
                 ruleResult.Properties.Set(true, "trackAllCaptures");
@@ -81,12 +81,12 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
             return "list of " + count + " conditions" + (_trackAllCaptures ? " tracking all captures" : "");
         }
 
-        public string ToString(IRequestInfo requestInfo)
+        public string ToString(IRuleExecutionContext requestInfo)
         {
             return ToString();
         }
 
-        private bool All(IRequestInfo request, IRuleResult ruleResult, bool expected)
+        private bool All(IRuleExecutionContext request, IRuleResult ruleResult, bool expected)
         {
             if (_conditions == null || _conditions.Count == 0) return true;
 
@@ -103,7 +103,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
             return true;
         }
 
-        private bool Any(IRequestInfo request, IRuleResult ruleResult, bool expected)
+        private bool Any(IRuleExecutionContext request, IRuleResult ruleResult, bool expected)
         {
             if (_conditions == null || _conditions.Count == 0) return false;
 

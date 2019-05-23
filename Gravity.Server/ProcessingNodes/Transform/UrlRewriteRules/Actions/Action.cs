@@ -12,12 +12,12 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
         protected bool _endRequest;
 
         public abstract void PerformAction(
-            IRequestInfo requestInfo, 
+            IRuleExecutionContext requestInfo, 
             IRuleResult ruleResult, 
             out bool stopProcessing,
             out bool endRequest);
 
-        public abstract string ToString(IRequestInfo requestInfo);
+        public abstract string ToString(IRuleExecutionContext requestInfo);
 
         public virtual IAction Initialize(XElement configuration)
         {

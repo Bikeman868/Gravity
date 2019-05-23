@@ -82,7 +82,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Operations
             return this;
         }
 
-        public string ToString(IRequestInfo requestInfo)
+        public string ToString(IRuleExecutionContext requestInfo)
         {
             return Name + "()";
         }

@@ -9,11 +9,11 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
 {
     internal class Redirect : Action, IRedirectAction
     {
-        private Action<IRequestInfo, string> _redirectAction;
+        private Action<IRuleExecutionContext, string> _redirectAction;
         private string _code;
 
         public override void PerformAction(
-            IRequestInfo requestInfo,
+            IRuleExecutionContext requestInfo,
             IRuleResult ruleResult,
             out bool stopProcessing,
             out bool endRequest)
@@ -76,7 +76,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
             return "Redirect to new URL with " + _code + " code";
         }
 
-        public override string ToString(IRequestInfo requestInfo)
+        public override string ToString(IRuleExecutionContext requestInfo)
         {
             return "redirect to '" + requestInfo.NewUrlString + "' with " + _code + " code";
         }

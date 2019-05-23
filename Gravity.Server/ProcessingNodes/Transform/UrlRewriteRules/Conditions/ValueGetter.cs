@@ -14,7 +14,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
         private Scope _scope;
         private string _scopeIndex;
         private IOperation _operation;
-        private Func<IRequestInfo, IRuleResult, string> _getValueFunc;
+        private Func<IRuleExecutionContext, IRuleResult, string> _getValueFunc;
 
         public IValueGetter Initialize(
             Scope scope,
@@ -281,13 +281,13 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
             return description;
         }
 
-        public string ToString(IRequestInfo requestInfo)
+        public string ToString(IRuleExecutionContext requestInfo)
         {
             var ruleResult = new Rules.RuleResult();
             return ToString() + "='" + GetString(requestInfo, ruleResult) + "'";
         }
 
-        public string GetString(IRequestInfo requestInfo, IRuleResult ruleResult)
+        public string GetString(IRuleExecutionContext requestInfo, IRuleResult ruleResult)
         {
             var value = _getValueFunc(requestInfo, ruleResult);
             if (_operation != null)
@@ -295,7 +295,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
             return value;
         }
 
-        public int GetInt(IRequestInfo requestInfo, IRuleResult ruleResult, int defaultValue)
+        public int GetInt(IRuleExecutionContext requestInfo, IRuleResult ruleResult, int defaultValue)
         {
             var value = GetString(requestInfo, ruleResult);
             int intValue;

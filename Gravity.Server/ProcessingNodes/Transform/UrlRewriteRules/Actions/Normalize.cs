@@ -10,7 +10,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
     {
         private NormalizeAction _leadingPathSeparator;
         private NormalizeAction _trailingPathSeparator;
-        private List<Action<IRequestInfo>> _actions;
+        private List<Action<IRuleExecutionContext>> _actions;
 
         public INormalizeAction Initialize(
             NormalizeAction leadingPathSeparator,
@@ -19,7 +19,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
             _leadingPathSeparator = leadingPathSeparator;
             _trailingPathSeparator = trailingPathSeparator;
 
-            _actions = new List<Action<IRequestInfo>>();
+            _actions = new List<Action<IRuleExecutionContext>>();
 
             switch (leadingPathSeparator)
             {
@@ -72,7 +72,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
         }
 
         public override void PerformAction(
-            IRequestInfo requestInfo,
+            IRuleExecutionContext requestInfo,
             IRuleResult ruleResult,
             out bool stopProcessing,
             out bool endRequest)
@@ -107,7 +107,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
             return text.Length == 0 ? "No normalization" : text;
         }
 
-        public override string ToString(IRequestInfo request)
+        public override string ToString(IRuleExecutionContext request)
         {
             return ToString();
         }

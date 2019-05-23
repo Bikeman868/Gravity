@@ -18,7 +18,7 @@ namespace UrlRewrite.Operations
             return "/" + value;
         }
 
-        public string ToString(IRequestInfo requestInfo)
+        public string ToString(IRuleExecutionContext requestInfo)
         {
             return "ToAbsoluteUrl()";
         }

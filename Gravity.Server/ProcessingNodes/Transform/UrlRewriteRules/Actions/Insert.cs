@@ -12,7 +12,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
         private string _scopeIndex;
         private int _scopeIndexValue;
         private IValueGetter _valueGetter;
-        private Action<IRequestInfo, string> _action;
+        private Action<IRuleExecutionContext, string> _action;
 
         public IInsertAction Initialize(Scope scope, string scopeIndex, IValueGetter valueGetter)
         {
@@ -72,7 +72,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
         }
 
         public override void PerformAction(
-            IRequestInfo requestInfo,
+            IRuleExecutionContext requestInfo,
             IRuleResult ruleResult,
             out bool stopProcessing,
             out bool endRequest)
@@ -92,7 +92,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
             return text;
         }
 
-        public override string ToString(IRequestInfo request)
+        public override string ToString(IRuleExecutionContext request)
         {
             var text = "insert " + _valueGetter + " into " + _scope;
             if (!string.IsNullOrEmpty(_scopeIndex))

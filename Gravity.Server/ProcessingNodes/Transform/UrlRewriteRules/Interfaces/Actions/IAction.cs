@@ -13,7 +13,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Ac
         /// when the rule matches the incomming request
         /// </summary>
         void PerformAction(
-            IRequestInfo requestInfo, 
+            IRuleExecutionContext requestInfo, 
             IRuleResult ruleResult, 
             out bool stopProcessing, 
             out bool endRequest);

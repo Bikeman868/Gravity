@@ -44,7 +44,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
             return File.Exists(filePath);
         }
 
-        public bool Test(IRequestInfo request, IRuleResult ruleResult)
+        public bool Test(IRuleExecutionContext request, IRuleResult ruleResult)
         {
             var path = _valueGetter.GetString(request, ruleResult);
             try
@@ -73,7 +73,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
             return this;
         }
 
-        public string ToString(IRequestInfo request)
+        public string ToString(IRuleExecutionContext request)
         {
             return ToString();
         }

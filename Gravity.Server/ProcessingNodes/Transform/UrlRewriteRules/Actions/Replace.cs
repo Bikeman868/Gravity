@@ -55,7 +55,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
         }
 
         public override void PerformAction(
-            IRequestInfo requestInfo,
+            IRuleExecutionContext requestInfo,
             IRuleResult ruleResult,
             out bool stopProcessing,
             out bool endRequest)
@@ -125,7 +125,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
             return text;
         }
 
-        public override string ToString(IRequestInfo request)
+        public override string ToString(IRuleExecutionContext request)
         {
             var text = "replace " + _scope;
             if (!string.IsNullOrEmpty(_scopeIndex))

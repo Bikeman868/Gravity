@@ -11,6 +11,6 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Co
         /// <summary>
         /// Tests a request to see if it meets this condition
         /// </summary>
-        bool Test(IRequestInfo requestInfo, IRuleResult ruleResult = null);
+        bool Test(IRuleExecutionContext requestInfo, IRuleResult ruleResult = null);
     }
 }

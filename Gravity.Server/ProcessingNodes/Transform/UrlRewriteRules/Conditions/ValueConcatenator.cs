@@ -47,7 +47,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
             return this;
         }
 
-        public string GetString(IRequestInfo requestInfo, IRuleResult ruleResult)
+        public string GetString(IRuleExecutionContext requestInfo, IRuleResult ruleResult)
         {
             var output = new StringBuilder();
             for (var i = 0; i < _values.Count; i++)
@@ -63,7 +63,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
             return _operation.Execute(output.ToString());
         }
 
-        public int GetInt(IRequestInfo requestInfo, IRuleResult ruleResult, int defaultValue)
+        public int GetInt(IRuleExecutionContext requestInfo, IRuleResult ruleResult, int defaultValue)
         {
             var value = GetString(requestInfo, ruleResult);
             int intValue;
@@ -77,7 +77,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
             return result;
         }
 
-        public string ToString(IRequestInfo requestInfo)
+        public string ToString(IRuleExecutionContext requestInfo)
         {
             return ToString();
         }

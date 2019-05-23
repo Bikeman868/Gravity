@@ -35,7 +35,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Rules
 
         public string Name { get { return _name; } }
 
-        public IRuleResult Evaluate(IRequestInfo requestInfo)
+        public IRuleResult Evaluate(IRuleExecutionContext requestInfo)
         {
             var result = new RuleResult();
 
@@ -82,7 +82,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Rules
         {
         }
 
-        public string ToString(IRequestInfo requestInfo)
+        public string ToString(IRuleExecutionContext requestInfo)
         {
             return ToString();
         }
