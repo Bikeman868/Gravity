@@ -6,6 +6,9 @@ using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
 {
+    /// <summary>
+    /// Implements rule execution context that modifies the outgoing response
+    /// </summary>
     internal class ResponseContext : IRuleExecutionContext
     {
         public IOwinContext Context { get; private set; }
@@ -28,9 +31,16 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
             }
         }
 
+        private string _originalHost;
+
+        public string OriginalHost
+        {
+            get { return _originalHost ?? (_originalHost = Context.Request.Uri.Host); }
+        }
+
         private string _originalUrlString;
 
-        public string OriginalUrlString
+        public string OriginalPathAndQueryString
         {
             get
             {
@@ -46,7 +56,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
             {
                 if (!_originalQueryPos.HasValue)
                 {
-                    _originalQueryPos = OriginalUrlString.IndexOf('?');
+                    _originalQueryPos = OriginalPathAndQueryString.IndexOf('?');
                 }
                 return _originalQueryPos.Value;
             }
@@ -61,8 +71,8 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
                 if (ReferenceEquals(_originalPathString, null))
                 {
                     _originalPathString = OriginalQueryPos < 0
-                        ? OriginalUrlString
-                        : OriginalUrlString.Substring(0, OriginalQueryPos);
+                        ? OriginalPathAndQueryString
+                        : OriginalPathAndQueryString.Substring(0, OriginalQueryPos);
                 }
                 return _originalPathString;
             }
@@ -84,6 +94,23 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
                         _originalPath.Insert(0, "");
                 }
                 return _originalPath;
+            }
+        }
+
+        private string _newHost;
+
+        public string NewHost
+        {
+            get
+            {
+                if (ReferenceEquals(_newHost, null))
+                    _newHost = OriginalHost;
+                return _newHost;
+            }
+            set
+            {
+                _newHost = value;
+                UrlIsModified = true;
             }
         }
 

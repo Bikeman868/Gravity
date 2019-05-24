@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
 using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Actions;
 using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Conditions;
@@ -53,6 +54,9 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
                 case Scope.Url:
                     requestInfo.NewUrlString = "/";
                     break;
+                case Scope.Host:
+                    requestInfo.NewHost = string.Empty;
+                    break;
                 case Scope.Path:
                     requestInfo.NewPathString = "/";
                     break;
@@ -83,6 +87,29 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
                         {
                             requestInfo.NewPath.RemoveAt(indexToRemove);
                             requestInfo.PathChanged();
+                        }
+                    }
+                    break;
+                }
+                case Scope.HostElement:
+                {
+                    if (_scopeIndexValue == 0 || string.IsNullOrEmpty(requestInfo.NewHost))
+                    {
+                        requestInfo.NewHost = string.Empty;
+                    }
+                    else
+                    {
+                        var hostElements = requestInfo.NewHost.Split('.');
+                        var count = hostElements.Length;
+                        if (string.IsNullOrEmpty(hostElements[count - 1])) count--;
+                        var indexToRemove = _scopeIndexValue < 0
+                            ? count + _scopeIndexValue
+                            : _scopeIndexValue - 1;
+                        if (indexToRemove >= 0 && indexToRemove < count)
+                        {
+                            var elementList = hostElements.ToList();
+                            elementList.RemoveAt(indexToRemove);
+                            requestInfo.NewHost = string.Join(".", elementList);
                         }
                     }
                     break;

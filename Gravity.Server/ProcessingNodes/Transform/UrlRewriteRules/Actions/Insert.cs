@@ -23,11 +23,13 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
             if (string.IsNullOrEmpty(scopeIndex))
                 throw new Exception("When inserting into the path the index of the element to insert before must be provided");
             
-            if (scope != Scope.PathElement)
-                throw new Exception("You can only insert into the path scope");
+            if (scope != Scope.PathElement && scope != Scope.HostElement)
+                throw new Exception("You can only insert into the path scope or host scope");
 
             if (!int.TryParse(scopeIndex, out _scopeIndexValue))
                 throw new Exception("The index of the path element to insert must be a number");
+            
+            // TODO: Insert into host elements
 
             if (_scopeIndexValue == 0)
                 _action = (requestInfo, value) =>

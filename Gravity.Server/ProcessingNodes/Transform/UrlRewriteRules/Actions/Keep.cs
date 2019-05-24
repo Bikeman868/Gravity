@@ -104,6 +104,9 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
                     if (newPath.Count < 2) newPath.Add(string.Empty);
                     requestInfo.NewPath = newPath;
                     break;
+                case Scope.HostElement:
+                    // TODO: but only if this makes any sense
+                    break;
             }
 
             stopProcessing = _stopProcessing;

@@ -3,6 +3,7 @@
     public enum Scope
     {
         OriginalUrl,
+        OriginalHost,
         OriginalPath,
         OriginalQueryString,
         OriginalPathElement,
@@ -10,6 +11,8 @@
         OriginalHeader,
 
         Url,
+        Host,
+        HostElement,
         Path,
         MatchPath,
         QueryString,

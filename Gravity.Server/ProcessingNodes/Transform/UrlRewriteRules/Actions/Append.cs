@@ -33,13 +33,21 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
                     case Scope.PathElement:
                         _scope = Scope.Path;
                         break;
+                    case Scope.HostElement:
+                        _scope = Scope.Host;
+                        break;
                 }
             }
             else
             {
                 int.TryParse(scopeIndex, out _scopeIndexValue);
-                if (_scopeIndexValue == 0 && scope == Scope.PathElement)
-                    _scope = Scope.Path;
+                if (_scopeIndexValue == 0)
+                {
+                    if (scope == Scope.PathElement)
+                        _scope = Scope.Path;
+                    if (scope == Scope.HostElement)
+                        _scope = Scope.Host;
+                }
             }
 
             return this;
@@ -57,6 +65,9 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
             {
                 case Scope.Url:
                     requestInfo.NewUrlString = requestInfo.NewUrlString + value;
+                    break;
+                case Scope.Host:
+                    requestInfo.NewHost = requestInfo.NewHost + value;
                     break;
                 case Scope.Path:
                     requestInfo.NewPathString = requestInfo.NewPathString 
@@ -94,6 +105,31 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
                             {
                                 requestInfo.NewPath[index] = requestInfo.NewPath[index] + value;
                                 requestInfo.PathChanged();
+                            }
+                        }
+                        requestInfo.PathChanged();
+                        break;
+                    }
+                case Scope.HostElement:
+                    {
+                        var hostElements = requestInfo.NewHost.Split('.');
+                        var count = hostElements.Length;
+                        if (string.IsNullOrEmpty(hostElements[count - 1])) count--;
+                        if (_scopeIndexValue > 0)
+                        {
+                            if (_scopeIndexValue <= count)
+                            {
+                                hostElements[_scopeIndexValue - 1] = hostElements[_scopeIndexValue - 1] + value;
+                                requestInfo.NewHost = string.Join(".", hostElements);
+                            }
+                        }
+                        else
+                        {
+                            var index = count + _scopeIndexValue;
+                            if (index > 0)
+                            {
+                                hostElements[index] = hostElements[index] + value;
+                                requestInfo.NewHost = string.Join(".", hostElements);
                             }
                         }
                         requestInfo.PathChanged();

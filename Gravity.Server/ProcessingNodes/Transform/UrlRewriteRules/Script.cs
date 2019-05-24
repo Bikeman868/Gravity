@@ -61,10 +61,24 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
             }
         }
 
-        void IRequestTransform.Transform(IOwinContext context)
+        bool IRequestTransform.Transform(IOwinContext context)
         {
-            if (_rules != null)
-                _rules.Evaluate(new RequestContext(context));
+            if (_rules == null) return false;
+
+            var requestContext = new RequestContext(context);
+            var ruleResult = _rules.Evaluate(requestContext);
+
+            if (ruleResult.EndRequest)
+                return true;
+
+            if (requestContext.UrlIsModified)
+            {
+                context.Request.Path = new PathString(requestContext.NewPathString);
+                context.Request.QueryString = new QueryString(requestContext.NewParametersString);
+                context.Request.Host = new HostString(requestContext.NewHost);
+            }
+
+            return false;
         }
 
         IOwinContext IResponseTransform.WrapOriginalRequest(IOwinContext originalContext)
@@ -72,10 +86,13 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
             return originalContext;
         }
 
-        void IResponseTransform.Transform(IOwinContext originalContext, IOwinContext wrappedContext)
+        bool IResponseTransform.Transform(IOwinContext originalContext, IOwinContext wrappedContext)
         {
-            if (_rules != null)
-                _rules.Evaluate(new ResponseContext(wrappedContext));
+            if (_rules == null) return false;
+
+            var requestContext = new ResponseContext(wrappedContext);
+            var ruleResult = _rules.Evaluate(requestContext);
+            return ruleResult.EndRequest;
         }
 
         #region Constructing instances using factories and custom type registrations

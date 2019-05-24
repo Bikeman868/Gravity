@@ -67,6 +67,9 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
                 case Scope.Url:
                     requestInfo.NewUrlString = value;
                     break;
+                case Scope.Host:
+                    requestInfo.NewHost = value;
+                    break;
                 case Scope.Path:
                     requestInfo.NewPathString = value;
                     break;
@@ -104,6 +107,33 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
                         {
                             requestInfo.NewPath[index] = value;
                             requestInfo.PathChanged();
+                        }
+                    }
+                    break;
+                case Scope.HostElement:
+                    if (_scopeIndexValue == 0)
+                        requestInfo.NewHost = value;
+                    else if (_scopeIndexValue > 0)
+                    {
+                        var hostElements = requestInfo.NewHost.Split('.');
+                        var count = hostElements.Length;
+                        if (string.IsNullOrEmpty(hostElements[count - 1])) count--;
+                        if (_scopeIndexValue < count)
+                        {
+                            hostElements[_scopeIndexValue - 1] = value;
+                            requestInfo.NewHost = string.Join(".", hostElements);
+                        }
+                    }
+                    else
+                    {
+                        var hostElements = requestInfo.NewHost.Split('.');
+                        var count = hostElements.Length;
+                        if (string.IsNullOrEmpty(hostElements[count - 1])) count--;
+                        var index = count + _scopeIndexValue;
+                        if (index > 0)
+                        {
+                            requestInfo.NewPath[index] = value;
+                            requestInfo.NewHost = string.Join(".", hostElements);
                         }
                     }
                     break;

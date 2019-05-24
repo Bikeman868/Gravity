@@ -120,7 +120,11 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
                     break;
 
                 case Scope.PathElement:
-                    if (scopeIndexValue >= 0)
+                    if (scopeIndexValue == 0)
+                    {
+                        _getValueFunc = (request, ruleResult) => request.NewPathString;
+                    }
+                    else if (scopeIndexValue > 0)
                     {
                         _getValueFunc = (request, ruleResult) => 
                             scopeIndexValue < request.NewPath.Count
@@ -137,6 +141,41 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
                                 ? request.NewPath[i]
                                 : string.Empty;
                         };
+                    }
+                    break;
+
+                case Scope.HostElement:
+                    {
+                        if (scopeIndexValue == 0)
+                        {
+                            _getValueFunc = (request, ruleResult) => request.NewHost;
+                        }
+                        else if (scopeIndexValue > 0)
+                        {
+                            _getValueFunc = (request, ruleResult) =>
+                            {
+                                var hostElements = request.NewHost.Split('.');
+                                var count = hostElements.Length;
+                                if (string.IsNullOrEmpty(hostElements[count - 1])) count--;
+
+                                return scopeIndexValue <= count
+                                    ? hostElements[scopeIndexValue - 1]
+                                    : string.Empty;
+                            };
+                        }
+                        else
+                        {
+                            _getValueFunc = (request, ruleResult) =>
+                            {
+                                var hostElements = request.NewHost.Split('.');
+                                var count = hostElements.Length;
+                                var i = count + scopeIndexValue;
+                                if (string.IsNullOrEmpty(hostElements[count - 1])) i--;
+                                return i > 0
+                                    ? hostElements[i]
+                                    : string.Empty;
+                            };
+                        }
                     }
                     break;
 
@@ -225,7 +264,11 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
             switch (_scope)
             {
                 case Scope.OriginalUrl:
-                    _getValueFunc = (request, ruleResult) => request.OriginalUrlString;
+                    _getValueFunc = (request, ruleResult) => request.OriginalPathAndQueryString;
+                    break;
+
+                case Scope.OriginalHost:
+                    _getValueFunc = (request, ruleResult) => request.OriginalHost;
                     break;
 
                 case Scope.OriginalPath:
@@ -238,6 +281,10 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
 
                 case Scope.Url:
                     _getValueFunc = (request, ruleResult) => request.NewUrlString;
+                    break;
+
+                case Scope.Host:
+                    _getValueFunc = (request, ruleResult) => request.NewHost;
                     break;
 
                 case Scope.Path:

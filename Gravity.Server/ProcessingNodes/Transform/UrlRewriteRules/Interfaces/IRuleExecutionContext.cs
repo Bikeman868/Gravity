@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Web;
 using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces
@@ -13,13 +12,15 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces
         bool UrlIsModified { get; }
 
         // Information parsed from the incomming request
-        string OriginalUrlString { get; }
+        string OriginalHost { get; }
+        string OriginalPathAndQueryString { get; }
         string OriginalPathString { get; }
         IList<string> OriginalPath { get; }
         string OriginalParametersString { get; }
         IDictionary<string, IList<string>> OriginalParameters { get; }
 
-        // Control over the rewritten/redirected URL
+        // Control over the rewriten/redirected URL
+        string NewHost { get; set; }
         string NewUrlString { get; set; }
         string NewPathString { get; set; }
         string NewParametersString { get; set; }
