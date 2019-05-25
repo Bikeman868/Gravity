@@ -116,7 +116,21 @@
             "transforms": [
                 {
                     "name": "A",
-                    "output": "N"
+                    "output": "N",
+                    "description": [
+                        "Remove www from host name if present"
+                    ],
+                    "scriptLanguage": "UrlRewriteModule",
+                    "requestScript": [
+                        "<rewrite>",
+                        "  <rules name='root'>",
+                        "    <rule name='remove www' stopProcessing='false'>",
+                        "      <condition scope='hostElement' index='1' test='equals' value='www' />",
+                        "      <delete scope='hostElement' index='1' />",
+                        "    </rule>",
+                        "  </rules>",
+                        "</rewrite>"
+                    ]
                 },
                 {
                     "name": "J",
@@ -167,7 +181,7 @@
                     "thresholds": [ 1, 20, 200, 5000 ]
                 },
                 "nodes": [
-                    { "name": "A", "x": 300, "y": 50 },
+                    { "name": "A", "x": 200, "y": 50 },
                     { "name": "B", "x": 700, "y": 80 },
                     { "name": "C", "x": 700, "y": 230 },
                     { "name": "D", "x": 950, "y": 220 },

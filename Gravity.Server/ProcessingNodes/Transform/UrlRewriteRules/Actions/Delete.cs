@@ -30,6 +30,9 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
                     case Scope.PathElement:
                         _scope = Scope.Path;
                         break;
+                    case Scope.HostElement:
+                        _scope = Scope.Host;
+                        break;
                 }
             }
             else
@@ -37,6 +40,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
                 if (!int.TryParse(scopeIndex, out _scopeIndexValue))
                 {
                     if (scope == Scope.PathElement) _scope = Scope.Path;
+                    if (scope == Scope.HostElement) _scope = Scope.Host;
                 }
             }
 

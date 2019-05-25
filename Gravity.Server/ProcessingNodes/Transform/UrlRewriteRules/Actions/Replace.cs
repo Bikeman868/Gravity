@@ -41,13 +41,20 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
             {
                 if (int.TryParse(scopeIndex, out _scopeIndexValue))
                 {
-                    if (scope == Scope.PathElement && _scopeIndexValue == 0)
-                        _scope = Scope.Path;
+                    if (_scopeIndexValue == 0)
+                    {
+                        if (scope == Scope.PathElement)
+                            _scope = Scope.Path;
+                        else if (scope == Scope.HostElement)
+                            _scope = Scope.Host;
+                    }
                 }
                 else
                 {
                     if (scope == Scope.PathElement) 
                         _scope = Scope.Path;
+                    else if (scope == Scope.HostElement)
+                        _scope = Scope.Host;
                 }
             }
 

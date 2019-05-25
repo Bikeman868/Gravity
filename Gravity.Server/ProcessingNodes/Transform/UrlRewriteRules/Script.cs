@@ -421,6 +421,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
             switch (scope)
             {
                 case Scope.PathElement:
+                case Scope.HostElement:
                 case Scope.OriginalPathElement:
                 case Scope.ConditionGroup:
                 case Scope.MatchGroup:

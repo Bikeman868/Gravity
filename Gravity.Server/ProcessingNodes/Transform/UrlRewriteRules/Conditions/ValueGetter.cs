@@ -44,6 +44,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
             var hasNumericIndex =
                 scope == Scope.OriginalPathElement ||
                 scope == Scope.PathElement ||
+                scope == Scope.HostElement ||
                 scope == Scope.ConditionGroup ||
                 scope == Scope.MatchGroup;
 
@@ -51,6 +52,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
             {
                 if (scope == Scope.OriginalPathElement) scope = Scope.OriginalPath;
                 if (scope == Scope.PathElement) scope = Scope.Path;
+                if (scope == Scope.HostElement) scope = Scope.Host;
                 if (scope == Scope.OriginalParameter) scope = Scope.OriginalQueryString;
                 if (scope == Scope.Parameter) scope = Scope.QueryString;
             }
@@ -63,6 +65,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Conditions
                     {
                         if (scope == Scope.OriginalPathElement) scope = Scope.OriginalPath;
                         if (scope == Scope.PathElement) scope = Scope.Path;
+                        if (scope == Scope.HostElement) scope = Scope.Host;
                         if (scope == Scope.ConditionGroup)
                         {
                             scopeIndexValue = 0;

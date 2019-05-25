@@ -35,6 +35,9 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
                 case Scope.Path:
                     _scope = Scope.PathElement;
                     break;
+                case Scope.Host:
+                    _scope = Scope.HostElement;
+                    break;
                 case Scope.QueryString:
                     _scope = Scope.Parameter;
                     break;
