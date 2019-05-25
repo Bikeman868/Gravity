@@ -9,12 +9,15 @@ namespace Gravity.Server.Configuration
         public string RouteTo { get; set; }
 
         [JsonProperty("conditions")]
-        public RouterRuleConfiguration[] Rules { get; set; }
+        public RouterConditionConfiguration[] Conditions { get; set; }
 
         [JsonProperty("logic")]
-        public RuleLogic RuleLogic { get; set; }
+        public ConditionLogic ConditionLogic { get; set; }
 
         [JsonIgnore]
         public NodeOutput ProcessingNode { get; set; }
+
+        public void Sanitize()
+        { }
     }
 }

@@ -9,8 +9,9 @@ namespace Gravity.Server.ProcessingNodes.Routing
     {
         private readonly Regex _delimitedExpressionRegex = new Regex("{(.*)}", RegexOptions.Compiled);
         private readonly Regex _pathExpressionRegex = new Regex("path\\[(.*)]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private readonly Regex _nullExpressionRegex = new Regex("^null$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private readonly Regex _headerExpressionRegex = new Regex("header\\[(.*)]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private readonly Regex _queryExpressionRegex = new Regex("query\\[(.*)]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private readonly Regex _nullExpressionRegex = new Regex("^null$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private readonly Regex _methodExpressionRegex = new Regex("^method$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         IExpression<T> IExpressionParser.Parse<T>(string expression)
@@ -41,6 +42,10 @@ namespace Gravity.Server.ProcessingNodes.Routing
             var headerMatch = _headerExpressionRegex.Match(expression);
             if (headerMatch.Success)
                 return new HeaderExpression<T>(headerMatch.Groups[1].Value);
+
+            var queryMatch = _queryExpressionRegex.Match(expression);
+            if (queryMatch.Success)
+                return new QueryExpression<T>(queryMatch.Groups[1].Value);
 
             throw new Exception("Unknown expression syntax '" + expression + "'");
         }
@@ -101,6 +106,26 @@ namespace Gravity.Server.ProcessingNodes.Routing
                     return (T)(object)method;
 
                 return (T)Convert.ChangeType(method, typeof(T));
+            }
+        }
+
+        private class QueryExpression<T> : IExpression<T>
+        {
+            private readonly string _parameterName;
+
+            public QueryExpression(string parameterName)
+            {
+                _parameterName = parameterName;
+            }
+
+            T IExpression<T>.Evaluate(IOwinContext context)
+            {
+                var parameterValue = context.Request.Query[_parameterName];
+
+                if (typeof (string) == typeof (T))
+                    return (T)(object)parameterValue;
+
+                return (T)Convert.ChangeType(parameterValue, typeof(T));
             }
         }
 

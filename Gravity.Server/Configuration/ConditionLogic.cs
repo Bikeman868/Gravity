@@ -1,6 +1,6 @@
 ﻿namespace Gravity.Server.Configuration
 {
-    public enum RuleLogic
+    public enum ConditionLogic
     {
         All,
         Any,

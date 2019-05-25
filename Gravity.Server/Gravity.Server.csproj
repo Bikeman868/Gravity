@@ -73,8 +73,8 @@
     <Compile Include="Configuration\DashboardConfiguration.cs" />
     <Compile Include="Configuration\ResponseHeaderConfiguration.cs" />
     <Compile Include="Configuration\LeastConnectionsConfiguration.cs" />
-    <Compile Include="Configuration\RouterRuleConfiguration.cs" />
-    <Compile Include="Configuration\RuleLogic.cs" />
+    <Compile Include="Configuration\RouterConditionConfiguration.cs" />
+    <Compile Include="Configuration\ConditionLogic.cs" />
     <Compile Include="Configuration\ResponseConfiguration.cs" />
     <Compile Include="Configuration\ScriptLanguage.cs" />
     <Compile Include="Configuration\TrafficIndicatorConfiguration.cs" />

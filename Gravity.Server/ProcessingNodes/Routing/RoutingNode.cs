@@ -48,23 +48,56 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
                 _routes[i] = new Route
                 {
-                    RuleLogic = outputConfiguration.RuleLogic,
+                    ConditionLogic = outputConfiguration.ConditionLogic,
                 };
 
-                if (outputConfiguration.Rules != null && outputConfiguration.Rules.Length > 0)
+                if (outputConfiguration.Conditions != null && outputConfiguration.Conditions.Length > 0)
                 {
-                    _routes[i].Rules = outputConfiguration.Rules
-                        .Select(r =>
+                    _routes[i].Rules = outputConfiguration.Conditions
+                        .Select<RouterConditionConfiguration,  Rule>(r =>
                         {
                             var equals = r.Condition.IndexOf('=');
-                            if (equals < 0)
+                            if (equals < 1 || equals > r.Condition.Length - 2)
                                 throw new Exception("Routing expression must contain 'expr = expr'. You have '" +
                                                     r.Condition + "'");
 
-                            var leftSide = r.Condition.Substring(0, equals);
+                            var prefix = r.Condition[equals - 1];
+                            var isPrefixed = "<>!~".Contains(prefix);
+
+                            var leftSide = r.Condition.Substring(0, isPrefixed ? equals - 1 : equals);
                             var rightSide = r.Condition.Substring(equals + 1);
 
-                            return new Rule
+                            if (isPrefixed)
+                            {
+                                switch (prefix)
+                                {
+                                    case '~':
+                                        return new ContainsRule
+                                        {
+                                            Expression1 = _expressionParser.Parse<string>(leftSide),
+                                            Expression2 = _expressionParser.Parse<string>(rightSide),
+                                        };
+                                    case '!':
+                                        return new NotEqualsRule
+                                        {
+                                            Expression1 = _expressionParser.Parse<string>(leftSide),
+                                            Expression2 = _expressionParser.Parse<string>(rightSide),
+                                        };
+                                    case '<':
+                                        return new StartsWithRule
+                                        {
+                                            Expression1 = _expressionParser.Parse<string>(leftSide),
+                                            Expression2 = _expressionParser.Parse<string>(rightSide),
+                                        };
+                                    case '>':
+                                        return new EndsWithRule
+                                        {
+                                            Expression1 = _expressionParser.Parse<string>(leftSide),
+                                            Expression2 = _expressionParser.Parse<string>(rightSide),
+                                        };
+                                }
+                            }
+                            return new EqualsRule
                             {
                                 Expression1 = _expressionParser.Parse<string>(leftSide),
                                 Expression2 = _expressionParser.Parse<string>(rightSide),
@@ -142,37 +175,92 @@ namespace Gravity.Server.ProcessingNodes.Routing
         private class Route
         {
             public Rule[] Rules;
-            public RuleLogic RuleLogic;
+            public ConditionLogic ConditionLogic;
 
             public bool IsMatch(IOwinContext context)
             {
                 if (Rules == null)
                     return true;
 
-                switch (RuleLogic)
+                switch (ConditionLogic)
                 {
-                    case RuleLogic.All:
+                    case ConditionLogic.All:
                         return Rules.All(r => r.IsMatch(context));
-                    case RuleLogic.None:
+                    case ConditionLogic.None:
                         return Rules.All(r => !r.IsMatch(context));
-                    case RuleLogic.Any:
+                    case ConditionLogic.Any:
                         return Rules.Any(r => r.IsMatch(context));
                 }
-                throw new Exception("Routing node does not understand RuleLogic=" + RuleLogic);
+                throw new Exception("Routing node does not understand ConditionLogic=" + ConditionLogic);
             }
         }
 
-        private class Rule
+        private abstract class Rule
+        {
+            public abstract bool IsMatch(IOwinContext context);
+        }
+
+        private class EqualsRule: Rule
         {
             public IExpression<string> Expression1;
             public IExpression<string> Expression2;
 
-            public bool IsMatch(IOwinContext context)
+            public override bool IsMatch(IOwinContext context)
             {
                 return string.Equals(
                     Expression1.Evaluate(context),
                     Expression2.Evaluate(context),
                     StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        private class NotEqualsRule: Rule
+        {
+            public IExpression<string> Expression1;
+            public IExpression<string> Expression2;
+
+            public override bool IsMatch(IOwinContext context)
+            {
+                return !string.Equals(
+                    Expression1.Evaluate(context),
+                    Expression2.Evaluate(context),
+                    StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        private class ContainsRule: Rule
+        {
+            public IExpression<string> Expression1;
+            public IExpression<string> Expression2;
+
+            public override bool IsMatch(IOwinContext context)
+            {
+                return Expression1.Evaluate(context)
+                    .IndexOf(Expression2.Evaluate(context), StringComparison.OrdinalIgnoreCase) >= 0;
+            }
+        }
+
+        private class StartsWithRule: Rule
+        {
+            public IExpression<string> Expression1;
+            public IExpression<string> Expression2;
+
+            public override bool IsMatch(IOwinContext context)
+            {
+                return Expression1.Evaluate(context)
+                    .StartsWith(Expression2.Evaluate(context), StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        private class EndsWithRule: Rule
+        {
+            public IExpression<string> Expression1;
+            public IExpression<string> Expression2;
+
+            public override bool IsMatch(IOwinContext context)
+            {
+                return Expression1.Evaluate(context)
+                    .EndsWith(Expression2.Evaluate(context), StringComparison.OrdinalIgnoreCase);
             }
         }
     }

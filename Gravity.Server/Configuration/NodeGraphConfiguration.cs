@@ -39,7 +39,7 @@ namespace Gravity.Server.Configuration
 
                 InternalNodes = new[]
                 {
-                    new InternalEndpointConfiguration {Name = "A"}
+                    new InternalEndpointConfiguration { Name = "A" }
                 };
             }
             else

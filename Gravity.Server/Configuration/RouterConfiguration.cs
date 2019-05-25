@@ -9,6 +9,18 @@ namespace Gravity.Server.Configuration
 
         public override void Sanitize()
         {
+            if (Outputs == null || Outputs.Length == 0)
+            {
+                Outputs = new[]
+                {
+                    new RouterOutputConfiguration { RouteTo = "A" }
+                };
+            }
+            else
+            {
+                foreach (var output in Outputs)
+                    output.Sanitize();
+            }
         }
     }
 }

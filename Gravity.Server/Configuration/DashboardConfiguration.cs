@@ -47,6 +47,24 @@ namespace Gravity.Server.Configuration
                 TrafficIndicator = new TrafficIndicatorConfiguration();
             TrafficIndicator.Sanitize();
 
+            if (Listeners == null)
+            {
+                Listeners = new ListenersConfiguration
+                {
+                    X = 0,
+                    Y = 50,
+                    XSpacing = 0,
+                    YSpacing = 150
+                };
+            }
+            else
+            {
+                if (Listeners.X < 0) Listeners.X = 0;
+                if (Listeners.X > 10000) Listeners.X = 10000;
+                if (Listeners.Y < 0) Listeners.Y = 0;
+                if (Listeners.Y > 10000) Listeners.Y = 10000;
+            }
+
             return this;
         }
 

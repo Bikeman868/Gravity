@@ -54,11 +54,26 @@
                     "name": "M",
                     "disabled": true,
                     "host": "localhost",
-                    "healthCheckHost": "mycompany.com"
+                    "port": 80,
+                    "connectionTimeout": "00:00:10",
+                    "responseTimeout": "00:10:00",
+                    "healthCheckHost": "mycompany.com",
+                    "healthCheckMethod": "GET",
+                    "healthCheckPort": 80,
+                    "healthCheckPath": "/"
                 }
             ],
             "cors": [
-                { "name": "L", "output": "K" }
+                {
+                    "name": "L",
+                    "output": "K" ,
+                    "websiteOrigin": "https://mycompany.com",
+                    "allowedOrigins": "https?://(.+\\.)?mycompany\\.com",
+                    "allowedHeaders": "Accept,Content-Type,Location",
+                    "allowedMethods": "GET,POST",
+                    "allowCredentials": true,
+                    "exposedHeaders": "Location"
+                }
             ],
             "responses": [
                 {
@@ -124,7 +139,7 @@
                     "requestScript": [
                         "<rewrite>",
                         "  <rules name='root'>",
-                        "    <rule name='remove www' stopProcessing='false'>",
+                        "    <rule name='remove www'>",
                         "      <condition scope='hostElement' index='1' test='equals' value='www' />",
                         "      <delete scope='hostElement' index='1' />",
                         "    </rule>",
@@ -142,13 +157,13 @@
                     "description": [
                         "Add X-Forwarded-For header",
                         "Add X-Real-IP header",
-                        "ADD X-Powered-By header"
+                        "Add X-Powered-By header"
                     ],
                     "scriptLanguage": "UrlRewriteModule",
                     "requestScript": [
                         "<rewrite>",
                         "  <rules name='root'>",
-                        "    <rule name='set-headers' stopProcessing='false'>",
+                        "    <rule name='set-headers'>",
                         "      <rewrite to='header' toIndex='X-Forwarded-For' from='serverVariable' fromIndex='LocalIpAddress'/>",
                         "      <rewrite to='header' toIndex='X-Real-IP' from='serverVariable' fromIndex='LocalIpAddress'/>",
                         "    </rule>",

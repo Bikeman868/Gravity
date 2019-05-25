@@ -81,11 +81,11 @@ namespace Gravity.Server.Ui.Nodes
             {
                 var details = new List<string>();
 
-                if (routerOutput.Rules != null && routerOutput.Rules.Length > 0)
+                if (routerOutput.Conditions != null && routerOutput.Conditions.Length > 0)
                 {
-                    details.Add("If " + routerOutput.RuleLogic.ToString().ToLower());
+                    details.Add("If " + routerOutput.ConditionLogic.ToString().ToLower());
 
-                    foreach (var rule in routerOutput.Rules)
+                    foreach (var rule in routerOutput.Conditions)
                     {
                         if (!rule.Disabled)
                         {
