@@ -3,9 +3,9 @@ using Svg;
 
 namespace Gravity.Server.Interfaces
 {
-    internal interface IDiagramGenerator
+    internal interface IDrawingGenerator
     {
-        DrawingElement GenerateDashboardDiagram();
+        DrawingElement GenerateDashboardDrawing();
         SvgDocument ProduceSvg(DrawingElement rootElement);
     }
 }

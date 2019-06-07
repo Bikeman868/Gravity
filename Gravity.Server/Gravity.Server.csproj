@@ -166,11 +166,12 @@
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Script.cs" />
     <Compile Include="ProcessingNodes\Transform\IScriptParser.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Parser.cs" />
-    <Compile Include="Ui\DiagramGenerator.cs" />
-    <Compile Include="Interfaces\IDiagramGenerator.cs" />
-    <Compile Include="Ui\SvgSerializer.cs" />
+    <Compile Include="Ui\Drawings\DashboardDrawing.cs" />
+    <Compile Include="Ui\Drawings\DrawingGenerator.cs" />
+    <Compile Include="Interfaces\IDrawingGenerator.cs" />
+    <Compile Include="Ui\Drawings\SvgSerializer.cs" />
     <Compile Include="Ui\Nodes\LoadBalancerDrawing.cs" />
-    <Compile Include="Ui\Service.cs" />
+    <Compile Include="Ui\ApiService.cs" />
     <Compile Include="Utility\Factory.cs" />
     <Compile Include="Utility\Timer.cs" />
     <Compile Include="ProcessingNodes\Routing\ExpressionParser.cs" />
@@ -200,8 +201,8 @@
     <Compile Include="ProcessingNodes\Transform\TransformNode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
-    <Compile Include="Ui\DashboardDiagramComponent.cs" />
-    <Compile Include="Ui\DiagramComponentBase.cs" />
+    <Compile Include="Ui\Components\DashboardDiagramComponent.cs" />
+    <Compile Include="Ui\Components\DiagramComponentBase.cs" />
     <Compile Include="Ui\Nodes\NodeDrawing.cs" />
     <Compile Include="Ui\Nodes\ListenerDrawing.cs" />
     <Compile Include="Ui\Nodes\InternalRequestDrawing.cs" />

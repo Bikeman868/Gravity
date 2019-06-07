@@ -22,6 +22,15 @@
                             ]
                         },
                         {
+                            "to": "B",
+                            "logic": "All",
+                            "conditions": [
+                                { "condition": "{method} = GET" },
+                                { "condition": "{header[host]} = localhost:52581" },
+                                { "condition": "{path[1]} = assets" }
+                            ]
+                        },
+                        {
                             "to": "G",
                             "logic": "All",
                             "conditions": [
@@ -225,6 +234,9 @@
     },
     "owinFramework": {
         "pages": {
+            "framework": {
+                "assetRootPath" : "/ui/assets"
+            },
             "html": {
                 "includeComments": true,
                 "indented": true

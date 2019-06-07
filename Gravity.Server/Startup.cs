@@ -55,7 +55,8 @@ namespace Gravity.Server
             ninject.Get<OwinFramework.Pages.Restful.BuildEngine>().Install(fluentBuilder);
             fluentBuilder.Register(Assembly.GetExecutingAssembly(), t => ninject.Get(t));
 
-            ninject.Get<INameManager>().Bind();
+            var nameManager = ninject.Get<INameManager>();
+            nameManager.Bind();
         }
     }
 }

@@ -1,26 +1,49 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Web;
+using Gravity.Server.Configuration;
 using Gravity.Server.Interfaces;
-using Gravity.Server.Ui.Nodes;
 using Gravity.Server.Ui.Shapes;
+using OwinFramework.Interfaces.Builder;
 using Svg;
 
-namespace Gravity.Server.Ui
+namespace Gravity.Server.Ui.Drawings
 {
-    internal class DiagramGenerator : IDiagramGenerator
+    internal class DiagramGenerator : IDrawingGenerator
     {
         public const float SvgTextHeight = 12;
         public const float SvgTextLineSpacing = 15;
         public const float SvgTextCharacterSpacing = 6.3f;
 
-        public DrawingElement GenerateDashboardDiagram()
+        private readonly IRequestListener _requestListener;
+        private readonly INodeGraph _nodeGraph;
+
+        private readonly IDisposable _dashboardConfig;
+
+        private DashboardConfiguration _dashboardConfiguration;
+
+        public DiagramGenerator(
+            IConfiguration configuration,
+            IRequestListener requestListener,
+            INodeGraph nodeGraph)
         {
-            throw new NotImplementedException();
+            _requestListener = requestListener;
+            _nodeGraph = nodeGraph;
+
+            _dashboardConfig = configuration.Register(
+                "/gravity/ui/dashboard",
+                c => _dashboardConfiguration = c.Sanitize(),
+                new DashboardConfiguration());
+        }
+
+        public DrawingElement GenerateDashboardDrawing()
+        {
+            return new DashboardDrawing(
+                _dashboardConfiguration,
+                _requestListener,
+                _nodeGraph.GetNodes(n => n));
         }
 
         public SvgDocument ProduceSvg(DrawingElement rootElement)

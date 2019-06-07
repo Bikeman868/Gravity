@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,7 +7,7 @@ using OwinFramework.Pages.Restful.Interfaces;
 using OwinFramework.Pages.Restful.Serializers;
 using Svg;
 
-namespace Gravity.Server.Ui
+namespace Gravity.Server.Ui.Drawings
 {
     public class SvgSerializer: SerializerBase, IResponseSerializer
     {

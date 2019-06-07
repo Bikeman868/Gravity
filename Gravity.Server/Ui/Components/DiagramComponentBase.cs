@@ -4,19 +4,19 @@ using System.Text;
 using Gravity.Server.Interfaces;
 using Gravity.Server.Ui.Shapes;
 using OwinFramework.Pages.Core.Enums;
-using OwinFramework.Pages.Html.Elements;
 using OwinFramework.Pages.Core.Interfaces.Builder;
 using OwinFramework.Pages.Core.Interfaces.Runtime;
+using OwinFramework.Pages.Html.Elements;
 
-namespace Gravity.Server.Ui
+namespace Gravity.Server.Ui.Components
 {
     internal abstract class DiagramComponentBase: Component
     {
-        protected readonly IDiagramGenerator DiagramGenerator;
+        protected readonly IDrawingGenerator DiagramGenerator;
 
         protected DiagramComponentBase(
             IComponentDependenciesFactory dependencies,
-            IDiagramGenerator diagramGenerator) 
+            IDrawingGenerator diagramGenerator) 
             : base(dependencies)
         {
             DiagramGenerator = diagramGenerator;
