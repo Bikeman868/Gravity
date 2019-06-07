@@ -8,6 +8,7 @@ nuget Urchin.Client > 1.2
 nuget Moq = 4.2.1507.0118
 nuget Moq.Modules = 1.0.2
 nuget Newtonsoft.Json = 7.0.1
+nuget DotlessClientOnly
 
 nuget NUnit ~> 3
 

@@ -1,43 +1,29 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Web;
+using Gravity.Server.Interfaces;
+using Gravity.Server.Ui.Nodes;
 using Gravity.Server.Ui.Shapes;
-using OwinFramework.Pages.Core.Enums;
-using OwinFramework.Pages.Html.Elements;
-using OwinFramework.Pages.Core.Interfaces.Builder;
-using OwinFramework.Pages.Core.Interfaces.Runtime;
 using Svg;
 
 namespace Gravity.Server.Ui
 {
-    internal abstract class DiagramComponent: Component
+    internal class DiagramGenerator : IDiagramGenerator
     {
         public const float SvgTextHeight = 12;
         public const float SvgTextLineSpacing = 15;
         public const float SvgTextCharacterSpacing = 6.3f;
 
-        protected DiagramComponent(
-            IComponentDependenciesFactory dependencies) 
-            : base(dependencies)
+        public DrawingElement GenerateDashboardDiagram()
         {
+            throw new NotImplementedException();
         }
 
-        public override IWriteResult WritePageArea(IRenderContext context, PageArea pageArea)
-        {
-            if (pageArea == PageArea.Body)
-            {
-                var rootElement = DrawDiagram();
-                Write(rootElement, context.Html);
-            }
-
-            return base.WritePageArea(context, pageArea);
-        }
-
-        protected abstract DrawingElement DrawDiagram();
-
-        private void Write(DrawingElement rootElement, IHtmlWriter writer)
+        public SvgDocument ProduceSvg(DrawingElement rootElement)
         {
             rootElement.SortDescendentsByZOrder();
             rootElement.Arrange();
@@ -77,15 +63,7 @@ namespace Gravity.Server.Ui
             svgDocument.Height = rootElement.Top + rootElement.Height;
             svgDocument.ViewBox = new SvgViewBox(0, 0, svgDocument.Width, svgDocument.Height);
 
-            string svg;
-            using (var stream = new MemoryStream())
-            {
-                svgDocument.Write(stream);
-                svg = Encoding.UTF8.GetString(stream.GetBuffer(), 0, (int)stream.Length);
-                svg = svg.Substring(svg.IndexOf("<svg", StringComparison.OrdinalIgnoreCase));
-            }
-
-            writer.GetTextWriter().Write(svg);
+            return svgDocument;
         }
 
         #region Embedded resources

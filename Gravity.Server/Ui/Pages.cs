@@ -11,7 +11,7 @@ namespace Gravity.Server.Ui
     [Route("/ui", Method.Get)]
     [PageTitle("Gravity")]
     [UsesLayout("page")]
-    [RegionHtml("main", "app-title", "<h1>Gravity UI</h1>")]
+    [ZoneHtml("main", "app-title", "<h1>Gravity UI</h1>")]
     internal class HomePage { }
 
     /*
@@ -22,7 +22,7 @@ namespace Gravity.Server.Ui
     [Route("/ui/dashboard", Method.Get)]
     [PageTitle("Gravity dashboard")]
     [UsesLayout("page")]
-    [RegionComponent("main", "dashboard_diagram")]
+    [ZoneComponent("main", "dashboard_diagram")]
     internal class DashboardPage { }
 
     /*
@@ -30,9 +30,9 @@ namespace Gravity.Server.Ui
      */
 
     [IsLayout("page", "header,main,footer")]
-    [LayoutRegion("header", "header")]
-    [LayoutRegion("main", "main")]
-    [LayoutRegion("footer", "footer")]
+    [ZoneRegion("header", "header")]
+    [ZoneRegion("main", "main")]
+    [ZoneRegion("footer", "footer")]
     internal class HomePageLayout { }
 
     [IsRegion("header")]

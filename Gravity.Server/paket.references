@@ -3,6 +3,7 @@ Ioc.Modules.Ninject
 
 Newtonsoft.Json
 Svg
+DotlessClientOnly
 
 Owin
 Microsoft.Owin

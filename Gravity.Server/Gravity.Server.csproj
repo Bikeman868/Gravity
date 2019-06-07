@@ -166,7 +166,11 @@
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Script.cs" />
     <Compile Include="ProcessingNodes\Transform\IScriptParser.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Parser.cs" />
+    <Compile Include="Ui\DiagramGenerator.cs" />
+    <Compile Include="Interfaces\IDiagramGenerator.cs" />
+    <Compile Include="Ui\SvgSerializer.cs" />
     <Compile Include="Ui\Nodes\LoadBalancerDrawing.cs" />
+    <Compile Include="Ui\Service.cs" />
     <Compile Include="Utility\Factory.cs" />
     <Compile Include="Utility\Timer.cs" />
     <Compile Include="ProcessingNodes\Routing\ExpressionParser.cs" />
@@ -197,7 +201,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
     <Compile Include="Ui\DashboardDiagramComponent.cs" />
-    <Compile Include="Ui\DiagramComponent.cs" />
+    <Compile Include="Ui\DiagramComponentBase.cs" />
     <Compile Include="Ui\Nodes\NodeDrawing.cs" />
     <Compile Include="Ui\Nodes\ListenerDrawing.cs" />
     <Compile Include="Ui\Nodes\InternalRequestDrawing.cs" />
@@ -233,7 +237,6 @@
   <ItemGroup>
     <Content Include="config.json" />
   </ItemGroup>
-  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
@@ -266,6 +269,17 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5'">
+      <ItemGroup>
+        <Reference Include="dotless.ClientOnly">
+          <HintPath>..\packages\DotlessClientOnly\lib\dotless.ClientOnly.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
   <Choose>
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5'">
       <ItemGroup>

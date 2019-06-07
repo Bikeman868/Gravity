@@ -21,7 +21,7 @@ namespace Gravity.Server.Ui
     // TODO: replace initialization JavaScript to jsut refres the image
 
     [IsComponent("dashboard_diagram")]
-    internal class DashboardDiagramComponent: DiagramComponent
+    internal class DashboardDiagramComponent: DiagramComponentBase
     {
         private readonly IRequestListener _requestListener;
         private readonly INodeGraph _nodeGraph;
@@ -34,8 +34,9 @@ namespace Gravity.Server.Ui
             IComponentDependenciesFactory dependencies,
             IConfiguration configuration,
             IRequestListener requestListener,
-            INodeGraph nodeGraph) 
-            : base(dependencies)
+            INodeGraph nodeGraph,
+            IDiagramGenerator diagramGenerator) 
+            : base(dependencies, diagramGenerator)
         {
             _requestListener = requestListener;
             _nodeGraph = nodeGraph;
