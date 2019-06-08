@@ -31,9 +31,9 @@ nuget Owin.Framework.ExceptionReporter
 nuget Owin.Framework.NotFound
 nuget Owin.Framework.Urchin
 nuget Owin.Framework.AnalysisReporter
-nuget Owin.Framework.Pages.Core
-nuget Owin.Framework.Pages.Framework
-nuget Owin.Framework.Pages.Html
-nuget Owin.Framework.Pages.Restful
-nuget Owin.Framework.Pages.Standard
-nuget Owin.Framework.Pages.DebugMiddleware
+nuget Owin.Framework.Pages.Core >= 1.2.1
+nuget Owin.Framework.Pages.Framework >= 1.2.1
+nuget Owin.Framework.Pages.Html >= 1.2.1
+nuget Owin.Framework.Pages.Restful >= 1.2.1
+nuget Owin.Framework.Pages.Standard >= 1.2.1
+nuget Owin.Framework.Pages.DebugMiddleware >= 1.2.1
