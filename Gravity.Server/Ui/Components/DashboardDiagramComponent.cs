@@ -7,8 +7,11 @@ using OwinFramework.Pages.Html.Elements;
 namespace Gravity.Server.Ui.Components
 {
     [IsComponent("dashboard_diagram")]
-    //[NeedsComponent("api")]
-    [DeployFunction("void", "updateImage", "id", "var image=getElementById(id);image.src=image.src;")]
+    [DeployFunction(
+        "void",
+        "reloadDashboardDiagram",
+        "e",
+        @"setTimeout(function() { e.src = e.src.replace(/\?r=.+/, '?r=' + Math.random()); }, 2000);")]
     internal class DashboardDiagramComponent: Component
     {
         public DashboardDiagramComponent(
@@ -22,10 +25,11 @@ namespace Gravity.Server.Ui.Components
             if (pageArea == PageArea.Body)
             {
                 context.Html.WriteUnclosedElement(
-                    "img",
+                    "img", 
                     "id", "dashboard_diagram",
-                    "src", "/ui/api/diagram/dashboard",
-                    "onload", "updateImage(\"dashboard_diagram\");");
+                    "class", "diagram", 
+                    "src", "/ui/api/diagram/dashboard?r=0",
+                    "onload", "reloadDashboardDiagram(this);");
             }
 
             return base.WritePageArea(context, pageArea);

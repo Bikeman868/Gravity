@@ -22,15 +22,6 @@
                             ]
                         },
                         {
-                            "to": "B",
-                            "logic": "All",
-                            "conditions": [
-                                { "condition": "{method} = GET" },
-                                { "condition": "{header[host]} = localhost:52581" },
-                                { "condition": "{path[1]} = assets" }
-                            ]
-                        },
-                        {
                             "to": "G",
                             "logic": "All",
                             "conditions": [
@@ -75,7 +66,7 @@
             "cors": [
                 {
                     "name": "L",
-                    "output": "K" ,
+                    "output": "K",
                     "websiteOrigin": "https://mycompany.com",
                     "allowedOrigins": "https?://(.+\\.)?mycompany\\.com",
                     "allowedHeaders": "Accept,Content-Type,Location",
@@ -183,7 +174,7 @@
                         "  </rules>",
                         "</rewrite>"
                     ],
-                    "responseScript": [ 
+                    "responseScript": [
                         "<rewrite>",
                         "  <rules name='root'>",
                         "    <rule name='set-headers'>",
@@ -235,10 +226,14 @@
     "owinFramework": {
         "pages": {
             "framework": {
-                "assetRootPath" : "/ui/assets"
+                "defaultLanguage":  "en-US",
+                "assetRootPath": "/ui/assets",
+                "assetCacheTime":  "01:00:00",
+                "assetVersion": "1",
+                "debugLogging": false
             },
             "html": {
-                "includeComments": true,
+                "includeComments": false,
                 "indented": true
             }
         }
