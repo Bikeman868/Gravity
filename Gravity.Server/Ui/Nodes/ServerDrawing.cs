@@ -36,10 +36,10 @@ namespace Gravity.Server.Ui.Nodes
             details.Add("Connection timeout " + server.ConnectionTimeout);
             details.Add("Response timeout " + server.ResponseTimeout);
             details.Add("Health check " + 
-                server.HealthCheckMethod + " http://" + 
+                server.HealthCheckMethod + (server.HealthCheckPort == 443 ? " https": " http") +"://" + 
                 (server.HealthCheckHost ?? server.Host) + 
-                (server.HealthCheckPort == 80 ? "" : ":" + server.HealthCheckPort) + 
-                server.HealthCheckPath);
+                ((server.HealthCheckPort == 80 || server.HealthCheckPort == 443) ? "" : ":" + server.HealthCheckPort) + 
+                server.HealthCheckPath + " returns " + string.Join(" or ", server.HealthCheckCodes));
 
             AddDetails(details, null, server.Disabled ? "disabled" : string.Empty);
 

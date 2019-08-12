@@ -8,9 +8,10 @@ namespace Gravity.Server.ProcessingNodes.Routing
     internal class ExpressionParser: IExpressionParser
     {
         private readonly Regex _delimitedExpressionRegex = new Regex("{(.*)}", RegexOptions.Compiled);
-        private readonly Regex _pathExpressionRegex = new Regex("path\\[(.*)]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private readonly Regex _pathElementExpressionRegex = new Regex("path\\[(.*)]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private readonly Regex _headerExpressionRegex = new Regex("header\\[(.*)]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private readonly Regex _queryExpressionRegex = new Regex("query\\[(.*)]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private readonly Regex _pathExpressionRegex = new Regex("^path$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private readonly Regex _nullExpressionRegex = new Regex("^null$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private readonly Regex _methodExpressionRegex = new Regex("^method$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
@@ -37,7 +38,11 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
             var pathMatch = _pathExpressionRegex.Match(expression);
             if (pathMatch.Success)
-                return new PathExpression<T>(int.Parse(pathMatch.Groups[1].Value));
+                return new PathExpression<T>();
+
+            var pathElementMatch = _pathElementExpressionRegex.Match(expression);
+            if (pathElementMatch.Success)
+                return new PathElementExpression<T>(int.Parse(pathElementMatch.Groups[1].Value));
 
             var headerMatch = _headerExpressionRegex.Match(expression);
             if (headerMatch.Success)
@@ -109,6 +114,19 @@ namespace Gravity.Server.ProcessingNodes.Routing
             }
         }
 
+        private class PathExpression<T> : IExpression<T>
+        {
+            T IExpression<T>.Evaluate(IOwinContext context)
+            {
+                var path = context.Request.Path.Value;
+
+                if (typeof(string) == typeof(T))
+                    return (T)(object)path;
+
+                return (T)Convert.ChangeType(path, typeof(T));
+            }
+        }
+
         private class QueryExpression<T> : IExpression<T>
         {
             private readonly string _parameterName;
@@ -129,11 +147,11 @@ namespace Gravity.Server.ProcessingNodes.Routing
             }
         }
 
-        private class PathExpression<T> : IExpression<T>
+        private class PathElementExpression<T> : IExpression<T>
         {
             private readonly int _index;
 
-            public PathExpression(int index)
+            public PathElementExpression(int index)
             {
                 _index = index;
             }

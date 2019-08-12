@@ -53,6 +53,9 @@ namespace Gravity.Server.Configuration
         [JsonProperty("healthCheckPath")]
         public string HealthCheckPath { get; set; }
 
+        [JsonProperty("healthCheckCodes")]
+        public int[] HealthCheckCodes { get; set; }
+
         public ServerConfiguration()
         {
             Port = 80;
@@ -61,6 +64,7 @@ namespace Gravity.Server.Configuration
             HealthCheckMethod = "GET";
             HealthCheckPath = "/";
             HealthCheckPort = 80;
+            HealthCheckCodes = new[] { 200 };
         }
 
         public override void Sanitize()

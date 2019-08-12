@@ -274,6 +274,7 @@ namespace Gravity.Server.Utility
                         HealthCheckHost = serverNodeConfiguration.HealthCheckHost,
                         HealthCheckPath = serverNodeConfiguration.HealthCheckPath,
                         HealthCheckMethod = serverNodeConfiguration.HealthCheckMethod,
+                        HealthCheckCodes = serverNodeConfiguration.HealthCheckCodes
                     };
                     serverNodeConfiguration.Node = node;
                     nodes.Add(node);

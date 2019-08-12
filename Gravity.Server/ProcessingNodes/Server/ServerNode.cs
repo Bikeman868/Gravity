@@ -22,6 +22,7 @@ namespace Gravity.Server.ProcessingNodes.Server
         public string HealthCheckHost { get; set; }
         public int HealthCheckPort { get; set; }
         public string HealthCheckPath { get; set; }
+        public int[] HealthCheckCodes { get; set; }
         public TimeSpan DnsLookupInterval { get; set; }
 
         public bool? Healthy { get; private set; }
@@ -44,6 +45,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             HealthCheckPort = 80;
             HealthCheckMethod = "GET";
             HealthCheckPath = "/";
+            HealthCheckCodes = new[] { 200 };
 
             _endpoints = new Dictionary<IPEndPoint, ConnectionPool>();
 
@@ -277,7 +279,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                     var response = Send(request);
 
-                    if (response.StatusCode == 200)
+                    if (HealthCheckCodes.Contains(response.StatusCode))
                     {
                         healthy = true;
                         IpAddresses[i].SetHealthy();
@@ -304,26 +306,42 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         private Response Send(Request request)
         {
-            var endpoint = new IPEndPoint(request.IpAddress, request.PortNumber);
-
-            ConnectionPool connectionPool;
-            lock (_endpoints)
-            {
-                if (!_endpoints.TryGetValue(endpoint, out connectionPool))
-                {
-                    connectionPool = new ConnectionPool(endpoint, ConnectionTimeout, ResponseTimeout);
-                    _endpoints.Add(endpoint, connectionPool);
-                }
-            }
-
-            var connection = connectionPool.GetConnection();
             try
             {
-                return connection.Send(request);
+                var endpoint = new IPEndPoint(request.IpAddress, request.PortNumber);
+
+                ConnectionPool connectionPool;
+                lock (_endpoints)
+                {
+                    if (!_endpoints.TryGetValue(endpoint, out connectionPool))
+                    {
+                        connectionPool = new ConnectionPool(endpoint, ConnectionTimeout, ResponseTimeout);
+                        _endpoints.Add(endpoint, connectionPool);
+                    }
+                }
+
+                var connection = connectionPool.GetConnection();
+                try
+                {
+                    return connection.Send(request);
+                }
+                finally
+                {
+                    connectionPool.ReuseConnection(connection);
+                }
             }
-            finally
+            catch (Exception ex)
             {
-                connectionPool.ReuseConnection(connection);
+                return new Response
+                {
+                    StatusCode = 503,
+                    ReasonPhrase = "Exception forwarding request to real server",
+                    Headers = new[]
+                    {
+                        new Tuple<string, string>("Retry-After", "60"),
+                        new Tuple<string, string>("X-Exception", ex.Message)
+                    }
+                };
             }
         }
     }

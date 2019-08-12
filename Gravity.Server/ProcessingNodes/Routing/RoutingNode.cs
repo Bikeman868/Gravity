@@ -200,17 +200,20 @@ namespace Gravity.Server.ProcessingNodes.Routing
             public abstract bool IsMatch(IOwinContext context);
         }
 
-        private class EqualsRule: Rule
+        private class EqualsRule : Rule
         {
             public IExpression<string> Expression1;
             public IExpression<string> Expression2;
 
             public override bool IsMatch(IOwinContext context)
             {
-                return string.Equals(
-                    Expression1.Evaluate(context),
-                    Expression2.Evaluate(context),
-                    StringComparison.OrdinalIgnoreCase);
+                var value1 = Expression1.Evaluate(context);
+                var value2 = Expression2.Evaluate(context);
+
+                if (string.IsNullOrEmpty(value1)) return string.IsNullOrEmpty(value2);
+                if (string.IsNullOrEmpty(value2)) return false;
+
+                return string.Equals(value1, value2, StringComparison.OrdinalIgnoreCase);
             }
         }
 
@@ -221,10 +224,13 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
             public override bool IsMatch(IOwinContext context)
             {
-                return !string.Equals(
-                    Expression1.Evaluate(context),
-                    Expression2.Evaluate(context),
-                    StringComparison.OrdinalIgnoreCase);
+                var value1 = Expression1.Evaluate(context);
+                var value2 = Expression2.Evaluate(context);
+
+                if (string.IsNullOrEmpty(value1)) return !string.IsNullOrEmpty(value2);
+                if (string.IsNullOrEmpty(value2)) return true;
+
+                return !string.Equals(value1, value2, StringComparison.OrdinalIgnoreCase);
             }
         }
 
@@ -235,8 +241,13 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
             public override bool IsMatch(IOwinContext context)
             {
-                return Expression1.Evaluate(context)
-                    .IndexOf(Expression2.Evaluate(context), StringComparison.OrdinalIgnoreCase) >= 0;
+                var value1 = Expression1.Evaluate(context);
+                if (string.IsNullOrEmpty(value1)) return false;
+
+                var value2 = Expression2.Evaluate(context);
+                if (string.IsNullOrEmpty(value2)) return false;
+
+                return value1.IndexOf(value2, StringComparison.OrdinalIgnoreCase) >= 0;
             }
         }
 
@@ -247,8 +258,13 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
             public override bool IsMatch(IOwinContext context)
             {
-                return Expression1.Evaluate(context)
-                    .StartsWith(Expression2.Evaluate(context), StringComparison.OrdinalIgnoreCase);
+                var value1 = Expression1.Evaluate(context);
+                if (string.IsNullOrEmpty(value1)) return false;
+
+                var value2 = Expression2.Evaluate(context);
+                if (string.IsNullOrEmpty(value2)) return false;
+
+                return value1.StartsWith(value2, StringComparison.OrdinalIgnoreCase);
             }
         }
 
@@ -259,8 +275,13 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
             public override bool IsMatch(IOwinContext context)
             {
-                return Expression1.Evaluate(context)
-                    .EndsWith(Expression2.Evaluate(context), StringComparison.OrdinalIgnoreCase);
+                var value1 = Expression1.Evaluate(context);
+                if (string.IsNullOrEmpty(value1)) return false;
+
+                var value2 = Expression2.Evaluate(context);
+                if (string.IsNullOrEmpty(value2)) return false;
+
+                return value1.EndsWith(value2, StringComparison.OrdinalIgnoreCase);
             }
         }
     }
