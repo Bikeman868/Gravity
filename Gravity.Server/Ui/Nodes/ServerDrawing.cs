@@ -32,7 +32,7 @@ namespace Gravity.Server.Ui.Nodes
             }
 
             details.Add("Host " + (server.Host ?? string.Empty));
-            details.Add("Port " + server.Port);
+            details.Add("Port " + (server.Port.HasValue ? server.Port.Value.ToString() :  "pass-through"));
             details.Add("Connection timeout " + server.ConnectionTimeout);
             details.Add("Response timeout " + server.ResponseTimeout);
             details.Add("Health check " + 

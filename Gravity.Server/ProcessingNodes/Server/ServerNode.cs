@@ -15,7 +15,7 @@ namespace Gravity.Server.ProcessingNodes.Server
         public string Name { get; set; }
         public bool Disabled { get; set; }
         public string Host { get; set; }
-        public int Port { get; set; }
+        public int? Port { get; set; }
         public TimeSpan ConnectionTimeout { get; set; }
         public TimeSpan ResponseTimeout { get; set; }
         public string HealthCheckMethod { get; set; }
@@ -38,7 +38,6 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         public ServerNode()
         {
-            Port = 80;
             ConnectionTimeout = TimeSpan.FromSeconds(5);
             ResponseTimeout = TimeSpan.FromMinutes(1);
             DnsLookupInterval = TimeSpan.FromSeconds(5);
@@ -144,10 +143,20 @@ namespace Gravity.Server.ProcessingNodes.Server
             var ipAddressIndex = Interlocked.Increment(ref _lastIpAddressIndex) % ipAddresses.Count;
             var ipAddress = ipAddresses[ipAddressIndex];
 
+            var port = 80;
+            if (Port.HasValue)
+            {
+                port = Port.Value;
+            }
+            else if (string.Equals(context.Request.Scheme, "https", StringComparison.OrdinalIgnoreCase))
+            {
+                port = 443;
+            }
+
             var request = new Request
             {
                 IpAddress = ipAddress.Address,
-                PortNumber = Port,
+                PortNumber = port,
                 Method = context.Request.Method,
                 PathAndQuery = context.Request.Path.ToString(),
                 Headers = context.Request.Headers

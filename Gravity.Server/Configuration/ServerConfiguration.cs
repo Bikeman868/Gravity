@@ -12,10 +12,10 @@ namespace Gravity.Server.Configuration
         public string Host { get; set; }
 
         /// <summary>
-        /// Port number of the server
+        /// Port number of the server or null to pass through from the request
         /// </summary>
         [JsonProperty("port")]
-        public int Port { get; set; }
+        public int? Port { get; set; }
 
         /// <summary>
         /// How long to wait for a connection to be opened
@@ -58,7 +58,6 @@ namespace Gravity.Server.Configuration
 
         public ServerConfiguration()
         {
-            Port = 80;
             ConnectionTimeout = TimeSpan.FromSeconds(5);
             ResponseTimeout = TimeSpan.FromMinutes(1);
             HealthCheckMethod = "GET";
