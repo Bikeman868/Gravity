@@ -48,13 +48,13 @@
                 {
                     "name": "I",
                     "disabled": false,
+                    "port": 80,
                     "host": "owinframework.net"
                 },
                 {
                     "name": "M",
                     "disabled": true,
                     "host": "localhost",
-                    "port": null,
                     "connectionTimeout": "00:00:10",
                     "responseTimeout": "00:10:00",
                     "healthCheckHost": "mycompany.com",
