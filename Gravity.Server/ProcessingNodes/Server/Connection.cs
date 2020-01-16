@@ -114,24 +114,34 @@ namespace Gravity.Server.ProcessingNodes.Server
             void ParseHeaders()
             {
                 var firstSpaceIndex = headerLines[0].IndexOf(' ');
+                if (firstSpaceIndex < 1) throw new Exception("Response first line contains no spaces");
+
                 var secondSpaceIndex = headerLines[0].IndexOf(' ', firstSpaceIndex + 1);
-                result.StatusCode = Int32.Parse(headerLines[0].Substring(firstSpaceIndex + 1, secondSpaceIndex - firstSpaceIndex));
+                if (secondSpaceIndex < 3) throw new Exception("Response first line contains only 1 space");
+
+                if (!Int32.TryParse(headerLines[0].Substring(firstSpaceIndex + 1, secondSpaceIndex - firstSpaceIndex), out result.StatusCode))
+                    throw new Exception("Response status code can not be parsed as an integer");
+
                 result.ReasonPhrase = headerLines[0].Substring(secondSpaceIndex + 1);
 
                 result.Headers = new Tuple<string, string>[headerLines.Count - 1];
+
                 for (var j = 1; j < headerLines.Count; j++)
                 {
                     var headerLine = headerLines[j];
 
                     var colonPos = headerLine.IndexOf(':');
-                    var name = headerLine.Substring(0, colonPos).Trim();
-                    var value = headerLine.Substring(colonPos + 1).Trim();
-                    result.Headers[j - 1] = new Tuple<string, string>(name, value);
-
-                    if (string.Equals(name, "Content-Length", StringComparison.OrdinalIgnoreCase))
+                    if (colonPos > 0)
                     {
-                        contentLength = Int32.Parse(value);
-                        fixedLength = true;
+                        var name = headerLine.Substring(0, colonPos).Trim();
+                        var value = headerLine.Substring(colonPos + 1).Trim();
+                        result.Headers[j - 1] = new Tuple<string, string>(name, value);
+
+                        if (string.Equals(name, "Content-Length", StringComparison.OrdinalIgnoreCase))
+                        {
+                            contentLength = Int32.Parse(value);
+                            fixedLength = true;
+                        }
                     }
                 }
             }
@@ -166,6 +176,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                 {
                     result.StatusCode = 504;
                     result.ReasonPhrase = "Server did not respond within " + _responseTimeout;
+                    Dispose();
                     return result;
                 }
 

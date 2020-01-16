@@ -347,6 +347,11 @@ namespace Gravity.Server.ProcessingNodes.Server
                 {
                     return connection.Send(request);
                 }
+                catch
+                {
+                    connection.Dispose();
+                    throw;
+                }
                 finally
                 {
                     connectionPool.ReuseConnection(connection);
