@@ -32,7 +32,7 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
         {
         }
 
-        Task INode.ProcessRequest(IOwinContext context)
+        Task INode.ProcessRequest(IOwinContext context, ILog log)
         {
             context.Response.StatusCode = StatusCode;
             context.Response.ReasonPhrase = ReasonPhrase;

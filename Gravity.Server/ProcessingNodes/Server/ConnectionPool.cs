@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using Gravity.Server.Interfaces;
 
 namespace Gravity.Server.ProcessingNodes.Server
 {
@@ -37,7 +38,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
         }
 
-        public Connection GetConnection()
+        public Connection GetConnection(ILog log)
         {
             while (true)
             {
@@ -45,22 +46,32 @@ namespace Gravity.Server.ProcessingNodes.Server
                 {
                     if (_pool.Count > 0)
                     {
+                        log?.Log(LogType.Pooling, LogLevel.Detailed, () => $"Connection pool contains {_pool.Count} connections");
+
                         var connection = _pool.Dequeue();
                         if (connection.IsConnected)
                             return connection;
 
+                        log?.Log(LogType.Pooling, LogLevel.Superficial, () => "The connection dequeued from the pool was not connected and will be disposed");
                         connection.Dispose();
                     }
-                    else break;
+                    else
+                    {
+                        break;
+                    }
                 }
             }
-            return new Connection(_endpoint, _hostName, _protocol, _connectionTimeout, _responseTimeout);
+
+            log?.Log(LogType.Pooling, LogLevel.Detailed, () => "The connection pool is empty, creating a new connection");
+            return new Connection(log, _endpoint, _hostName, _protocol, _connectionTimeout, _responseTimeout);
         }
 
-        public void ReuseConnection(Connection connection)
+        public void ReuseConnection(ILog log, Connection connection)
         {
             if (connection.IsConnected)
             {
+                log?.Log(LogType.Pooling, LogLevel.Detailed, () => "The connection is still connected and can be reused");
+
                 lock (_pool)
                 {
                     if (_pool.Count < 500)
@@ -68,8 +79,11 @@ namespace Gravity.Server.ProcessingNodes.Server
                         _pool.Enqueue(connection);
                         return;
                     }
+                    log?.Log(LogType.Pooling, LogLevel.Detailed, () => "The connection pool is full");
                 }
             }
+
+            log?.Log(LogType.Pooling, LogLevel.Detailed, () => "Disposing of the connection");
             connection.Dispose();
         }
     }

@@ -64,6 +64,6 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
             Offline = offline;
         }
 
-        public abstract Task ProcessRequest(IOwinContext context);
+        public abstract Task ProcessRequest(IOwinContext context, ILog log);
     }
 }

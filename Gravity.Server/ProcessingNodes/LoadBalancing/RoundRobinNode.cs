@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Gravity.Server.Interfaces;
 using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes.LoadBalancing
@@ -9,7 +10,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
     {
         private int _next;
 
-        public override Task ProcessRequest(IOwinContext context)
+        public override Task ProcessRequest(IOwinContext context, ILog log)
         {
             if (Disabled)
             {
@@ -40,7 +41,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
             var output = enabledOutputs[index];
 
             var startTime = output.TrafficAnalytics.BeginRequest();
-            return output.Node.ProcessRequest(context).ContinueWith(t =>
+            return output.Node.ProcessRequest(context, log).ContinueWith(t =>
             {
                 output.TrafficAnalytics.EndRequest(startTime);
             });

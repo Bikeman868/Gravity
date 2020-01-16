@@ -22,7 +22,7 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
         {
         }
 
-        Task INode.ProcessRequest(IOwinContext context)
+        Task INode.ProcessRequest(IOwinContext context, ILog log)
         {
             // returning null here will make the listener middleware chain the
             // next middleware in the OWIN pipeline

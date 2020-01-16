@@ -30,7 +30,7 @@ namespace Gravity.Server.ProcessingNodes.Server
         public bool Offline { get; private set; }
 
         public ServerIpAddress[] IpAddresses;
-        private readonly Dictionary<string, ConnectionPool> _endpoints;
+        private readonly Dictionary<string, ConnectionPool> _connectionPools;
 
         private readonly Thread _heathCheckThread;
         private DateTime _nextDnsLookup;
@@ -46,7 +46,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             HealthCheckPath = "/";
             HealthCheckCodes = new[] { 200 };
 
-            _endpoints = new Dictionary<string, ConnectionPool>();
+            _connectionPools = new Dictionary<string, ConnectionPool>();
 
             _heathCheckThread = new Thread(() =>
             {
@@ -96,11 +96,11 @@ namespace Gravity.Server.ProcessingNodes.Server
             _heathCheckThread.Abort();
             _heathCheckThread.Join(TimeSpan.FromSeconds(10));
 
-            lock (_endpoints)
+            lock (_connectionPools)
             {
-                foreach (var endpoint in _endpoints.Values)
+                foreach (var endpoint in _connectionPools.Values)
                     endpoint.Dispose();
-                _endpoints.Clear();
+                _connectionPools.Clear();
             }
         }
 
@@ -120,7 +120,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             Offline = Healthy == false;
         }
 
-        Task INode.ProcessRequest(IOwinContext context)
+        Task INode.ProcessRequest(IOwinContext context, ILog log)
         {
             var allIpAddresses = IpAddresses;
 
@@ -188,14 +188,14 @@ namespace Gravity.Server.ProcessingNodes.Server
 
             Response response;
             ipAddress.IncrementConnectionCount();
-            var startTime = ipAddress.TrafficAnalytics.BeginRequest();
+            var startTicks = ipAddress.TrafficAnalytics.BeginRequest();
             try
             {
-                response = Send(request);
+                response = Send(request, log);
             }
             finally
             {
-                ipAddress.TrafficAnalytics.EndRequest(startTime);
+                ipAddress.TrafficAnalytics.EndRequest(startTicks);
                 ipAddress.DecrementConnectionCount();
             }
 
@@ -298,7 +298,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                         }
                     };
 
-                    var response = Send(request);
+                    var response = Send(request, null);
 
                     if (HealthCheckCodes.Contains(response.StatusCode))
                     {
@@ -325,7 +325,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
         }
 
-        private Response Send(Request request)
+        private Response Send(Request request, ILog log)
         {
             try
             {
@@ -333,16 +333,17 @@ namespace Gravity.Server.ProcessingNodes.Server
                 var key = request.Protocol + "://" + request.HostName + ":" + request.PortNumber + " " + request.IpAddress;
 
                 ConnectionPool connectionPool;
-                lock (_endpoints)
+                lock (_connectionPools)
                 {
-                    if (!_endpoints.TryGetValue(key, out connectionPool))
+                    if (!_connectionPools.TryGetValue(key, out connectionPool))
                     {
+                        log?.Log(LogType.Pooling, LogLevel.Superficial, () => "Creating new connection pool " + key);
                         connectionPool = new ConnectionPool(endpoint, request.HostName, request.Protocol, ConnectionTimeout, ResponseTimeout);
-                        _endpoints.Add(key, connectionPool);
+                        _connectionPools.Add(key, connectionPool);
                     }
                 }
 
-                var connection = connectionPool.GetConnection();
+                var connection = connectionPool.GetConnection(log);
                 try
                 {
                     return connection.Send(request);
@@ -354,7 +355,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                 }
                 finally
                 {
-                    connectionPool.ReuseConnection(connection);
+                    connectionPool.ReuseConnection(log, connection);
                 }
             }
             catch (Exception ex)

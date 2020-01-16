@@ -117,7 +117,7 @@ namespace Gravity.Server.ProcessingNodes.Transform
                 Offline = _nextNode.Offline;
         }
 
-        Task INode.ProcessRequest(IOwinContext context)
+        Task INode.ProcessRequest(IOwinContext context, ILog log)
         {
             if (_nextNode == null)
             {
@@ -132,10 +132,10 @@ namespace Gravity.Server.ProcessingNodes.Transform
             }
 
             if (Disabled || _responseTransform == null)
-                return _nextNode.ProcessRequest(context);
+                return _nextNode.ProcessRequest(context, log);
 
             var wrappedContext = _responseTransform.WrapOriginalRequest(context);
-            return _nextNode.ProcessRequest(wrappedContext).ContinueWith(t =>
+            return _nextNode.ProcessRequest(wrappedContext, log).ContinueWith(t =>
             {
                 _responseTransform.Transform(context, wrappedContext);
             });

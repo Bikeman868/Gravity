@@ -38,6 +38,6 @@ namespace Gravity.Server.Interfaces
         /// <summary>
         /// Runtime request processing
         /// </summary>
-        Task ProcessRequest(IOwinContext context);
+        Task ProcessRequest(IOwinContext context, ILog log);
     }
 }

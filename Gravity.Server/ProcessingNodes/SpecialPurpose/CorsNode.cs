@@ -42,7 +42,7 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
                 Offline = _nextNode.Offline;
         }
 
-        Task INode.ProcessRequest(IOwinContext context)
+        Task INode.ProcessRequest(IOwinContext context, ILog log)
         {
             if (_nextNode == null)
             {
@@ -114,7 +114,7 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
                 }
             }
 
-            return _nextNode.ProcessRequest(context);
+            return _nextNode.ProcessRequest(context, log);
         }
     }
 }

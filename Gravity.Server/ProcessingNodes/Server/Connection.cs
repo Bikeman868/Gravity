@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
+using Gravity.Server.Interfaces;
 
 namespace Gravity.Server.ProcessingNodes.Server
 {
@@ -15,12 +16,16 @@ namespace Gravity.Server.ProcessingNodes.Server
         private readonly Stream _stream;
 
         public Connection(
+            ILog log,
             IPEndPoint endpoint,
             string hostName,
             string protocol,
             TimeSpan connectionTimeout, 
             TimeSpan responseTimeout)
         {
+            log?.Log(LogType.TcpIp, LogLevel.Basic, 
+                () => $"Opening a new Tcp connection to {protocol}://{hostName} at {endpoint}");
+
             _responseTimeout = responseTimeout;
 
             _tcpClient = new TcpClient
@@ -31,15 +36,23 @@ namespace Gravity.Server.ProcessingNodes.Server
 
             var connectResult = _tcpClient.BeginConnect(endpoint.Address, endpoint.Port, null, null);
             if (!connectResult.AsyncWaitHandle.WaitOne(connectionTimeout))
+            {
+                log?.Log(LogType.Exception, LogLevel.Superficial, () => $"Failed to connect within {connectionTimeout}");
                 throw new Exception("Failed to connect within " + connectionTimeout);
+            }
+
             _tcpClient.EndConnect(connectResult);            
 
             _stream = _tcpClient.GetStream();
 
             if (protocol == "https")
             {
-                var  sslStream = new SslStream(_stream);
+                log?.Log(LogType.TcpIp, LogLevel.Basic, () => "Wrapping Tcp connection in SSL stream");
+                var sslStream = new SslStream(_stream);
+
                 _stream = sslStream;
+
+                log?.Log(LogType.TcpIp, LogLevel.Basic, () => $"Authenticating server's SSL certificate for {hostName}");
                 sslStream.AuthenticateAsClient(hostName);
             }
         }

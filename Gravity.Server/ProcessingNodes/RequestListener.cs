@@ -11,16 +11,23 @@ namespace Gravity.Server.ProcessingNodes
 {
     internal class RequestListener: IRequestListener
     {
+        private static readonly object _lock = new object();
+
         private readonly INodeGraph _nodeGraph;
+        private readonly ILogFactory _logFactory;
+
         private ListenerConfiguration _configuration;
         private readonly IDisposable _configurationRegistration;
+
         private Thread _trafficUpdateThread;
 
         public RequestListener(
             IConfiguration configuration,
-            INodeGraph nodeGraph)
+            INodeGraph nodeGraph,
+            ILogFactory logFactory)
         {
             _nodeGraph = nodeGraph;
+            _logFactory = logFactory;
 
             _configurationRegistration = configuration.Register(
                 "/gravity/listener",
@@ -112,14 +119,21 @@ namespace Gravity.Server.ProcessingNodes
                         return context.Response.WriteAsync(string.Empty);
                     }
 
-                    var startTime = output.TrafficAnalytics.BeginRequest();
+                    using (var log = _logFactory.Create(context))
+                    {
+                        var startTime = output.TrafficAnalytics.BeginRequest();
+#if DEBUG
+                        lock (_lock)
+#endif
+                        {
+                            var task = output.Node.ProcessRequest(context, log);
 
-                    var task = output.Node.ProcessRequest(context);
+                            if (task == null)
+                                return next();
 
-                    if (task == null)
-                        return next();
-
-                    return task.ContinueWith(t => output.TrafficAnalytics.EndRequest(startTime));
+                            return task.ContinueWith(t => output.TrafficAnalytics.EndRequest(startTime));
+                        }
+                    }
                 }
             }
 

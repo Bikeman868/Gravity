@@ -144,7 +144,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
             Offline = offline;
         }
 
-        Task INode.ProcessRequest(IOwinContext context)
+        Task INode.ProcessRequest(IOwinContext context, ILog log)
         {
             for (var i = 0; i < _routes.Length; i++)
             {
@@ -156,7 +156,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
                     if (node != null)
                     {
                         var startTime = output.TrafficAnalytics.BeginRequest();
-                        var task = node.ProcessRequest(context);
+                        var task = node.ProcessRequest(context, log);
                         if (task == null)
                             return null;
                         return task.ContinueWith(t =>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Gravity.Server.Interfaces;
 using Gravity.Server.Utility;
 using Microsoft.Owin;
 
@@ -78,7 +79,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
             _cleanupThread.Join(TimeSpan.FromSeconds(10));
         }
 
-        public override Task ProcessRequest(IOwinContext context)
+        public override Task ProcessRequest(IOwinContext context, ILog log)
         {
             if (Disabled)
             {
@@ -115,7 +116,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
                 startTime = output.TrafficAnalytics.BeginRequest();
                 output.IncrementConnectionCount();
 
-                return output.Node.ProcessRequest(context).ContinueWith(t =>
+                return output.Node.ProcessRequest(context, log).ContinueWith(t =>
                 {
                     output.TrafficAnalytics.EndRequest(startTime);
                     output.DecrementConnectionCount();
@@ -173,7 +174,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
             startTime = sessionOutput.TrafficAnalytics.BeginRequest();
             sessionOutput.IncrementConnectionCount();
 
-            return sessionOutput.Node.ProcessRequest(context).ContinueWith(t =>
+            return sessionOutput.Node.ProcessRequest(context, log).ContinueWith(t =>
             {
                 sessionOutput.TrafficAnalytics.EndRequest(startTime);
                 sessionOutput.DecrementConnectionCount();
