@@ -30,7 +30,7 @@ namespace Gravity.Server.ProcessingNodes.Server
         public bool Offline { get; private set; }
 
         public ServerIpAddress[] IpAddresses;
-        private readonly Dictionary<IPEndPoint, ConnectionPool> _endpoints;
+        private readonly Dictionary<string, ConnectionPool> _endpoints;
 
         private readonly Thread _heathCheckThread;
         private DateTime _nextDnsLookup;
@@ -46,7 +46,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             HealthCheckPath = "/";
             HealthCheckCodes = new[] { 200 };
 
-            _endpoints = new Dictionary<IPEndPoint, ConnectionPool>();
+            _endpoints = new Dictionary<string, ConnectionPool>();
 
             _heathCheckThread = new Thread(() =>
             {
@@ -144,17 +144,27 @@ namespace Gravity.Server.ProcessingNodes.Server
             var ipAddress = ipAddresses[ipAddressIndex];
 
             var port = 80;
+            var protocol = context.Request.Scheme;
+
             if (Port.HasValue)
             {
                 port = Port.Value;
+                protocol = port == 443 ? "https" : "http";
             }
-            else if (string.Equals(context.Request.Scheme, "https", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(protocol, "https", StringComparison.OrdinalIgnoreCase))
             {
                 port = 443;
             }
 
+            var host = context.Request.Headers["Host"];
+            var hostColon = host.IndexOf(':');
+            if (hostColon > 0)
+                host = host.Substring(0, hostColon);
+
             var request = new Request
             {
+                Protocol = protocol,
+                HostName = host,
                 IpAddress = ipAddress.Address,
                 PortNumber = port,
                 Method = context.Request.Method,
@@ -266,7 +276,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
 
             var host = HealthCheckHost ?? Host;
-            if (HealthCheckPort != 80) host += ":" + HealthCheckPort;
+            var hostHeader = HealthCheckPort == 80 ? host : host + ":" + HealthCheckPort;
 
             var healthy = false;
 
@@ -276,13 +286,15 @@ namespace Gravity.Server.ProcessingNodes.Server
                 {
                     var request = new Request
                     {
+                        Protocol = HealthCheckPort == 443 ? "https" : "http",
+                        HostName = host,
                         IpAddress = IpAddresses[i].Address,
                         PortNumber = HealthCheckPort,
                         Method = HealthCheckMethod,
                         PathAndQuery = HealthCheckPath,
                         Headers = new[]
                         {
-                            new Tuple<string, string>("Host", host)
+                            new Tuple<string, string>("Host", hostHeader)
                         }
                     };
 
@@ -318,14 +330,15 @@ namespace Gravity.Server.ProcessingNodes.Server
             try
             {
                 var endpoint = new IPEndPoint(request.IpAddress, request.PortNumber);
+                var key = request.IpAddress + ":" + request.PortNumber + " " + request.HostName;
 
                 ConnectionPool connectionPool;
                 lock (_endpoints)
                 {
-                    if (!_endpoints.TryGetValue(endpoint, out connectionPool))
+                    if (!_endpoints.TryGetValue(key, out connectionPool))
                     {
-                        connectionPool = new ConnectionPool(endpoint, ConnectionTimeout, ResponseTimeout);
-                        _endpoints.Add(endpoint, connectionPool);
+                        connectionPool = new ConnectionPool(endpoint, request.HostName, request.Protocol, ConnectionTimeout, ResponseTimeout);
+                        _endpoints.Add(key, connectionPool);
                     }
                 }
 

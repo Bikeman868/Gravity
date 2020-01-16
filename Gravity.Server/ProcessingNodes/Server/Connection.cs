@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
 
@@ -11,10 +12,12 @@ namespace Gravity.Server.ProcessingNodes.Server
     {
         private readonly TimeSpan _responseTimeout;
         private readonly TcpClient _tcpClient;
-        private readonly NetworkStream _stream;
+        private readonly Stream _stream;
 
         public Connection(
             IPEndPoint endpoint,
+            string hostName,
+            string protocol,
             TimeSpan connectionTimeout, 
             TimeSpan responseTimeout)
         {
@@ -30,23 +33,24 @@ namespace Gravity.Server.ProcessingNodes.Server
             if (!connectResult.AsyncWaitHandle.WaitOne(connectionTimeout))
                 throw new Exception("Failed to connect within " + connectionTimeout);
             _tcpClient.EndConnect(connectResult);            
-            
+
             _stream = _tcpClient.GetStream();
+
+            if (protocol == "https")
+            {
+                var  sslStream = new SslStream(_stream);
+                _stream = sslStream;
+                sslStream.AuthenticateAsClient(hostName);
+            }
         }
 
         public void Dispose()
         {
-            _stream.Close();
-            _tcpClient.Close();
+            _stream?.Close();
+            _tcpClient?.Close();
         }
 
-        public bool IsConnected
-        {
-            get
-            {
-                return _tcpClient.Connected;
-            }
-        }
+        public bool IsConnected => _tcpClient.Connected;
 
         public Response Send(Request request)
         {
@@ -60,6 +64,11 @@ namespace Gravity.Server.ProcessingNodes.Server
 
             buffer.Append(request.Method);
             buffer.Append(' ');
+            buffer.Append(request.Protocol);
+            buffer.Append("://");
+            buffer.Append(request.HostName);
+            buffer.Append(':');
+            buffer.Append(request.PortNumber);
             buffer.Append(request.PathAndQuery);
             buffer.Append(' ');
             buffer.Append("HTTP/1.1");
@@ -95,13 +104,14 @@ namespace Gravity.Server.ProcessingNodes.Server
 
             var line = new StringBuilder();
             var headerLines = new List<string>();
-            var buffer = new byte[65535];
+            var buffer = new byte[50000];
             var contentLength = 0;
             var contentIndex = 0;
             var header = true;
             var beginning = true;
+            var fixedLength = false;
 
-            Action parseHeaders = () =>
+            void ParseHeaders()
             {
                 var firstSpaceIndex = headerLines[0].IndexOf(' ');
                 var secondSpaceIndex = headerLines[0].IndexOf(' ', firstSpaceIndex + 1);
@@ -118,12 +128,32 @@ namespace Gravity.Server.ProcessingNodes.Server
                     var value = headerLine.Substring(colonPos + 1).Trim();
                     result.Headers[j - 1] = new Tuple<string, string>(name, value);
 
-                    if (String.Equals(name, "Content-Length", StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(name, "Content-Length", StringComparison.OrdinalIgnoreCase))
+                    {
                         contentLength = Int32.Parse(value);
+                        fixedLength = true;
+                    }
+                }
+            }
+
+            void AppendContent(int src, int dest, int count)
+            {
+                if (result.Content == null)
+                {
+#if DEBUG
+                    if (dest != 0) throw new Exception("Destination offset for copy must be 0 when the content buffer has not been allocated yet");
+#endif
+                    result.Content = new byte[fixedLength ? contentLength : count];
+                }
+                else if (result.Content.Length < dest + count)
+                {
+                    var newContent = new byte[dest + count];
+                    Array.Copy(result.Content, 0, newContent, 0, result.Content.Length);
+                    result.Content = newContent;
                 }
 
-                if (contentLength > 0) result.Content = new byte[contentLength];
-            };
+                Array.Copy(buffer, src, result.Content, dest, count);
+            }
 
             while (true)
             {
@@ -155,13 +185,13 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                             if (line.Length == 0)
                             {
-                                parseHeaders();
+                                ParseHeaders();
                                 header = false;
 
                                 if (i < readCount - 1)
                                 {
                                     contentIndex = readCount - i - 1;
-                                    Array.Copy(buffer, i + 1, result.Content, 0, contentIndex);
+                                    AppendContent(i + 1, 0, contentIndex);
                                 }
                                 break;
                             }
@@ -177,11 +207,8 @@ namespace Gravity.Server.ProcessingNodes.Server
                 }
                 else
                 {
-                    if (result.Content != null)
-                    {
-                        Array.Copy(buffer, 0, result.Content, contentIndex, readCount);
-                        contentIndex += readCount;
-                    }
+                    AppendContent(0, contentIndex, readCount);
+                    contentIndex += readCount;
                 }
 
                 if (readCount < buffer.Length)

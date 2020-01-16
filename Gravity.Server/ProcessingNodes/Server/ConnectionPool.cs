@@ -7,16 +7,22 @@ namespace Gravity.Server.ProcessingNodes.Server
     internal class ConnectionPool: IDisposable
     {
         private readonly IPEndPoint _endpoint;
+        private readonly string _hostName;
+        private readonly string _protocol;
         private readonly TimeSpan _connectionTimeout;
         private readonly TimeSpan _responseTimeout;
         private readonly Queue<Connection> _pool;
 
         public ConnectionPool(
             IPEndPoint endpoint,
+            string hostName,
+            string protocol,
             TimeSpan connectionTimeout, 
             TimeSpan responseTimeout)
         {
             _endpoint = endpoint;
+            _hostName = hostName;
+            _protocol = protocol;
             _connectionTimeout = connectionTimeout;
             _responseTimeout = responseTimeout;
             _pool = new Queue<Connection>();
@@ -48,11 +54,12 @@ namespace Gravity.Server.ProcessingNodes.Server
                     else break;
                 }
             }
-            return new Connection(_endpoint, _connectionTimeout, _responseTimeout);
+            return new Connection(_endpoint, _hostName, _protocol, _connectionTimeout, _responseTimeout);
         }
 
         public void ReuseConnection(Connection connection)
         {
+#if !DEBUG
             if (connection.IsConnected)
             {
                 lock (_pool)
@@ -64,7 +71,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                     }
                 }
             }
-
+#endif
             connection.Dispose();
         }
     }
