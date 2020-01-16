@@ -330,7 +330,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             try
             {
                 var endpoint = new IPEndPoint(request.IpAddress, request.PortNumber);
-                var key = request.IpAddress + ":" + request.PortNumber + " " + request.HostName;
+                var key = request.Protocol + "://" + request.HostName + ":" + request.PortNumber + " " + request.IpAddress;
 
                 ConnectionPool connectionPool;
                 lock (_endpoints)

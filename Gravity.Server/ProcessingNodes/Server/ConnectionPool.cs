@@ -59,7 +59,6 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         public void ReuseConnection(Connection connection)
         {
-#if !DEBUG
             if (connection.IsConnected)
             {
                 lock (_pool)
@@ -71,7 +70,6 @@ namespace Gravity.Server.ProcessingNodes.Server
                     }
                 }
             }
-#endif
             connection.Dispose();
         }
     }
