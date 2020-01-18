@@ -50,7 +50,10 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                         var connection = _pool.Dequeue();
                         if (connection.IsConnected)
+                        {
+                            log?.Log(LogType.Pooling, LogLevel.Detailed, () => "Reusing the connection dequeued from the pool");
                             return connection;
+                        }
 
                         log?.Log(LogType.Pooling, LogLevel.Superficial, () => "The connection dequeued from the pool was not connected and will be disposed");
                         connection.Dispose();
@@ -79,8 +82,12 @@ namespace Gravity.Server.ProcessingNodes.Server
                         _pool.Enqueue(connection);
                         return;
                     }
-                    log?.Log(LogType.Pooling, LogLevel.Detailed, () => "The connection pool is full");
                 }
+                log?.Log(LogType.Pooling, LogLevel.Detailed, () => "The connection pool is full");
+            }
+            else
+            {
+                log?.Log(LogType.Pooling, LogLevel.Detailed, () => "This connection is no longer connected and will not be reused");
             }
 
             log?.Log(LogType.Pooling, LogLevel.Detailed, () => "Disposing of the connection");

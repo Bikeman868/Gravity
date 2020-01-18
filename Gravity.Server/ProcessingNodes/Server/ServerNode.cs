@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -40,7 +41,7 @@ namespace Gravity.Server.ProcessingNodes.Server
         {
             ConnectionTimeout = TimeSpan.FromSeconds(5);
             ResponseTimeout = TimeSpan.FromMinutes(1);
-            DnsLookupInterval = TimeSpan.FromSeconds(5);
+            DnsLookupInterval = TimeSpan.FromMinutes(5);
             HealthCheckPort = 80;
             HealthCheckMethod = "GET";
             HealthCheckPath = "/";
@@ -51,16 +52,17 @@ namespace Gravity.Server.ProcessingNodes.Server
             _heathCheckThread = new Thread(() =>
             {
                 var counter = 0;
+                var log = new HealthCheckLog();
                 while (true)
                 {
                     try
                     {
-                        Thread.Sleep(1000);
+                        Thread.Sleep(3000);
 
                         if (!Disabled && !string.IsNullOrEmpty(Host))
-                            CheckHealth();
+                            CheckHealth(log);
 
-                        if (++counter == 5)
+                        if (++counter == 3)
                         {
                             counter = 0;
                             var ipAddresses = IpAddresses;
@@ -94,7 +96,7 @@ namespace Gravity.Server.ProcessingNodes.Server
         public void Dispose()
         {
             _heathCheckThread.Abort();
-            _heathCheckThread.Join(TimeSpan.FromSeconds(10));
+            _heathCheckThread.Join(TimeSpan.FromSeconds(60));
 
             lock (_connectionPools)
             {
@@ -209,7 +211,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             return context.Response.WriteAsync(response.Content);
         }
 
-        private void CheckHealth()
+        private void CheckHealth(ILog log)
         {
             if (IpAddresses == null || DateTime.UtcNow > _nextDnsLookup)
             {
@@ -230,14 +232,22 @@ namespace Gravity.Server.ProcessingNodes.Server
                 {
                     try
                     {
+                        log.Log(LogType.Health, LogLevel.Detailed, () => $"Looking up IP address for {Host}");
+
                         var hostEntry = Dns.GetHostEntry(Host);
+
                         if (hostEntry.AddressList == null || hostEntry.AddressList.Length == 0)
                         {
+                            log.Log(LogType.Health, LogLevel.Superficial, () => "DNS returned no IP addresses");
+
                             UnhealthyReason = "DNS returned no IP addresses for " + Host;
                             Healthy = false;
                             _nextDnsLookup = DateTime.UtcNow.AddSeconds(10);
                             return;
                         }
+
+                        log.Log(LogType.Health, LogLevel.Detailed, () => "DNS returned " + string.Join(", ", hostEntry.AddressList.Select(a => a.ToString())));
+
                         var newIpAddresses = hostEntry.AddressList
                                 .Select(a => new ServerIpAddress {Address = a})
                                 .ToArray();
@@ -267,6 +277,8 @@ namespace Gravity.Server.ProcessingNodes.Server
                     }
                     catch (Exception ex)
                     {
+                        log.Log(LogType.Exception, LogLevel.Superficial, () => "Exception in DNS lookup of " + Host + ". " + ex.Message);
+
                         UnhealthyReason = ex.Message + " " + Host;
                         Healthy = false;
                         _nextDnsLookup = DateTime.UtcNow.AddSeconds(10);
@@ -298,15 +310,19 @@ namespace Gravity.Server.ProcessingNodes.Server
                         }
                     };
 
-                    var response = Send(request, null);
+                    var response = Send(request, log);
 
                     if (HealthCheckCodes.Contains(response.StatusCode))
                     {
+                        log.Log(LogType.Health, LogLevel.Superficial, () => "Endpoint " + IpAddresses[i].Address + " passed its health check");
+
                         healthy = true;
                         IpAddresses[i].SetHealthy();
                     }
                     else
                     {
+                        log.Log(LogType.Health, LogLevel.Superficial, () => "Endpoint " + IpAddresses[i].Address + " failed health check with status code " + response.StatusCode);
+
                         IpAddresses[i].SetUnhealthy("Status code " + response.StatusCode);
                     }
                 }
@@ -335,7 +351,11 @@ namespace Gravity.Server.ProcessingNodes.Server
                 ConnectionPool connectionPool;
                 lock (_connectionPools)
                 {
-                    if (!_connectionPools.TryGetValue(key, out connectionPool))
+                    if (_connectionPools.TryGetValue(key, out connectionPool))
+                    {
+                        log?.Log(LogType.Pooling, LogLevel.VeryDetailed, () => "A connection pool exists for " + key);
+                    }
+                    else
                     {
                         log?.Log(LogType.Pooling, LogLevel.Superficial, () => "Creating new connection pool " + key);
                         connectionPool = new ConnectionPool(endpoint, request.HostName, request.Protocol, ConnectionTimeout, ResponseTimeout);
@@ -346,10 +366,11 @@ namespace Gravity.Server.ProcessingNodes.Server
                 var connection = connectionPool.GetConnection(log);
                 try
                 {
-                    return connection.Send(request);
+                    return connection.Send(request, log);
                 }
-                catch
+                catch (Exception ex)
                 {
+                    log?.Log(LogType.TcpIp, LogLevel.Superficial, () => "Exception thrown sending request - " + ex.Message);
                     connection.Dispose();
                     throw;
                 }
@@ -360,6 +381,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
             catch (Exception ex)
             {
+                log?.Log(LogType.TcpIp, LogLevel.Superficial, () => "Returning 503 response because " + ex.Message);
                 return new Response
                 {
                     StatusCode = 503,
@@ -370,6 +392,26 @@ namespace Gravity.Server.ProcessingNodes.Server
                         new Tuple<string, string>("X-Exception", ex.Message)
                     }
                 };
+            }
+        }
+
+        private class HealthCheckLog : ILog
+        {
+            private static volatile int _nextId;
+            private readonly int _id;
+
+            public HealthCheckLog()
+            {
+                _id = ++_nextId;
+            }
+
+            public void Dispose()
+            {
+            }
+
+            public void Log(LogType type, LogLevel level, Func<string> messageFunc)
+            {
+                Trace.WriteLine($"[HEALTH] {_id,4} {type,-10} {messageFunc()}");
             }
         }
     }

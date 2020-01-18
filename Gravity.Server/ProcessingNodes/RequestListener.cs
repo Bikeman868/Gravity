@@ -121,17 +121,23 @@ namespace Gravity.Server.ProcessingNodes
 
                     using (var log = _logFactory.Create(context))
                     {
-                        var startTime = output.TrafficAnalytics.BeginRequest();
-#if DEBUG
-                        lock (_lock)
-#endif
+                        log?.Log(LogType.Request, LogLevel.Basic, () => $"Starting new request for {context.Request.Uri}");
+
+                        try
                         {
-                            var task = output.Node.ProcessRequest(context, log);
+                            var startTime = output.TrafficAnalytics.BeginRequest();
+                            {
+                                var task = output.Node.ProcessRequest(context, log);
 
-                            if (task == null)
-                                return next();
+                                if (task == null)
+                                    return next();
 
-                            return task.ContinueWith(t => output.TrafficAnalytics.EndRequest(startTime));
+                                return task.ContinueWith(t => output.TrafficAnalytics.EndRequest(startTime));
+                            }
+                        }
+                        finally
+                        {
+                            log?.Log(LogType.Request, LogLevel.Basic, () => $"Completed request for {context.Request.Uri}");
                         }
                     }
                 }

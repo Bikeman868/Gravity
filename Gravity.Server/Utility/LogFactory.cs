@@ -27,14 +27,16 @@ namespace Gravity.Server.Utility
                 "/gravity/log", 
                 c =>
                 {
-                    if ((int)c.MaxLogLevel < 1 || c.LogTypes.Length == 0)
+                    if ((int)c.MaxLogLevel < 1)
                     {
                         _filter = (t, l) => false;
                         c.Enabled = false;
                     }
                     else
                     {
-                        var levelMask = c.LogTypes.Aggregate(0, (m, t) => m |= (int)t);
+                        var levelMask = c.LogTypes.Length == 0 
+                            ? -1
+                            : c.LogTypes.Aggregate(0, (m, t) => m |= (int)t);
                         _filter = (t, l) =>
                         {
                             if (l > c.MaxLogLevel) return false;
@@ -145,7 +147,7 @@ namespace Gravity.Server.Utility
                 if (_filter(type, level))
                 {
                     var elapsed = (int)(DateTime.UtcNow - _start).TotalMilliseconds;
-                    Trace.WriteLine($"{_key:n6} {elapsed,8}ms {messageFunc()}");
+                    Trace.WriteLine($"{_key,6} {elapsed,5}ms {type,-10} {messageFunc()}");
                 }
             }
         }
@@ -165,7 +167,7 @@ namespace Gravity.Server.Utility
                 Enabled = false;
                 Method = LogMethod.Trace;
                 MaxLogLevel = LogLevel.Basic;
-                LogTypes = new []{ LogType.RequestInfo };
+                LogTypes = new LogType[0];
                 Directory = "C:\\Logs";
             }
         }
@@ -184,12 +186,12 @@ namespace Gravity.Server.Utility
             {
                 lock (_lock)
                 {
-                    Trace.WriteLine("LOG " + key.ToString("n6"));
+                    Trace.WriteLine($"LOG {key,6}");
 
                     foreach (var entry in logEntries)
                         Trace.WriteLine(entry);
 
-                    Trace.WriteLine("LOG " + key.ToString("n6"));
+                    Trace.WriteLine($"LOG {key,6}");
                 }
             }
         }

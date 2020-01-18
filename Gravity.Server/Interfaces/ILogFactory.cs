@@ -32,14 +32,15 @@ namespace Gravity.Server.Interfaces
     internal enum LogType
     {
         Stats = 1,
-        ProcessingStep = 2,
-        BusinessLogic = 4,
-        RequestInfo = 8,
+        Step = 2,
+        Logic = 4,
+        Request = 8,
         Timing = 16,
         Caching = 32,
         Pooling = 64,
         TcpIp = 128,
-        Exception = 256
+        Exception = 256,
+        Health = 512
     }
 
     internal interface ILog: IDisposable
