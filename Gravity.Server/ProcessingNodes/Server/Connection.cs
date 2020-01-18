@@ -11,32 +11,32 @@ namespace Gravity.Server.ProcessingNodes.Server
 {
     internal class Connection: IDisposable
     {
-        private readonly TimeSpan _responseTimeout;
         private readonly TcpClient _tcpClient;
         private readonly Stream _stream;
+
+        private TimeSpan _responseTimeout;
+        private TimeSpan _readTimeout;
+        private DateTime _lastUsedUtc;
+        private readonly TimeSpan _maximumIdleTime = TimeSpan.FromMinutes(5);
 
         public Connection(
             ILog log,
             IPEndPoint endpoint,
             string hostName,
             string protocol,
-            TimeSpan connectionTimeout, 
-            TimeSpan responseTimeout)
+            TimeSpan connectionTimeout)
         {
             log?.Log(LogType.TcpIp, LogLevel.Basic, 
                 () => $"Opening a new Tcp connection to {protocol}://{hostName} at {endpoint}");
 
-            _responseTimeout = responseTimeout;
 
             _tcpClient = new TcpClient
             {
-                ReceiveTimeout = (int)responseTimeout.TotalMilliseconds,
+                ReceiveTimeout = 0,
                 SendTimeout = 0,
                 LingerState = new LingerOption(true, 10),
                 NoDelay = true
             };
-
-            //_tcpClient.Client.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.KeepAlive, 1);
 
             var connectResult = _tcpClient.BeginConnect(endpoint.Address, endpoint.Port, null, null);
             if (!connectResult.AsyncWaitHandle.WaitOne(connectionTimeout))
@@ -60,6 +60,8 @@ namespace Gravity.Server.ProcessingNodes.Server
                 log?.Log(LogType.TcpIp, LogLevel.Basic, () => $"Authenticating server's SSL certificate for {hostName}");
                 sslStream.AuthenticateAsClient(hostName);
             }
+
+            _lastUsedUtc = DateTime.UtcNow;
         }
 
         public void Dispose()
@@ -68,12 +70,32 @@ namespace Gravity.Server.ProcessingNodes.Server
             _tcpClient?.Close();
         }
 
+        /// <summary>
+        /// Gets this connection ready for a new request
+        /// </summary>
+        /// <returns></returns>
+        public Connection Initialize(TimeSpan responseTimeout, TimeSpan readTimeout)
+        {
+            _responseTimeout = responseTimeout;
+            _readTimeout = readTimeout;
+
+            return this;
+        }
+
         public bool IsConnected => _tcpClient.Connected;
+
+        public bool IsStale => (DateTime.UtcNow - _lastUsedUtc) > _maximumIdleTime;
 
         public Response Send(Request request, ILog log)
         {
             SendHttp(request, log);
-            return ReceiveHttp(log);
+
+            var expectBodyInResponse = !string.Equals(request.Method, "HEAD");
+            var response = ReceiveHttp(expectBodyInResponse, log);
+
+            _lastUsedUtc = DateTime.UtcNow;
+
+            return response;
         }
 
         private void SendHttp(Request request, ILog log)
@@ -96,14 +118,21 @@ namespace Gravity.Server.ProcessingNodes.Server
             {
                 foreach (var header in request.Headers)
                 {
+                    if (string.Equals("Connection", header.Item1, StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    if (string.Equals("Keep-Alive", header.Item1, StringComparison.OrdinalIgnoreCase))
+                        continue;
+
                     buffer.Append(header.Item1);
                     buffer.Append(": ");
                     buffer.Append(header.Item2);
                     buffer.Append("\r\n");
                 }
             }
-
-            buffer.Append("\r\n");
+            buffer.Append("Connection: Keep-Alive\r\n");
+            buffer.Append("Keep-Alive: timeout=");
+            buffer.Append((int)(_maximumIdleTime.TotalSeconds + 5));
+            buffer.Append("\r\n\r\n");
 
             var bytes = Encoding.ASCII.GetBytes(buffer.ToString());
 
@@ -117,7 +146,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
         }
 
-        private Response ReceiveHttp(ILog log)
+        private Response ReceiveHttp(bool expectBody, ILog log)
         {
             var result = new Response
             {
@@ -128,16 +157,17 @@ namespace Gravity.Server.ProcessingNodes.Server
             var line = new StringBuilder();
             var headerLines = new List<string>();
             var buffer = new byte[50000];
-            var contentLength = 0;
+            int? contentLength = expectBody ? null : (int?)0;
             var contentIndex = 0;
             var header = true;
             var beginning = true;
-            var fixedLength = false;
 
             void ParseHeaders()
             {
-                log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"Parsing {headerLines.Count} header lines. First line is '{headerLines[0]}'");
-
+                log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"First blank line received, parsing headers");
+                for (var j = 0; j < headerLines.Count; j++)
+                    log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"> {headerLines[j]}");
+                
                 var firstSpaceIndex = headerLines[0].IndexOf(' ');
                 log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"First space in first header line at {firstSpaceIndex}");
 
@@ -148,10 +178,16 @@ namespace Gravity.Server.ProcessingNodes.Server
                 log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"Second space in first header line at {secondSpaceIndex}");
 
                 if (secondSpaceIndex < 3)
+                {
+                    log?.Log(LogType.TcpIp, LogLevel.Basic, () => "Response first line contains only 1 space");
                     throw new Exception("Response first line contains only 1 space");
+                }
 
                 if (!int.TryParse(headerLines[0].Substring(firstSpaceIndex + 1, secondSpaceIndex - firstSpaceIndex), out result.StatusCode))
+                {
+                    log?.Log(LogType.TcpIp, LogLevel.Basic, () => "Response status code can not be parsed as an integer");
                     throw new Exception("Response status code can not be parsed as an integer");
+                }
 
                 result.ReasonPhrase = headerLines[0].Substring(secondSpaceIndex + 1);
 
@@ -160,7 +196,6 @@ namespace Gravity.Server.ProcessingNodes.Server
                 for (var j = 1; j < headerLines.Count; j++)
                 {
                     var headerLine = headerLines[j];
-                    log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"Header line {j} = '{headerLine}'");
 
                     var colonPos = headerLine.IndexOf(':');
                     if (colonPos > 0)
@@ -171,13 +206,13 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                         if (string.Equals(name, "Content-Length", StringComparison.OrdinalIgnoreCase))
                         {
-                            log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"Content length header is {value}");
+                            log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"Content length header = {value}");
                             contentLength = int.Parse(value);
-                            fixedLength = true;
                         }
                     }
                     else
                     {
+                        log?.Log(LogType.TcpIp, LogLevel.Basic, () => $"Invalid header line '{headerLine}' does not contain a colon");
                         throw new Exception("Invalid header line does not contain a colon");
                     }
                 }
@@ -190,7 +225,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 #if DEBUG
                     if (dest != 0) throw new Exception("Destination offset for copy must be 0 when the content buffer has not been allocated yet");
 #endif
-                    result.Content = new byte[fixedLength ? contentLength : count];
+                    result.Content = new byte[contentLength ?? count];
                 }
                 else if (result.Content.Length < dest + count)
                 {
@@ -202,7 +237,10 @@ namespace Gravity.Server.ProcessingNodes.Server
                 Array.Copy(buffer, src, result.Content, dest, count);
             }
 
-            while (true)
+            log?.Log(LogType.TcpIp, LogLevel.Detailed, () => "Waiting for a response from the server");
+
+            _tcpClient.ReceiveTimeout = (int)_responseTimeout.TotalMilliseconds;
+            while (header || (contentLength.HasValue && contentLength.Value > 0 && (result.Content == null || result.Content.Length < contentLength.Value)))
             {
                 int readCount;
                 try
@@ -211,13 +249,16 @@ namespace Gravity.Server.ProcessingNodes.Server
                 }
                 catch (IOException)
                 {
+                    log?.Log(LogType.TcpIp, LogLevel.Basic, () => $"Server did not respond within {_tcpClient.ReceiveTimeout}ms");
                     result.StatusCode = 504;
-                    result.ReasonPhrase = "Server did not respond within " + _responseTimeout;
+                    result.ReasonPhrase = "Server did not respond within " + _tcpClient.ReceiveTimeout + "ms";
                     Dispose();
                     return result;
                 }
-
                 if (readCount == 0) break;
+                _tcpClient.ReceiveTimeout = (int)_readTimeout.TotalMilliseconds;
+
+                log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{readCount} bytes received from the server");
 
                 if (header)
                 {
@@ -260,7 +301,12 @@ namespace Gravity.Server.ProcessingNodes.Server
                 }
             }
 
-            log?.Log(LogType.TcpIp, LogLevel.Basic, () => $"Received {result.StatusCode} response with {result.Content?.Length ?? 0} bytes of content and {result.Headers?.Length} header lines");
+            log?.Log(LogType.TcpIp, LogLevel.Basic, () =>
+            {
+                var headers = result.Headers == null ? "no headers" : $"{result.Headers.Length} header lines";
+                var content = result.Content == null ? "no content" : $"{result.Content.Length} bytes of content";
+                return $"Response status {result.StatusCode} '{result.ReasonPhrase}' with {content} and {headers}";
+            });
 
             return result;
         }

@@ -17,14 +17,22 @@ namespace Gravity.Server.ProcessingNodes.Server
         public bool Disabled { get; set; }
         public string Host { get; set; }
         public int? Port { get; set; }
+
         public TimeSpan ConnectionTimeout { get; set; }
         public TimeSpan ResponseTimeout { get; set; }
+        public TimeSpan ReadTimeout { get; set; }
+        public bool ReuseConnections { get; set; }
+
         public string HealthCheckMethod { get; set; }
         public string HealthCheckHost { get; set; }
         public int HealthCheckPort { get; set; }
         public string HealthCheckPath { get; set; }
         public int[] HealthCheckCodes { get; set; }
+        public bool HealthCheckLog { get; set; }
+        public TimeSpan HealthCheckInterval { get; set; }
+
         public TimeSpan DnsLookupInterval { get; set; }
+        public TimeSpan RecalculateInterval { get; set; }
 
         public bool? Healthy { get; private set; }
         public string UnhealthyReason { get; private set; }
@@ -33,45 +41,65 @@ namespace Gravity.Server.ProcessingNodes.Server
         public ServerIpAddress[] IpAddresses;
         private readonly Dictionary<string, ConnectionPool> _connectionPools;
 
-        private readonly Thread _heathCheckThread;
+        private Thread _backgroundThread;
         private DateTime _nextDnsLookup;
         private int _lastIpAddressIndex;
 
         public ServerNode()
         {
-            ConnectionTimeout = TimeSpan.FromSeconds(5);
-            ResponseTimeout = TimeSpan.FromMinutes(1);
+            ConnectionTimeout = TimeSpan.FromSeconds(20);
+            ResponseTimeout = TimeSpan.FromSeconds(10);
+            ReadTimeout = TimeSpan.FromSeconds(3);
+            ReuseConnections = true;
             DnsLookupInterval = TimeSpan.FromMinutes(5);
+            RecalculateInterval = TimeSpan.FromSeconds(5);
             HealthCheckPort = 80;
             HealthCheckMethod = "GET";
             HealthCheckPath = "/";
+            HealthCheckInterval = TimeSpan.FromMinutes(1);
             HealthCheckCodes = new[] { 200 };
 
             _connectionPools = new Dictionary<string, ConnectionPool>();
+        }
 
-            _heathCheckThread = new Thread(() =>
+        public void Initialize()
+        {
+            _backgroundThread = new Thread(() =>
             {
-                var counter = 0;
-                var log = new HealthCheckLog();
+                ILog log = null;
+                var nextHealthCheck = DateTime.UtcNow;
+                var nextRecalculate = DateTime.UtcNow.AddSeconds(5);
+
                 while (true)
                 {
                     try
                     {
-                        Thread.Sleep(3000);
+                        Thread.Sleep(100);
+                        var timeNow = DateTime.UtcNow;
 
-                        if (!Disabled && !string.IsNullOrEmpty(Host))
-                            CheckHealth(log);
-
-                        if (++counter == 3)
+                        if (!Disabled && timeNow > nextHealthCheck && !string.IsNullOrEmpty(Host))
                         {
-                            counter = 0;
+                            nextHealthCheck = timeNow + HealthCheckInterval;
+
+                            if (HealthCheckLog && log == null)
+                                log = new HealthCheckLogger();
+                            else if (!HealthCheckLog && log != null)
+                            {
+                                log.Dispose();
+                                log = null;
+                            }
+
+                            CheckHealth(log);
+                        }
+
+                        if (timeNow > nextRecalculate)
+                        {
+                            nextRecalculate = timeNow + RecalculateInterval;
                             var ipAddresses = IpAddresses;
                             if (ipAddresses != null)
                             {
                                 for (var i = 0; i < ipAddresses.Length; i++)
-                                {
                                     ipAddresses[i].TrafficAnalytics.Recalculate();
-                                }
                             }
                         }
                     }
@@ -87,7 +115,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                 }
             })
             {
-                Name = "Server health check",
+                Name = "Server node " + Name,
                 IsBackground = true,
                 Priority = ThreadPriority.AboveNormal
             };
@@ -95,8 +123,9 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         public void Dispose()
         {
-            _heathCheckThread.Abort();
-            _heathCheckThread.Join(TimeSpan.FromSeconds(60));
+            _backgroundThread?.Abort();
+            _backgroundThread?.Join(TimeSpan.FromSeconds(60));
+            _backgroundThread = null;
 
             lock (_connectionPools)
             {
@@ -108,7 +137,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         void INode.Bind(INodeGraph nodeGraph)
         {
-            _heathCheckThread.Start();
+            _backgroundThread.Start();
         }
 
         void INode.UpdateStatus()
@@ -193,7 +222,27 @@ namespace Gravity.Server.ProcessingNodes.Server
             var startTicks = ipAddress.TrafficAnalytics.BeginRequest();
             try
             {
-                response = Send(request, log);
+                var retry = 0;
+                while (true)
+                {
+                    try
+                    {
+                        response = Send(request, log);
+                        break;
+                    }
+                    catch
+                    {
+                        if (++retry > 2)
+                        {
+                            log?.Log(LogType.Exception, LogLevel.Superficial, () => $"Request to server node {Name} failed {retry} times and will not be retried");
+                            throw;
+                        }
+                        else
+                        {
+                            log?.Log(LogType.Exception, LogLevel.Basic, () => $"Request to server node {Name} failed and will be retried");
+                        }
+                    }
+                }
             }
             finally
             {
@@ -232,13 +281,13 @@ namespace Gravity.Server.ProcessingNodes.Server
                 {
                     try
                     {
-                        log.Log(LogType.Health, LogLevel.Detailed, () => $"Looking up IP address for {Host}");
+                        log?.Log(LogType.Health, LogLevel.Detailed, () => $"Looking up IP address for {Host}");
 
                         var hostEntry = Dns.GetHostEntry(Host);
 
                         if (hostEntry.AddressList == null || hostEntry.AddressList.Length == 0)
                         {
-                            log.Log(LogType.Health, LogLevel.Superficial, () => "DNS returned no IP addresses");
+                            log?.Log(LogType.Health, LogLevel.Superficial, () => "DNS returned no IP addresses");
 
                             UnhealthyReason = "DNS returned no IP addresses for " + Host;
                             Healthy = false;
@@ -246,7 +295,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                             return;
                         }
 
-                        log.Log(LogType.Health, LogLevel.Detailed, () => "DNS returned " + string.Join(", ", hostEntry.AddressList.Select(a => a.ToString())));
+                        log?.Log(LogType.Health, LogLevel.Detailed, () => "DNS returned " + string.Join(", ", hostEntry.AddressList.Select(a => a.ToString())));
 
                         var newIpAddresses = hostEntry.AddressList
                                 .Select(a => new ServerIpAddress {Address = a})
@@ -277,7 +326,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                     }
                     catch (Exception ex)
                     {
-                        log.Log(LogType.Exception, LogLevel.Superficial, () => "Exception in DNS lookup of " + Host + ". " + ex.Message);
+                        log?.Log(LogType.Exception, LogLevel.Superficial, () => "Exception in DNS lookup of " + Host + ". " + ex.Message);
 
                         UnhealthyReason = ex.Message + " " + Host;
                         Healthy = false;
@@ -314,14 +363,14 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                     if (HealthCheckCodes.Contains(response.StatusCode))
                     {
-                        log.Log(LogType.Health, LogLevel.Superficial, () => "Endpoint " + IpAddresses[i].Address + " passed its health check");
+                        log?.Log(LogType.Health, LogLevel.Superficial, () => "Endpoint " + IpAddresses[i].Address + " passed its health check");
 
                         healthy = true;
                         IpAddresses[i].SetHealthy();
                     }
                     else
                     {
-                        log.Log(LogType.Health, LogLevel.Superficial, () => "Endpoint " + IpAddresses[i].Address + " failed health check with status code " + response.StatusCode);
+                        log?.Log(LogType.Health, LogLevel.Superficial, () => "Endpoint " + IpAddresses[i].Address + " failed health check with status code " + response.StatusCode);
 
                         IpAddresses[i].SetUnhealthy("Status code " + response.StatusCode);
                     }
@@ -358,12 +407,12 @@ namespace Gravity.Server.ProcessingNodes.Server
                     else
                     {
                         log?.Log(LogType.Pooling, LogLevel.Superficial, () => "Creating new connection pool " + key);
-                        connectionPool = new ConnectionPool(endpoint, request.HostName, request.Protocol, ConnectionTimeout, ResponseTimeout);
+                        connectionPool = new ConnectionPool(endpoint, request.HostName, request.Protocol, ConnectionTimeout);
                         _connectionPools.Add(key, connectionPool);
                     }
                 }
 
-                var connection = connectionPool.GetConnection(log);
+                var connection = connectionPool.GetConnection(log, ResponseTimeout, ReadTimeout);
                 try
                 {
                     return connection.Send(request, log);
@@ -376,7 +425,10 @@ namespace Gravity.Server.ProcessingNodes.Server
                 }
                 finally
                 {
-                    connectionPool.ReuseConnection(log, connection);
+                    if (ReuseConnections)
+                        connectionPool.ReuseConnection(log, connection);
+                    else
+                        connection.Dispose();
                 }
             }
             catch (Exception ex)
@@ -395,12 +447,12 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
         }
 
-        private class HealthCheckLog : ILog
+        private class HealthCheckLogger : ILog
         {
             private static volatile int _nextId;
             private readonly int _id;
 
-            public HealthCheckLog()
+            public HealthCheckLogger()
             {
                 _id = ++_nextId;
             }

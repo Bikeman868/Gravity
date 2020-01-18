@@ -270,12 +270,19 @@ namespace Gravity.Server.Utility
                         Port = serverNodeConfiguration.Port,
                         ConnectionTimeout = serverNodeConfiguration.ConnectionTimeout,
                         ResponseTimeout = serverNodeConfiguration.ResponseTimeout,
+                        ReadTimeout = serverNodeConfiguration.ReadTimeout,
+                        ReuseConnections = serverNodeConfiguration.ReuseConnections,
+                        DnsLookupInterval = serverNodeConfiguration.DnsLookupInterval,
+                        RecalculateInterval = serverNodeConfiguration.RecalculateInterval,
                         HealthCheckPort = serverNodeConfiguration.HealthCheckPort,
                         HealthCheckHost = serverNodeConfiguration.HealthCheckHost,
                         HealthCheckPath = serverNodeConfiguration.HealthCheckPath,
                         HealthCheckMethod = serverNodeConfiguration.HealthCheckMethod,
-                        HealthCheckCodes = serverNodeConfiguration.HealthCheckCodes
+                        HealthCheckCodes = serverNodeConfiguration.HealthCheckCodes,
+                        HealthCheckLog = serverNodeConfiguration.HealthCheckLog,
+                        HealthCheckInterval = serverNodeConfiguration.HealthCheckInterval,
                     };
+                    node.Initialize();
                     serverNodeConfiguration.Node = node;
                     nodes.Add(node);
                 }

@@ -1,241 +1,343 @@
 ﻿{
-    "gravity": {
-        "listener": {
-            "endpoints": [
-                { "ipAddress": "*", "port": 0, "node": "A" },
-                { "ipAddress": "192.168.3.1", "port": 80, "node": "L" },
-                { "ipAddress": "192.168.3.1", "port": 443, "node": "J" }
-            ]
+  "gravity": {
+    "listener": {
+      "endpoints": [
+        {
+          "ipAddress": "*",
+          "port": 0,
+          "node": "A"
         },
-        "nodeGraph": {
-            "routers": [
-                {
-                    "name": "N",
-                    "routes": [
-                        {
-                            "to": "B",
-                            "logic": "All",
-                            "conditions": [
-                                { "condition": "{method} = GET" },
-                                { "condition": "{header[host]} = localhost:52581" },
-                                { "condition": "{path[1]} = ui" }
-                            ]
-                        },
-                        {
-                            "to": "G",
-                            "logic": "All",
-                            "conditions": [
-                                { "condition": "{method} = GET" },
-                                { "condition": "{path[0]} = /favicon.ico" }
-                            ]
-                        },
-                        {
-                            "to": "C"
-                        }
-                    ]
-                }
-            ],
-            "internalEndpoints": [
-                {
-                    "name": "B",
-                    "disabled": false
-                }
-            ],
-            "roundRobin": [
-                { "name": "C", "outputs": [ "D", "E", "O" ] }
-            ],
-            "servers": [
-                {
-                    "name": "I",
-                    "disabled": false,
-                    "port": 80,
-                    "host": "owinframework.net"
-                },
-                {
-                    "name": "M",
-                    "disabled": true,
-                    "host": "localhost",
-                    "connectionTimeout": "00:00:10",
-                    "responseTimeout": "00:10:00",
-                    "healthCheckHost": "mycompany.com",
-                    "healthCheckMethod": "GET",
-                    "healthCheckPort": 80,
-                    "healthCheckPath": "/"
-                }
-            ],
-            "cors": [
-                {
-                    "name": "L",
-                    "output": "K",
-                    "websiteOrigin": "https://mycompany.com",
-                    "allowedOrigins": "https?://(.+\\.)?mycompany\\.com",
-                    "allowedHeaders": "Accept,Content-Type,Location",
-                    "allowedMethods": "GET,POST",
-                    "allowCredentials": true,
-                    "exposedHeaders": "Location"
-                }
-            ],
-            "responses": [
-                {
-                    "name": "D",
-                    "disabled": false,
-                    "statusCode": 200,
-                    "reasonPhrase": "OK",
-                    "content": "Server D",
-                    "headers": [
-                        { "name": "Content-Type", "value": "text/plain" }
-                    ]
-                },
-                {
-                    "name": "E",
-                    "disabled": false,
-                    "statusCode": 200,
-                    "reasonPhrase": "OK",
-                    "content": "Server E",
-                    "headers": [
-                        { "name": "Content-Type", "value": "text/plain" }
-                    ]
-                },
-                {
-                    "name": "F",
-                    "statusCode": 200,
-                    "reasonPhrase": "OK",
-                    "content": "Server F",
-                    "headers": [
-                        { "name": "Content-Type", "value": "text/plain" }
-                    ]
-                },
-                {
-                    "name": "G",
-                    "disabled": false,
-                    "statusCode": 404,
-                    "reasonPhrase": "Not found"
-                }
-            ],
-            "stickySessions": [
-                {
-                    "name": "H",
-                    "outputs": [ "I", "M" ],
-                    "disabled": false,
-                    "cookie": "ASP.NET_SessionId",
-                    "sessionDuration": "01:00:00"
-                }
-            ],
-            "leastConnections": [
-                {
-                    "name": "K",
-                    "outputs": [ "I", "M" ],
-                    "disabled": false
-                }
-            ],
-            "transforms": [
-                {
-                    "name": "A",
-                    "output": "N",
-                    "description": [
-                        "Remove www from host name if present"
-                    ],
-                    "scriptLanguage": "UrlRewriteModule",
-                    "requestScript": [
-                        "<rewrite>",
-                        "  <rules name='root'>",
-                        "    <rule name='remove www'>",
-                        "      <condition scope='hostElement' index='1' test='equals' value='www' />",
-                        "      <delete scope='hostElement' index='1' />",
-                        "    </rule>",
-                        "  </rules>",
-                        "</rewrite>"
-                    ]
-                },
-                {
-                    "name": "J",
-                    "output": "H"
-                },
-                {
-                    "name": "O",
-                    "output": "I",
-                    "description": [
-                        "Add X-Forwarded-For header",
-                        "Add X-Real-IP header",
-                        "Add X-Powered-By header"
-                    ],
-                    "scriptLanguage": "UrlRewriteModule",
-                    "requestScript": [
-                        "<rewrite>",
-                        "  <rules name='root'>",
-                        "    <rule name='set-headers'>",
-                        "      <rewrite to='header' toIndex='X-Forwarded-For' from='serverVariable' fromIndex='LocalIpAddress'/>",
-                        "      <rewrite to='header' toIndex='X-Real-IP' from='serverVariable' fromIndex='LocalIpAddress'/>",
-                        "    </rule>",
-                        "    <rule>",
-                        "      <condition scope='pathElement' index='1' test='equals' value='ms' />",
-                        "      <rewrite to='path' toIndex='0' value='/content/general/helloworld' />",
-                        "    </rule>",
-                        "  </rules>",
-                        "</rewrite>"
-                    ],
-                    "responseScript": [
-                        "<rewrite>",
-                        "  <rules name='root'>",
-                        "    <rule name='set-headers'>",
-                        "      <delete scope='header' index='X-Powered-By'/>",
-                        "      <delete scope='header' index='Server'/>",
-                        "      <rewrite to='header' toIndex='X-Powered-By' value='Gravity'/>",
-                        "    </rule>",
-                        "  </rules>",
-                        "</rewrite>"
-                    ]
-                }
-            ]
+        {
+          "ipAddress": "192.168.3.1",
+          "port": 80,
+          "node": "L"
         },
-        "ui": {
-            "dashboard": {
-                "listeners": { "x": 0, "y": 50, "xSpacing": 0, "ySpacing": 150 },
-                "trafficIndicator": {
-                    "comment": "Traffic thresholds are in requests/min and are exclusive upper bounds",
-                    "thresholds": [ 1, 20, 200, 5000 ]
-                },
-                "nodes": [
-                    { "name": "A", "x": 200, "y": 50 },
-                    { "name": "B", "x": 700, "y": 80 },
-                    { "name": "C", "x": 700, "y": 230 },
-                    { "name": "D", "x": 950, "y": 220 },
-                    { "name": "E", "x": 950, "y": 300 },
-                    { "name": "F", "x": 950, "y": 380 },
-                    { "name": "G", "x": 700, "y": 150 },
-                    { "name": "H", "x": 550, "y": 800 },
-                    { "name": "I", "x": 1100, "y": 650 },
-                    { "name": "J", "x": 300, "y": 800 },
-                    { "name": "K", "x": 550, "y": 550 },
-                    { "name": "L", "x": 300, "y": 550 },
-                    { "name": "M", "x": 800, "y": 830 },
-                    { "name": "N", "x": 450, "y": 50 },
-                    { "name": "O", "x": 850, "y": 500 }
-                ]
-            }
-        },
-        "middleware": {
-            "listener": {
-            },
-            "pages": {
-            },
-            "debugInfo": {
-            }
+        {
+          "ipAddress": "192.168.3.1",
+          "port": 443,
+          "node": "J"
         }
+      ]
     },
-    "owinFramework": {
-        "pages": {
-            "framework": {
-                "defaultLanguage":  "en-US",
-                "assetRootPath": "/ui/assets",
-                "assetCacheTime":  "01:00:00",
-                "assetVersion": "1",
-                "debugLogging": false
+    "nodeGraph": {
+      "routers": [
+        {
+          "name": "N",
+          "routes": [
+            {
+              "to": "B",
+              "logic": "All",
+              "conditions": [
+                { "condition": "{method} = GET" },
+                { "condition": "{header[host]} = localhost:52581" },
+                { "condition": "{path[1]} = ui" }
+              ]
             },
-            "html": {
-                "includeComments": false,
-                "indented": true
+            {
+              "to": "G",
+              "logic": "All",
+              "conditions": [
+                { "condition": "{method} = GET" },
+                { "condition": "{path[0]} = /favicon.ico" }
+              ]
+            },
+            {
+              "to": "C"
             }
+          ]
         }
+      ],
+      "internalEndpoints": [
+        {
+          "name": "B",
+          "disabled": false
+        }
+      ],
+      "roundRobin": [
+        {
+          "name": "C",
+          "outputs": [ "D", "E", "O" ]
+        }
+      ],
+      "servers": [
+        {
+          "name": "I",
+          "disabled": false,
+          "port": 443,
+          "host": "stockhouse.com",
+          "connectionTimeout": "00:00:20",
+          "responseTimeout": "00:00:10",
+          "reuseConnections": true,
+          "healthCheckPort": 443,
+          "healthCheckMethod": "HEAD",
+          "healthCheckLog": true,
+          "healthCheckInterval": "00:00:30"
+        },
+        {
+          "name": "M",
+          "disabled": true,
+          "host": "localhost",
+          "connectionTimeout": "00:00:20",
+          "responseTimeout": "00:00:10",
+          "healthCheckHost": "mycompany.com",
+          "healthCheckMethod": "GET",
+          "healthCheckPort": 80,
+          "reuseConnections": true,
+          "healthCheckPath": "/"
+        }
+      ],
+      "cors": [
+        {
+          "name": "L",
+          "output": "K",
+          "websiteOrigin": "https://mycompany.com",
+          "allowedOrigins": "https?://(.+\\.)?mycompany\\.com",
+          "allowedHeaders": "Accept,Content-Type,Location",
+          "allowedMethods": "GET,POST",
+          "allowCredentials": true,
+          "exposedHeaders": "Location"
+        }
+      ],
+      "responses": [
+        {
+          "name": "D",
+          "disabled": false,
+          "statusCode": 200,
+          "reasonPhrase": "OK",
+          "content": "Server D",
+          "headers": [
+            {
+              "name": "Content-Type",
+              "value": "text/plain"
+            }
+          ]
+        },
+        {
+          "name": "E",
+          "disabled": false,
+          "statusCode": 200,
+          "reasonPhrase": "OK",
+          "content": "Server E",
+          "headers": [
+            {
+              "name": "Content-Type",
+              "value": "text/plain"
+            }
+          ]
+        },
+        {
+          "name": "F",
+          "statusCode": 200,
+          "reasonPhrase": "OK",
+          "content": "Server F",
+          "headers": [
+            {
+              "name": "Content-Type",
+              "value": "text/plain"
+            }
+          ]
+        },
+        {
+          "name": "G",
+          "disabled": false,
+          "statusCode": 404,
+          "reasonPhrase": "Not found"
+        }
+      ],
+      "stickySessions": [
+        {
+          "name": "H",
+          "outputs": [ "I", "M" ],
+          "disabled": false,
+          "cookie": "ASP.NET_SessionId",
+          "sessionDuration": "01:00:00"
+        }
+      ],
+      "leastConnections": [
+        {
+          "name": "K",
+          "outputs": [ "I", "M" ],
+          "disabled": false
+        }
+      ],
+      "transforms": [
+        {
+          "name": "A",
+          "output": "N",
+          "description": [
+            "Remove www from host name if present"
+          ],
+          "scriptLanguage": "UrlRewriteModule",
+          "requestScript": [
+            "<rewrite>",
+            "  <rules name='root'>",
+            "    <rule name='remove www'>",
+            "      <condition scope='hostElement' index='1' test='equals' value='www' />",
+            "      <delete scope='hostElement' index='1' />",
+            "    </rule>",
+            "  </rules>",
+            "</rewrite>"
+          ]
+        },
+        {
+          "name": "J",
+          "output": "H"
+        },
+        {
+          "name": "O",
+          "output": "I",
+          "description": [
+            "Add X-Forwarded-For header",
+            "Add X-Real-IP header",
+            "Add X-Powered-By header"
+          ],
+          "scriptLanguage": "UrlRewriteModule",
+          "requestScript": [
+            "<rewrite>",
+            "  <rules name='root'>",
+            "    <rule name='set-headers'>",
+            "      <rewrite to='header' toIndex='X-Forwarded-For' from='serverVariable' fromIndex='LocalIpAddress'/>",
+            "      <rewrite to='header' toIndex='X-Real-IP' from='serverVariable' fromIndex='LocalIpAddress'/>",
+            "    </rule>",
+            "    <rule>",
+            "      <condition scope='pathElement' index='1' test='equals' value='ms' />",
+            "      <rewrite to='path' toIndex='0' value='/content/general/helloworld' />",
+            "    </rule>",
+            "  </rules>",
+            "</rewrite>"
+          ],
+          "responseScript": [
+            "<rewrite>",
+            "  <rules name='root'>",
+            "    <rule name='set-headers'>",
+            "      <delete scope='header' index='X-Powered-By'/>",
+            "      <delete scope='header' index='Server'/>",
+            "      <rewrite to='header' toIndex='X-Powered-By' value='Gravity'/>",
+            "    </rule>",
+            "  </rules>",
+            "</rewrite>"
+          ]
+        }
+      ]
+    },
+    "ui": {
+      "dashboard": {
+        "listeners": {
+          "x": 0,
+          "y": 50,
+          "xSpacing": 0,
+          "ySpacing": 150
+        },
+        "trafficIndicator": {
+          "comment": "Traffic thresholds are in requests/min and are exclusive upper bounds",
+          "thresholds": [ 1, 20, 200, 5000 ]
+        },
+        "nodes": [
+          {
+            "name": "A",
+            "x": 200,
+            "y": 50
+          },
+          {
+            "name": "B",
+            "x": 700,
+            "y": 80
+          },
+          {
+            "name": "C",
+            "x": 700,
+            "y": 230
+          },
+          {
+            "name": "D",
+            "x": 950,
+            "y": 220
+          },
+          {
+            "name": "E",
+            "x": 950,
+            "y": 300
+          },
+          {
+            "name": "F",
+            "x": 950,
+            "y": 380
+          },
+          {
+            "name": "G",
+            "x": 700,
+            "y": 150
+          },
+          {
+            "name": "H",
+            "x": 550,
+            "y": 800
+          },
+          {
+            "name": "I",
+            "x": 1100,
+            "y": 650
+          },
+          {
+            "name": "J",
+            "x": 300,
+            "y": 800
+          },
+          {
+            "name": "K",
+            "x": 550,
+            "y": 550
+          },
+          {
+            "name": "L",
+            "x": 300,
+            "y": 550
+          },
+          {
+            "name": "M",
+            "x": 800,
+            "y": 830
+          },
+          {
+            "name": "N",
+            "x": 450,
+            "y": 50
+          },
+          {
+            "name": "O",
+            "x": 850,
+            "y": 500
+          }
+        ]
+      }
+    },
+    "middleware": {
+      "listener": {
+      },
+      "pages": {
+      },
+      "debugInfo": {
+      }
+    },
+    "log": {
+      "enabled": true,
+      "method": "Trace",
+      "maxLogLevel": "VeryDetailed"
     }
+  },
+  "owinFramework": {
+    "pages": {
+      "framework": {
+        "defaultLanguage": "en-US",
+        "assetRootPath": "/ui/assets",
+        "assetCacheTime": "01:00:00",
+        "assetVersion": "1",
+        "debugLogging": false
+      },
+      "html": {
+        "includeComments": false,
+        "indented": true
+      }
+    }
+  }
 }
