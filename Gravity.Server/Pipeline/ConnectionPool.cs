@@ -1,28 +1,36 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading.Tasks;
 using Gravity.Server.Interfaces;
+using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.ProcessingNodes.Server
 {
     internal class ConnectionPool: IDisposable
     {
         private readonly IPEndPoint _endpoint;
-        private readonly string _hostName;
-        private readonly string _protocol;
+        private readonly string _domainName;
+        private readonly ushort _portNumber;
+        private readonly Protocol _protocol;
         private readonly TimeSpan _connectionTimeout;
         private readonly Queue<Connection> _pool;
+        private readonly IBufferPool _bufferPool;
 
         public ConnectionPool(
+            IBufferPool bufferPool,
             IPEndPoint endpoint,
-            string hostName,
-            string protocol,
+            string domainName,
+            Protocol protocol,
+            ushort portNumber,
             TimeSpan connectionTimeout)
         {
             _endpoint = endpoint;
-            _hostName = hostName;
+            _domainName = domainName;
             _protocol = protocol;
+            _portNumber = portNumber;
             _connectionTimeout = connectionTimeout;
+            _bufferPool = bufferPool;
             _pool = new Queue<Connection>();
         }
 
@@ -35,7 +43,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
         }
 
-        public Connection GetConnection(ILog log, TimeSpan responseTimeout, int readTimeoutMs)
+        public Task<Connection> GetConnection(ILog log, TimeSpan responseTimeout, int readTimeoutMs)
         {
             while (true)
             {
@@ -51,7 +59,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                             if (!connection.IsStale)
                             {
                                 log?.Log(LogType.Pooling, LogLevel.Detailed, () => "Reusing the connection dequeued from the pool");
-                                return connection.Initialize(responseTimeout, readTimeoutMs);
+                                return Task.FromResult(connection);
                             }
 
                             log?.Log(LogType.Pooling, LogLevel.Important, () => "The connection dequeued from the pool has been idle too long and will be disposed");
@@ -71,7 +79,24 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
 
             log?.Log(LogType.Pooling, LogLevel.Detailed, () => "The connection pool is empty, creating a new connection");
-            return new Connection(log, _endpoint, _hostName, _protocol, _connectionTimeout).Initialize(responseTimeout, readTimeoutMs);
+            var newConnection = new Connection(_bufferPool, _endpoint, _domainName, _protocol, _connectionTimeout);
+            return newConnection.Connect(log)
+                .ContinueWith(connectTask => 
+                {
+                    if (connectTask.IsFaulted)
+                    {
+                        log?.Log(LogType.Pooling, LogLevel.Important, () => $"Connection to {_endpoint} failed with {connectTask.Exception.Message}");
+                        throw new Exception("Failed to connect to " + _endpoint, connectTask.Exception);
+                    }
+
+                    if (connectTask.IsCanceled)
+                    {
+                        log?.Log(LogType.Pooling, LogLevel.Important, () => $"Timeot connecting to {_endpoint}");
+                        throw new Exception("Timeout connecting to " + _endpoint);
+                    }
+
+                    return newConnection;
+                });
         }
 
         public void ReuseConnection(ILog log, Connection connection)

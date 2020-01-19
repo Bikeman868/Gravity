@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Gravity.Server.Interfaces;
+using System;
 using System.Threading.Tasks;
-using Microsoft.Owin;
 
-namespace Gravity.Server.Interfaces
+namespace Gravity.Server.Pipeline
 {
     internal interface INode: IDisposable
     {
@@ -38,6 +38,6 @@ namespace Gravity.Server.Interfaces
         /// <summary>
         /// Runtime request processing
         /// </summary>
-        Task ProcessRequest(IOwinContext context, ILog log);
+        Task ProcessRequest(IRequestContext context);
     }
 }

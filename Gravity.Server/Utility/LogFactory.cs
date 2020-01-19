@@ -73,6 +73,8 @@ namespace Gravity.Server.Utility
         {
             if (!_configuration.Enabled) return null;
 
+            context.Request.Protocol
+
             ILog log = null;
 
             switch (_configuration.Method)

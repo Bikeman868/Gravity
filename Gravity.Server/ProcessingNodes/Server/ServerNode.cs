@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Gravity.Server.Interfaces;
 using Gravity.Server.Utility;
-using Microsoft.Owin;
+using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.ProcessingNodes.Server
 {
@@ -145,31 +145,31 @@ namespace Gravity.Server.ProcessingNodes.Server
             Offline = Healthy == false;
         }
 
-        Task INode.ProcessRequest(IOwinContext context, ILog log)
+        Task INode.ProcessRequest(IRequestContext context)
         {
             var allIpAddresses = IpAddresses;
 
             if (allIpAddresses == null || allIpAddresses.Length == 0)
             {
-                context.Response.StatusCode = 503;
-                context.Response.ReasonPhrase = "No servers found with this host name";
-                return context.Response.WriteAsync(string.Empty);
+                context.Outgoing.StatusCode = 503;
+                context.Outgoing.ReasonPhrase = "No servers found with this host name";
+                return context.Outgoing.WriteAsync(string.Empty);
             }
 
             var ipAddresses = allIpAddresses.Where(i => i.Healthy == true).ToList();
 
             if (ipAddresses.Count == 0 || Healthy != true)
             {
-                context.Response.StatusCode = 503;
-                context.Response.ReasonPhrase = "No healthy servers";
-                return context.Response.WriteAsync(string.Empty);
+                context.Outgoing.StatusCode = 503;
+                context.Outgoing.ReasonPhrase = "No healthy servers";
+                return context.Outgoing.WriteAsync(string.Empty);
             }
 
             var ipAddressIndex = Interlocked.Increment(ref _lastIpAddressIndex) % ipAddresses.Count;
             var ipAddress = ipAddresses[ipAddressIndex];
 
             var port = 80;
-            var protocol = context.Request.Scheme;
+            var protocol = context.Incoming.Scheme;
 
             if (Port.HasValue)
             {
@@ -181,37 +181,37 @@ namespace Gravity.Server.ProcessingNodes.Server
                 port = 443;
             }
 
-            var host = context.Request.Headers["Host"];
+            var host = context.Incoming.Headers["Host"];
             var hostColon = host.IndexOf(':');
             if (hostColon > 0)
                 host = host.Substring(0, hostColon);
 
-            var request = new Request
+            var request = new IncomingMessage
             {
                 Protocol = protocol,
                 HostName = host,
                 IpAddress = ipAddress.Address,
                 PortNumber = port,
-                Method = context.Request.Method,
-                PathAndQuery = context.Request.Path.ToString(),
-                Headers = context.Request.Headers
+                Method = context.Incoming.Method,
+                PathAndQuery = context.Incoming.Path.ToString(),
+                Headers = context.Incoming.Headers
                     .Where(h => h.Value != null && h.Value.Length > 0)
                     .Select(h => new Tuple<string, string>(h.Key, h.Value[0]))
                     .ToArray()
             };
 
-            if (context.Request.QueryString.HasValue)
-                request.PathAndQuery += "?" + context.Request.QueryString.Value;
+            if (context.Incoming.QueryString.HasValue)
+                request.PathAndQuery += "?" + context.Incoming.QueryString.Value;
 
-            var contentLengthHeader = context.Request.Headers["Content-Length"];
-            if (contentLengthHeader != null && context.Request.Body != null && context.Request.Body.CanRead)
+            var contentLengthHeader = context.Incoming.Headers["Content-Length"];
+            if (contentLengthHeader != null && context.Incoming.Body != null && context.Incoming.Body.CanRead)
             {
                 var contentLength = int.Parse(contentLengthHeader);
                 request.Content = new byte[contentLength];
-                context.Request.Body.Read(request.Content, 0, contentLength);
+                context.Incoming.Body.Read(request.Content, 0, contentLength);
             }
 
-            Response response;
+            OutgoingMessage response;
             ipAddress.IncrementConnectionCount();
             var startTicks = ipAddress.TrafficAnalytics.BeginRequest();
             try
@@ -244,14 +244,14 @@ namespace Gravity.Server.ProcessingNodes.Server
                 ipAddress.DecrementConnectionCount();
             }
 
-            context.Response.StatusCode = response.StatusCode;
-            context.Response.ReasonPhrase = response.ReasonPhrase;
+            context.Outgoing.StatusCode = response.StatusCode;
+            context.Outgoing.ReasonPhrase = response.ReasonPhrase;
 
             if (response.Headers != null)
                 foreach (var header in response.Headers)
-                    context.Response.Headers[header.Item1] = header.Item2;
+                    context.Outgoing.Headers[header.Item1] = header.Item2;
 
-            return context.Response.WriteAsync(response.Content);
+            return context.Outgoing.WriteAsync(response.Content);
         }
 
         private void CheckHealth(ILog log)
@@ -341,7 +341,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                 {
                     log?.Log(LogType.Health, LogLevel.Important, () => "Checking health of endpoint " + IpAddresses[i].Address);
 
-                    var request = new Request
+                    var request = new IncomingMessage
                     {
                         Protocol = HealthCheckPort == 443 ? "https" : "http",
                         HostName = host,
@@ -385,7 +385,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
         }
 
-        private Response Send(Request request, ILog log)
+        private OutgoingMessage Send(IncomingMessage request, ILog log)
         {
             try
             {
@@ -429,7 +429,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             catch (Exception ex)
             {
                 log?.Log(LogType.TcpIp, LogLevel.Important, () => "Returning 503 response because " + ex.Message);
-                return new Response
+                return new OutgoingMessage
                 {
                     StatusCode = 503,
                     ReasonPhrase = "Exception forwarding request to real server",
