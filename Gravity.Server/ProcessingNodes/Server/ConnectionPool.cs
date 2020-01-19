@@ -35,7 +35,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
         }
 
-        public Connection GetConnection(ILog log, TimeSpan responseTimeout, TimeSpan readTimeout)
+        public Connection GetConnection(ILog log, TimeSpan responseTimeout, int readTimeoutMs)
         {
             while (true)
             {
@@ -51,15 +51,15 @@ namespace Gravity.Server.ProcessingNodes.Server
                             if (!connection.IsStale)
                             {
                                 log?.Log(LogType.Pooling, LogLevel.Detailed, () => "Reusing the connection dequeued from the pool");
-                                return connection.Initialize(responseTimeout, readTimeout);
+                                return connection.Initialize(responseTimeout, readTimeoutMs);
                             }
 
-                            log?.Log(LogType.Pooling, LogLevel.Superficial, () => "The connection dequeued from the pool has been idle too long and will be disposed");
+                            log?.Log(LogType.Pooling, LogLevel.Important, () => "The connection dequeued from the pool has been idle too long and will be disposed");
                             connection.Dispose();
                         }
                         else
                         {
-                            log?.Log(LogType.Pooling, LogLevel.Superficial, () => "The connection dequeued from the pool was not connected and will be disposed");
+                            log?.Log(LogType.Pooling, LogLevel.Important, () => "The connection dequeued from the pool was not connected and will be disposed");
                             connection.Dispose();
                         }
                     }
@@ -71,7 +71,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
 
             log?.Log(LogType.Pooling, LogLevel.Detailed, () => "The connection pool is empty, creating a new connection");
-            return new Connection(log, _endpoint, _hostName, _protocol, _connectionTimeout).Initialize(responseTimeout, readTimeout);
+            return new Connection(log, _endpoint, _hostName, _protocol, _connectionTimeout).Initialize(responseTimeout, readTimeoutMs);
         }
 
         public void ReuseConnection(ILog log, Connection connection)

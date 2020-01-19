@@ -166,7 +166,7 @@ namespace Gravity.Server.Utility
             {
                 Enabled = false;
                 Method = LogMethod.Trace;
-                MaxLogLevel = LogLevel.Basic;
+                MaxLogLevel = LogLevel.Standard;
                 LogTypes = new LogType[0];
                 Directory = "C:\\Logs";
             }

@@ -30,11 +30,11 @@ namespace Gravity.Server.Configuration
         public TimeSpan ResponseTimeout { get; set; }
 
         /// <summary>
-        /// How long to wait for the server to send the next batch of data
+        /// How long to wait in milliseconds for the server to send the next batch of data
         /// before deciding that the response is finished
         /// </summary>
-        [JsonProperty("readTimeout")]
-        public TimeSpan ReadTimeout { get; set; }
+        [JsonProperty("readTimeoutMs")]
+        public int ReadTimeoutMs { get; set; }
 
         /// <summary>
         /// Set this to True to pool and reuse connections. This is
@@ -104,7 +104,7 @@ namespace Gravity.Server.Configuration
         {
             ConnectionTimeout = TimeSpan.FromSeconds(5);
             ResponseTimeout = TimeSpan.FromSeconds(20);
-            ReadTimeout = TimeSpan.FromSeconds(3);
+            ReadTimeoutMs = 200;
             DnsLookupInterval = TimeSpan.FromMinutes(5);
             RecalculateInterval = TimeSpan.FromSeconds(5);
             HealthCheckMethod = "GET";

@@ -15,7 +15,7 @@ namespace Gravity.Server.ProcessingNodes.Server
         private readonly Stream _stream;
 
         private TimeSpan _responseTimeout;
-        private TimeSpan _readTimeout;
+        private int _readTimeoutMs;
         private DateTime _lastUsedUtc;
         private readonly TimeSpan _maximumIdleTime = TimeSpan.FromMinutes(5);
 
@@ -26,7 +26,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             string protocol,
             TimeSpan connectionTimeout)
         {
-            log?.Log(LogType.TcpIp, LogLevel.Basic, 
+            log?.Log(LogType.TcpIp, LogLevel.Standard, 
                 () => $"Opening a new Tcp connection to {protocol}://{hostName} at {endpoint}");
 
 
@@ -41,7 +41,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             var connectResult = _tcpClient.BeginConnect(endpoint.Address, endpoint.Port, null, null);
             if (!connectResult.AsyncWaitHandle.WaitOne(connectionTimeout))
             {
-                log?.Log(LogType.Exception, LogLevel.Superficial, () => $"Failed to connect within {connectionTimeout}");
+                log?.Log(LogType.Exception, LogLevel.Important, () => $"Failed to connect within {connectionTimeout}");
                 _tcpClient.Close();
                 throw new Exception("Failed to connect within " + connectionTimeout);
             }
@@ -52,12 +52,12 @@ namespace Gravity.Server.ProcessingNodes.Server
 
             if (protocol == "https")
             {
-                log?.Log(LogType.TcpIp, LogLevel.Basic, () => "Wrapping Tcp connection in SSL stream");
+                log?.Log(LogType.TcpIp, LogLevel.Standard, () => "Wrapping Tcp connection in SSL stream");
                 var sslStream = new SslStream(_stream);
 
                 _stream = sslStream;
 
-                log?.Log(LogType.TcpIp, LogLevel.Basic, () => $"Authenticating server's SSL certificate for {hostName}");
+                log?.Log(LogType.TcpIp, LogLevel.Standard, () => $"Authenticating server's SSL certificate for {hostName}");
                 sslStream.AuthenticateAsClient(hostName);
             }
 
@@ -74,10 +74,10 @@ namespace Gravity.Server.ProcessingNodes.Server
         /// Gets this connection ready for a new request
         /// </summary>
         /// <returns></returns>
-        public Connection Initialize(TimeSpan responseTimeout, TimeSpan readTimeout)
+        public Connection Initialize(TimeSpan responseTimeout, int readTimeoutMs)
         {
             _responseTimeout = responseTimeout;
-            _readTimeout = readTimeout;
+            _readTimeoutMs = readTimeoutMs;
 
             return this;
         }
@@ -179,13 +179,13 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                 if (secondSpaceIndex < 3)
                 {
-                    log?.Log(LogType.TcpIp, LogLevel.Basic, () => "Response first line contains only 1 space");
+                    log?.Log(LogType.TcpIp, LogLevel.Standard, () => "Response first line contains only 1 space");
                     throw new Exception("Response first line contains only 1 space");
                 }
 
                 if (!int.TryParse(headerLines[0].Substring(firstSpaceIndex + 1, secondSpaceIndex - firstSpaceIndex), out result.StatusCode))
                 {
-                    log?.Log(LogType.TcpIp, LogLevel.Basic, () => "Response status code can not be parsed as an integer");
+                    log?.Log(LogType.TcpIp, LogLevel.Standard, () => "Response status code can not be parsed as an integer");
                     throw new Exception("Response status code can not be parsed as an integer");
                 }
 
@@ -212,7 +212,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                     }
                     else
                     {
-                        log?.Log(LogType.TcpIp, LogLevel.Basic, () => $"Invalid header line '{headerLine}' does not contain a colon");
+                        log?.Log(LogType.TcpIp, LogLevel.Standard, () => $"Invalid header line '{headerLine}' does not contain a colon");
                         throw new Exception("Invalid header line does not contain a colon");
                     }
                 }
@@ -237,11 +237,13 @@ namespace Gravity.Server.ProcessingNodes.Server
                 Array.Copy(buffer, src, result.Content, dest, count);
             }
 
-            log?.Log(LogType.TcpIp, LogLevel.Detailed, () => "Waiting for a response from the server");
+            log?.Log(LogType.TcpIp, LogLevel.Detailed, () => "Starting http receive. Expecting " + (expectBody ? "possible body" : "no body"));
 
             _tcpClient.ReceiveTimeout = (int)_responseTimeout.TotalMilliseconds;
-            while (header || (contentLength.HasValue && contentLength.Value > 0 && (result.Content == null || result.Content.Length < contentLength.Value)))
+
+            while (header || !contentLength.HasValue || (contentLength.Value > 0 && (result.Content == null || result.Content.Length < contentLength.Value)))
             {
+                log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"Waiting up to {_tcpClient.ReceiveTimeout}ms for a response from the server");
                 int readCount;
                 try
                 {
@@ -249,22 +251,32 @@ namespace Gravity.Server.ProcessingNodes.Server
                 }
                 catch (IOException)
                 {
-                    log?.Log(LogType.TcpIp, LogLevel.Basic, () => $"Server did not respond within {_tcpClient.ReceiveTimeout}ms");
-                    result.StatusCode = 504;
-                    result.ReasonPhrase = "Server did not respond within " + _tcpClient.ReceiveTimeout + "ms";
-                    Dispose();
-                    return result;
+                    log?.Log(LogType.TcpIp, LogLevel.Standard, () => $"Server did not respond within {_tcpClient.ReceiveTimeout}ms");
+                    if (contentLength.HasValue || header)
+                    {
+                        result.StatusCode = 504;
+                        result.ReasonPhrase = "Server did not respond within " + _tcpClient.ReceiveTimeout + "ms";
+                        Dispose();
+                    }
+                    readCount = 0;
                 }
                 if (readCount == 0) break;
-                _tcpClient.ReceiveTimeout = (int)_readTimeout.TotalMilliseconds;
 
-                log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{readCount} bytes received from the server");
+                log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () =>
+                {
+                    var msg = $"{readCount} bytes received from the server";
+                    if (readCount < 30) 
+                        msg += " '" + Encoding.UTF8.GetString(buffer, 0, readCount)  + "'";
+                    return msg;
+                });
 
                 if (header)
                 {
                     for (var i = 0; i < readCount; i++)
                     {
                         var c = (char) buffer[i];
+
+                        if (beginning && c != 'H') continue;
 
                         if (c == '\r') continue;
 
@@ -298,10 +310,19 @@ namespace Gravity.Server.ProcessingNodes.Server
                 {
                     AppendContent(0, contentIndex, readCount);
                     contentIndex += readCount;
+
+                    _tcpClient.ReceiveTimeout = _readTimeoutMs;
                 }
             }
 
-            log?.Log(LogType.TcpIp, LogLevel.Basic, () =>
+            if (!expectBody && result.Content != null && result.Content.Length > 0)
+            {
+                var msg = $"No content body was expected but {result.Content.Length} bytes of content were received";
+                log?.Log(LogType.TcpIp, LogLevel.Important, () => msg);
+                throw new Exception(msg);
+            }
+
+            log?.Log(LogType.TcpIp, LogLevel.Standard, () =>
             {
                 var headers = result.Headers == null ? "no headers" : $"{result.Headers.Length} header lines";
                 var content = result.Content == null ? "no content" : $"{result.Content.Length} bytes of content";

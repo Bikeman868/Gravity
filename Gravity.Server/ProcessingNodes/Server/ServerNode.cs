@@ -20,7 +20,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         public TimeSpan ConnectionTimeout { get; set; }
         public TimeSpan ResponseTimeout { get; set; }
-        public TimeSpan ReadTimeout { get; set; }
+        public int ReadTimeoutMs { get; set; }
         public bool ReuseConnections { get; set; }
 
         public string HealthCheckMethod { get; set; }
@@ -49,7 +49,7 @@ namespace Gravity.Server.ProcessingNodes.Server
         {
             ConnectionTimeout = TimeSpan.FromSeconds(20);
             ResponseTimeout = TimeSpan.FromSeconds(10);
-            ReadTimeout = TimeSpan.FromSeconds(3);
+            ReadTimeoutMs = 200;
             ReuseConnections = true;
             DnsLookupInterval = TimeSpan.FromMinutes(5);
             RecalculateInterval = TimeSpan.FromSeconds(5);
@@ -66,7 +66,6 @@ namespace Gravity.Server.ProcessingNodes.Server
         {
             _backgroundThread = new Thread(() =>
             {
-                ILog log = null;
                 var nextHealthCheck = DateTime.UtcNow;
                 var nextRecalculate = DateTime.UtcNow.AddSeconds(5);
 
@@ -81,15 +80,10 @@ namespace Gravity.Server.ProcessingNodes.Server
                         {
                             nextHealthCheck = timeNow + HealthCheckInterval;
 
-                            if (HealthCheckLog && log == null)
-                                log = new HealthCheckLogger();
-                            else if (!HealthCheckLog && log != null)
+                            using (var log = HealthCheckLog ? new HealthCheckLogger() : null)
                             {
-                                log.Dispose();
-                                log = null;
+                                CheckHealth(log);
                             }
-
-                            CheckHealth(log);
                         }
 
                         if (timeNow > nextRecalculate)
@@ -234,12 +228,12 @@ namespace Gravity.Server.ProcessingNodes.Server
                     {
                         if (++retry > 2)
                         {
-                            log?.Log(LogType.Exception, LogLevel.Superficial, () => $"Request to server node {Name} failed {retry} times and will not be retried");
+                            log?.Log(LogType.Exception, LogLevel.Important, () => $"Request to server node {Name} failed {retry} times and will not be retried");
                             throw;
                         }
                         else
                         {
-                            log?.Log(LogType.Exception, LogLevel.Basic, () => $"Request to server node {Name} failed and will be retried");
+                            log?.Log(LogType.Exception, LogLevel.Standard, () => $"Request to server node {Name} failed and will be retried");
                         }
                     }
                 }
@@ -287,7 +281,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                         if (hostEntry.AddressList == null || hostEntry.AddressList.Length == 0)
                         {
-                            log?.Log(LogType.Health, LogLevel.Superficial, () => "DNS returned no IP addresses");
+                            log?.Log(LogType.Health, LogLevel.Important, () => "DNS returned no IP addresses");
 
                             UnhealthyReason = "DNS returned no IP addresses for " + Host;
                             Healthy = false;
@@ -326,7 +320,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                     }
                     catch (Exception ex)
                     {
-                        log?.Log(LogType.Exception, LogLevel.Superficial, () => "Exception in DNS lookup of " + Host + ". " + ex.Message);
+                        log?.Log(LogType.Exception, LogLevel.Important, () => "Exception in DNS lookup of " + Host + ". " + ex.Message);
 
                         UnhealthyReason = ex.Message + " " + Host;
                         Healthy = false;
@@ -345,6 +339,8 @@ namespace Gravity.Server.ProcessingNodes.Server
             {
                 try
                 {
+                    log?.Log(LogType.Health, LogLevel.Important, () => "Checking health of endpoint " + IpAddresses[i].Address);
+
                     var request = new Request
                     {
                         Protocol = HealthCheckPort == 443 ? "https" : "http",
@@ -363,16 +359,15 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                     if (HealthCheckCodes.Contains(response.StatusCode))
                     {
-                        log?.Log(LogType.Health, LogLevel.Superficial, () => "Endpoint " + IpAddresses[i].Address + " passed its health check");
+                        log?.Log(LogType.Health, LogLevel.Important, () => "Endpoint " + IpAddresses[i].Address + " passed its health check");
 
                         healthy = true;
                         IpAddresses[i].SetHealthy();
                     }
                     else
                     {
-                        log?.Log(LogType.Health, LogLevel.Superficial, () => "Endpoint " + IpAddresses[i].Address + " failed health check with status code " + response.StatusCode);
-
-                        IpAddresses[i].SetUnhealthy("Status code " + response.StatusCode);
+                        log?.Log(LogType.Health, LogLevel.Important, () => "Endpoint " + IpAddresses[i].Address + " failed health check with status code " + response.StatusCode + " " + response.ReasonPhrase);
+                        IpAddresses[i].SetUnhealthy(response.StatusCode + " " + response.ReasonPhrase);
                     }
                 }
                 catch (Exception ex)
@@ -406,20 +401,20 @@ namespace Gravity.Server.ProcessingNodes.Server
                     }
                     else
                     {
-                        log?.Log(LogType.Pooling, LogLevel.Superficial, () => "Creating new connection pool " + key);
+                        log?.Log(LogType.Pooling, LogLevel.Important, () => "Creating new connection pool " + key);
                         connectionPool = new ConnectionPool(endpoint, request.HostName, request.Protocol, ConnectionTimeout);
                         _connectionPools.Add(key, connectionPool);
                     }
                 }
 
-                var connection = connectionPool.GetConnection(log, ResponseTimeout, ReadTimeout);
+                var connection = connectionPool.GetConnection(log, ResponseTimeout, ReadTimeoutMs);
                 try
                 {
                     return connection.Send(request, log);
                 }
                 catch (Exception ex)
                 {
-                    log?.Log(LogType.TcpIp, LogLevel.Superficial, () => "Exception thrown sending request - " + ex.Message);
+                    log?.Log(LogType.TcpIp, LogLevel.Important, () => "Exception thrown sending request - " + ex.Message);
                     connection.Dispose();
                     throw;
                 }
@@ -433,7 +428,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
             catch (Exception ex)
             {
-                log?.Log(LogType.TcpIp, LogLevel.Superficial, () => "Returning 503 response because " + ex.Message);
+                log?.Log(LogType.TcpIp, LogLevel.Important, () => "Returning 503 response because " + ex.Message);
                 return new Response
                 {
                     StatusCode = 503,
@@ -451,6 +446,7 @@ namespace Gravity.Server.ProcessingNodes.Server
         {
             private static volatile int _nextId;
             private readonly int _id;
+            private readonly DateTime _startTime = DateTime.UtcNow;
 
             public HealthCheckLogger()
             {
@@ -463,7 +459,8 @@ namespace Gravity.Server.ProcessingNodes.Server
 
             public void Log(LogType type, LogLevel level, Func<string> messageFunc)
             {
-                Trace.WriteLine($"[HEALTH] {_id,4} {type,-10} {messageFunc()}");
+                var elapsed = (int)(DateTime.UtcNow - _startTime).TotalMilliseconds;
+                Trace.WriteLine($"[HEALTH-CHECK] {_id,6} {elapsed,6}ms {type,-10} {messageFunc()}");
             }
         }
     }

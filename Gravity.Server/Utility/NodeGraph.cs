@@ -270,7 +270,7 @@ namespace Gravity.Server.Utility
                         Port = serverNodeConfiguration.Port,
                         ConnectionTimeout = serverNodeConfiguration.ConnectionTimeout,
                         ResponseTimeout = serverNodeConfiguration.ResponseTimeout,
-                        ReadTimeout = serverNodeConfiguration.ReadTimeout,
+                        ReadTimeoutMs = serverNodeConfiguration.ReadTimeoutMs,
                         ReuseConnections = serverNodeConfiguration.ReuseConnections,
                         DnsLookupInterval = serverNodeConfiguration.DnsLookupInterval,
                         RecalculateInterval = serverNodeConfiguration.RecalculateInterval,

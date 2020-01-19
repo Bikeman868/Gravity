@@ -121,7 +121,7 @@ namespace Gravity.Server.ProcessingNodes
 
                     using (var log = _logFactory.Create(context))
                     {
-                        log?.Log(LogType.Request, LogLevel.Basic, () => $"Starting new request for {context.Request.Uri}");
+                        log?.Log(LogType.Request, LogLevel.Standard, () => $"Starting new request for {context.Request.Uri}");
 
                         try
                         {
@@ -137,7 +137,7 @@ namespace Gravity.Server.ProcessingNodes
                         }
                         finally
                         {
-                            log?.Log(LogType.Request, LogLevel.Basic, () => $"Completed request for {context.Request.Uri}");
+                            log?.Log(LogType.Request, LogLevel.Standard, () => $"Completed request for {context.Request.Uri}");
                         }
                     }
                 }

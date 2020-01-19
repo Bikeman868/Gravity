@@ -22,8 +22,8 @@ namespace Gravity.Server.Interfaces
 
     internal enum LogLevel
     {
-        Superficial = 1,
-        Basic = 2,
+        Important = 1,
+        Standard = 2,
         Detailed = 3,
         VeryDetailed = 4
     }
