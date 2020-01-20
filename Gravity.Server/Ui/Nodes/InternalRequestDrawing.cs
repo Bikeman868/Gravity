@@ -8,7 +8,7 @@ namespace Gravity.Server.Ui.Nodes
         public InternalRequestDrawing(
             DrawingElement drawing, 
             InternalNode internalRequest) 
-            : base(drawing, "Internal", "internal", internalRequest.Offline, 2, internalRequest.Name)
+            : base(drawing, "Internal", "public", internalRequest.Offline, 2, internalRequest.Name)
         {
         }
     }

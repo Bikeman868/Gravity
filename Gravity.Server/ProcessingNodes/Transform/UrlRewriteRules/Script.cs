@@ -21,15 +21,18 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
     internal class Script: IRequestTransform
     {
         private readonly IFactory _factory;
+        private readonly bool _incoming;
         private readonly ICustomTypeRegistrar _customTypeRegistrar;
         private readonly IRuleList _rules;
 
         public Script(
             IFactory factory, 
             Stream stream, 
-            Encoding encoding)
+            Encoding encoding,
+            bool incoming)
         {
             _factory = factory;
+            _incoming = incoming;
             _customTypeRegistrar = new CustomTypeRegistrar(_factory);
 
             XDocument document;
@@ -62,38 +65,25 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
             }
         }
 
-        void IRequestTransform.Transform(IRequestContext context)
+        bool IRequestTransform.Transform(IRequestContext context)
         {
-            if (_rules == null) return;
+            if (_rules == null) return false;
 
-            var requestContext = new IncomingContext(context);
-            var ruleResult = _rules.Evaluate(requestContext);
+            var ruleContext = _incoming ? (IRuleExecutionContext)new IncomingContext(context) : new OutgoingContext(context);
+
+            var ruleResult = _rules.Evaluate(ruleContext);
 
             if (ruleResult.EndRequest)
                 return true;
 
-            if (requestContext.UrlIsModified)
+            if (_incoming && ruleContext.UrlIsModified)
             {
-                context.Request.Path = new PathString(requestContext.NewPathString);
-                context.Request.QueryString = new QueryString(requestContext.NewParametersString);
-                context.Request.Host = new HostString(requestContext.NewHost);
+                context.Incoming.Path = new PathString(ruleContext.NewPathString);
+                context.Incoming.Query = new QueryString(ruleContext.NewParametersString);
+                context.Incoming.DomainName = ruleContext.NewHost;
             }
 
             return false;
-        }
-
-        IOwinContext IResponseTransform.WrapOriginalRequest(IOwinContext originalContext)
-        {
-            return originalContext;
-        }
-
-        bool IResponseTransform.Transform(IOwinContext originalContext, IOwinContext wrappedContext)
-        {
-            if (_rules == null) return false;
-
-            var requestContext = new OutgoingContext(wrappedContext);
-            var ruleResult = _rules.Evaluate(requestContext);
-            return ruleResult.EndRequest;
         }
 
         #region Constructing instances using factories and custom type registrations

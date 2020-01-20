@@ -8,7 +8,7 @@ namespace Gravity.Server.Utility
     /// Works like a stop watch, can be started and stopped many times and it accumulates elapsed time while running.
     /// Can query elapsed time after it has been stopped, or while it is running.
     /// </summary>
-    public class Timer
+    internal class Timer
     {
         #region Static stuff for access to very high precision timing
 

@@ -1,6 +1,6 @@
 ﻿namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Actions
 {
-    public interface IDoNothingAction: IAction
+    internal interface IDoNothingAction: IAction
     {
         IDoNothingAction Initialize();
     }

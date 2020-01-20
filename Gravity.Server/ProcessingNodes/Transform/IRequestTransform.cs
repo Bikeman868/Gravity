@@ -10,6 +10,13 @@ namespace Gravity.Server.ProcessingNodes.Transform
     /// </summary>
     internal interface IRequestTransform
     {
-        void Transform(IRequestContext context);
+        /// <summary>
+        /// Applies a transformation to a request 
+        /// </summary>
+        /// <returns>
+        /// True if the request processing should be terminated
+        /// because the transform generated the outgoing response
+        /// </returns>
+        bool Transform(IRequestContext context);
     }
 }

@@ -19,8 +19,8 @@ g.label > text { stroke:#808080; fill:#808080; }
 g.listener > rect { stroke:#009900; fill:#e6ffe6; }
 g.listener > text { stroke:#000000; fill:#000000; }
 
-g.internal > rect { stroke:#009999; fill:#e6ffff; }
-g.internal > text { stroke:#000000; fill:#000000; }
+g.public > rect { stroke:#009999; fill:#e6ffff; }
+g.public > text { stroke:#000000; fill:#000000; }
 
 g.router > rect { stroke:#dda2a2; fill:#f1dada; }
 g.router > text { stroke:#000000; fill:#000000; }

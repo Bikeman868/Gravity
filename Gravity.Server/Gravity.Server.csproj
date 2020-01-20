@@ -99,7 +99,7 @@
     <Compile Include="Pipeline\IRequestContext.cs" />
     <Compile Include="Pipeline\OwinRequestContext.cs" />
     <Compile Include="Pipeline\Scheme.cs" />
-    <Compile Include="Pipeline\Message.cs" />
+    <Compile Include="Pipeline\ServerRequestContext.cs" />
     <Compile Include="ProcessingNodes\LoadBalancing\LoadBalancerNode.cs" />
     <Compile Include="Pipeline\RequestListener.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Actions\AbortRequest.cs" />
@@ -197,8 +197,6 @@
     <Compile Include="Package.cs" />
     <Compile Include="Pipeline\Connection.cs" />
     <Compile Include="Pipeline\ConnectionPool.cs" />
-    <Compile Include="Pipeline\IncomingMessage.cs" />
-    <Compile Include="Pipeline\OutgoingMessage.cs" />
     <Compile Include="ProcessingNodes\SpecialPurpose\InternalNode.cs" />
     <Compile Include="Utility\NodeGraph.cs" />
     <Compile Include="Utility\NodeOutput.cs" />

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 using Gravity.Server.Interfaces;
+using Gravity.Server.Pipeline;
 using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes.Routing
@@ -57,7 +58,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
         private class DefaultExpression<T> : IExpression<T>
         {
-            T IExpression<T>.Evaluate(IOwinContext context)
+            T IExpression<T>.Evaluate(IRequestContext context)
             {
                 return default(T);
             }
@@ -75,7 +76,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
                 _value = (T)Convert.ChangeType(expression, typeof (T));
             }
 
-            T IExpression<T>.Evaluate(IOwinContext context)
+            T IExpression<T>.Evaluate(IRequestContext context)
             {
                 return _value;
             }
@@ -90,7 +91,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
                 _headerName = headerName;
             }
 
-            T IExpression<T>.Evaluate(IOwinContext context)
+            T IExpression<T>.Evaluate(IRequestContext context)
             {
                 var header = context.Request.Headers[_headerName];
 
@@ -103,9 +104,9 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
         private class MethodExpression<T> : IExpression<T>
         {
-            T IExpression<T>.Evaluate(IOwinContext context)
+            T IExpression<T>.Evaluate(IRequestContext context)
             {
-                var method = context.Request.Method;
+                var method = context.Incoming.Method;
 
                 if (typeof (string) == typeof (T))
                     return (T)(object)method;
@@ -116,9 +117,9 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
         private class PathExpression<T> : IExpression<T>
         {
-            T IExpression<T>.Evaluate(IOwinContext context)
+            T IExpression<T>.Evaluate(IRequestContext context)
             {
-                var path = context.Request.Path.Value;
+                var path = context.Incoming.Path.Value;
 
                 if (typeof(string) == typeof(T))
                     return (T)(object)path;
@@ -136,9 +137,29 @@ namespace Gravity.Server.ProcessingNodes.Routing
                 _parameterName = parameterName;
             }
 
-            T IExpression<T>.Evaluate(IOwinContext context)
+            T IExpression<T>.Evaluate(IRequestContext context)
             {
-                var parameterValue = context.Request.Query[_parameterName];
+                var parameterValue = string.Empty;
+
+                if (context.Incoming.Query.HasValue)
+                {
+                    var query = context.Incoming.Query.Value;
+                    if (!string.IsNullOrEmpty(query))
+                    {
+                        foreach (var parameter in query.Split('&'))
+                        {
+                            var equalsPos = parameter.IndexOf('=');
+                            if (equalsPos > 0)
+                            {
+                                var name = Uri.UnescapeDataString(parameter.Substring(0, equalsPos));
+                                if (string.Equals(name, _parameterName, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    parameterValue = Uri.UnescapeDataString(parameter.Substring(equalsPos + 1));
+                                }
+                            }
+                        }
+                    }
+                }
 
                 if (typeof (string) == typeof (T))
                     return (T)(object)parameterValue;
@@ -156,13 +177,13 @@ namespace Gravity.Server.ProcessingNodes.Routing
                 _index = index;
             }
 
-            T IExpression<T>.Evaluate(IOwinContext context)
+            T IExpression<T>.Evaluate(IRequestContext context)
             {
                 var value = string.Empty;
 
                 if (_index == 0)
                 {
-                    value = context.Request.Path.Value;
+                    value = context.Incoming.Path.Value;
                 }
                 else
                 {

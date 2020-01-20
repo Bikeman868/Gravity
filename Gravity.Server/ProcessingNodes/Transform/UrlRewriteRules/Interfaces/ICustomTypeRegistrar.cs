@@ -6,7 +6,7 @@ using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Operat
 
 namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces
 {
-    public interface ICustomTypeRegistrar
+    internal interface ICustomTypeRegistrar
     {
         void RegisterOperation(Type type, string name);
         void RegisterAction(Type type, string name);

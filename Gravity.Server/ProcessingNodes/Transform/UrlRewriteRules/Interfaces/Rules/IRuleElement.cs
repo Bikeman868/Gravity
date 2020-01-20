@@ -2,7 +2,7 @@
 
 namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Rules
 {
-    public interface IRuleElement
+    internal interface IRuleElement
     {
         string ToString(IRuleExecutionContext requestInfo);
     }

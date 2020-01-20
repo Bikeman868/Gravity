@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Gravity.Server.Configuration;
 using Gravity.Server.Interfaces;
 using Gravity.Server.Utility;
-using Microsoft.Owin;
 using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.ProcessingNodes.Routing
@@ -145,7 +144,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
             Offline = offline;
         }
 
-        Task INode.ProcessRequest(IOwinContext context, ILog log)
+        Task INode.ProcessRequest(IRequestContext context)
         {
             for (var i = 0; i < _routes.Length; i++)
             {
@@ -157,7 +156,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
                     if (node != null)
                     {
                         var startTime = output.TrafficAnalytics.BeginRequest();
-                        var task = node.ProcessRequest(context, log);
+                        var task = node.ProcessRequest(context);
                         if (task == null)
                             return null;
                         return task.ContinueWith(t =>
@@ -168,9 +167,13 @@ namespace Gravity.Server.ProcessingNodes.Routing
                 }
             }
 
-            context.Response.StatusCode = 404;
-            context.Response.ReasonPhrase = "No routes in " + Name + " matches the request";
-            return context.Response.WriteAsync(string.Empty);
+            return Task.Run(() =>
+            {
+                context.Outgoing.StatusCode = 404;
+                context.Outgoing.ReasonPhrase = "No routes in " + Name + " matches the request";
+                context.Outgoing.SendHeaders(context);
+
+            });
         }
 
         private class Route
@@ -178,7 +181,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
             public Rule[] Rules;
             public ConditionLogic ConditionLogic;
 
-            public bool IsMatch(IOwinContext context)
+            public bool IsMatch(IRequestContext context)
             {
                 if (Rules == null)
                     return true;
@@ -198,7 +201,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
         private abstract class Rule
         {
-            public abstract bool IsMatch(IOwinContext context);
+            public abstract bool IsMatch(IRequestContext context);
         }
 
         private class EqualsRule : Rule
@@ -206,7 +209,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
             public IExpression<string> Expression1;
             public IExpression<string> Expression2;
 
-            public override bool IsMatch(IOwinContext context)
+            public override bool IsMatch(IRequestContext context)
             {
                 var value1 = Expression1.Evaluate(context);
                 var value2 = Expression2.Evaluate(context);
@@ -223,7 +226,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
             public IExpression<string> Expression1;
             public IExpression<string> Expression2;
 
-            public override bool IsMatch(IOwinContext context)
+            public override bool IsMatch(IRequestContext context)
             {
                 var value1 = Expression1.Evaluate(context);
                 var value2 = Expression2.Evaluate(context);
@@ -240,7 +243,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
             public IExpression<string> Expression1;
             public IExpression<string> Expression2;
 
-            public override bool IsMatch(IOwinContext context)
+            public override bool IsMatch(IRequestContext context)
             {
                 var value1 = Expression1.Evaluate(context);
                 if (string.IsNullOrEmpty(value1)) return false;
@@ -257,7 +260,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
             public IExpression<string> Expression1;
             public IExpression<string> Expression2;
 
-            public override bool IsMatch(IOwinContext context)
+            public override bool IsMatch(IRequestContext context)
             {
                 var value1 = Expression1.Evaluate(context);
                 if (string.IsNullOrEmpty(value1)) return false;
@@ -274,7 +277,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
             public IExpression<string> Expression1;
             public IExpression<string> Expression2;
 
-            public override bool IsMatch(IOwinContext context)
+            public override bool IsMatch(IRequestContext context)
             {
                 var value1 = Expression1.Evaluate(context);
                 if (string.IsNullOrEmpty(value1)) return false;

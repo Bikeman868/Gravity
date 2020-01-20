@@ -1,6 +1,6 @@
 ﻿namespace Gravity.Server.Configuration
 {
-    internal enum ScriptLanguage
+    public enum ScriptLanguage
     {
         /// <summary>
         /// The scripts are written using the same syntax as used by the

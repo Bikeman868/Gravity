@@ -2,7 +2,7 @@
 {
     public enum NormalizeAction {  None, Add, Remove }
 
-    public interface INormalizeAction: IAction
+    internal interface INormalizeAction: IAction
     {
         INormalizeAction Initialize(
             NormalizeAction leadingSeparator, 

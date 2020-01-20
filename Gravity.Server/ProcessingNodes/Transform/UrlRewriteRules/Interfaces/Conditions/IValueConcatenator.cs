@@ -3,7 +3,7 @@ using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Operat
 
 namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Conditions
 {
-    public interface IValueConcatenator: IValueGetter
+    internal interface IValueConcatenator: IValueGetter
     {
         IValueGetter Initialize(IList<IValueGetter> values, string separator = null, IOperation operation = null);
         IValueGetter Initialize(IValueGetter value, IOperation operation);

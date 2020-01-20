@@ -16,12 +16,12 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
 
         IRequestTransform IScriptParser.ParseRequestScript(Stream stream, Encoding encoding)
         {
-            return new Script(_factory, stream, encoding);
+            return new Script(_factory, stream, encoding, true);
         }
 
-        IResponseTransform IScriptParser.ParseResponseScript(Stream stream, Encoding encoding)
+        IRequestTransform IScriptParser.ParseResponseScript(Stream stream, Encoding encoding)
         {
-            return new Script(_factory, stream, encoding);
+            return new Script(_factory, stream, encoding, false);
         }
     }
 }

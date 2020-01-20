@@ -1,6 +1,6 @@
 ﻿namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Conditions
 {
-    public interface IStringMatch: ICondition
+    internal interface IStringMatch: ICondition
     {
         IStringMatch Initialize(
             IValueGetter valueGetter,

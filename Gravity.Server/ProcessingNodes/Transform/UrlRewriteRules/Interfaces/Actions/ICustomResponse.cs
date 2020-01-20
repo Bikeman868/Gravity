@@ -2,7 +2,7 @@
 
 namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Actions
 {
-    public interface ICustomResponse: IAction
+    internal interface ICustomResponse: IAction
     {
         ICustomResponse Initialize(XElement configuration, bool stopProcessing = true, bool endRequest = true);
     }

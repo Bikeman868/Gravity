@@ -2,7 +2,7 @@
 
 namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Rules
 {
-    public interface IRuleListResult
+    internal interface IRuleListResult
     {
         bool StopProcessing { get; }
         bool EndRequest { get; }

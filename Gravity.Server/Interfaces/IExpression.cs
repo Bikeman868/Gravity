@@ -1,9 +1,9 @@
-﻿using Microsoft.Owin;
+﻿using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.Interfaces
 {
     internal interface IExpression<T>
     {
-        T Evaluate(IOwinContext context);
+        T Evaluate(IRequestContext context);
     }
 }

@@ -4,7 +4,7 @@ using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Rules
 {
-    public interface IRuleList : IAction
+    internal interface IRuleList : IAction
     {
         IRuleList Initialize(
             string name,

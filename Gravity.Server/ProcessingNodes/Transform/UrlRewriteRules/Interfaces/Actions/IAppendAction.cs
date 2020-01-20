@@ -2,7 +2,7 @@
 
 namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Actions
 {
-    public interface IAppendAction: IAction
+    internal interface IAppendAction: IAction
     {
         IAppendAction Initialize(Scope scope, string scopeIndex, IValueGetter valueGetter);
     }

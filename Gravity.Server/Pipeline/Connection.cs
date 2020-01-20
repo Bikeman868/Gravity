@@ -11,7 +11,7 @@ using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.ProcessingNodes.Server
 {
-    internal class ConnectionException: Exception
+    internal class ConnectionException: ApplicationException
     {
         public Connection Connection;
 
@@ -105,11 +105,11 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         public Scheme Scheme { get; }
 
-        public Task Send(IRequestContext context, TimeSpan responseTimeout, TimeSpan readTimeout)
+        public Task Send(IRequestContext context, TimeSpan responseTimeout, int readTimeoutMs)
         {
             _tcpClient.ReceiveTimeout = (int)responseTimeout.TotalMilliseconds;
 
-            return Task.WhenAll(SendHttp(context), ReceiveHttp(context, readTimeout))
+            return Task.WhenAll(SendHttp(context), ReceiveHttp(context, readTimeoutMs))
                 .ContinueWith(t => _lastUsedUtc = DateTime.UtcNow);
         }
 
@@ -139,13 +139,20 @@ namespace Gravity.Server.ProcessingNodes.Server
                 {
                     if (string.Equals("Connection", header.Key, StringComparison.OrdinalIgnoreCase))
                         continue;
+
                     if (string.Equals("Keep-Alive", header.Key, StringComparison.OrdinalIgnoreCase))
                         continue;
 
-                    head.Append(header.Key);
-                    head.Append(": ");
-                    head.Append(header.Value);
-                    head.Append("\r\n");
+                    if (header.Value == null || header.Value.Length == 0)
+                        continue;
+
+                    foreach (var headValue in header.Value)
+                    {
+                        head.Append(header.Key);
+                        head.Append(": ");
+                        head.Append(headValue);
+                        head.Append("\r\n");
+                    }
                 }
             }
             head.Append("Connection: Keep-Alive\r\n");
@@ -223,7 +230,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             });
         }
 
-        private Task ReceiveHttp(IRequestContext context, TimeSpan readTimeout)
+        private Task ReceiveHttp(IRequestContext context, int readTimeoutMs)
         {
             var expectBody = string.Equals(context.Incoming.Method, "HEAD", StringComparison.OrdinalIgnoreCase);
             int? contentLength = expectBody ? null : (int?)0;
@@ -307,7 +314,19 @@ namespace Gravity.Server.ProcessingNodes.Server
                     {
                         var name = headerLine.Substring(0, colonPos).Trim();
                         var value = headerLine.Substring(colonPos + 1).Trim();
-                        context.Outgoing.Headers[name] = value;
+
+                        if (context.Outgoing.Headers.ContainsKey(name))
+                        {
+                            var originalHeaders = context.Outgoing.Headers[name];
+                            var newHeaders = new string[originalHeaders.Length];
+                            Array.Copy(originalHeaders, 0, newHeaders, 0, originalHeaders.Length);
+                            newHeaders[originalHeaders.Length] = value;
+                            context.Outgoing.Headers[name] = newHeaders;
+                        }
+                        else
+                        {
+                            context.Outgoing.Headers[name] = new[] { value };
+                        }
 
                         if (string.Equals(name, "Content-Length", StringComparison.OrdinalIgnoreCase))
                         {
@@ -382,7 +401,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                             var contentStart = AppendHeader(buffer, bytesRead);
                             if (!header)
                             {
-                                _tcpClient.ReceiveTimeout = (int)readTimeout.TotalMilliseconds;
+                                _tcpClient.ReceiveTimeout = readTimeoutMs;
                                 if (contentStart < bytesRead)
                                     Write(buffer, contentStart, bytesRead - contentStart);
                             }

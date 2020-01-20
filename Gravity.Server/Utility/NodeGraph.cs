@@ -267,7 +267,7 @@ namespace Gravity.Server.Utility
                     {
                         Name = serverNodeConfiguration.Name,
                         Disabled = serverNodeConfiguration.Disabled,
-                        Host = serverNodeConfiguration.Host,
+                        DomainName = serverNodeConfiguration.Host,
                         Port = serverNodeConfiguration.Port,
                         ConnectionTimeout = serverNodeConfiguration.ConnectionTimeout,
                         ResponseTimeout = serverNodeConfiguration.ResponseTimeout,

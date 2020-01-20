@@ -68,7 +68,7 @@ namespace Gravity.Server.Configuration
             return this;
         }
 
-        public class ListenersConfiguration
+        internal class ListenersConfiguration
         {
             [JsonProperty("x")]
             public int X { get; set; }
@@ -83,7 +83,7 @@ namespace Gravity.Server.Configuration
             public int YSpacing { get; set; }
         }
 
-        public class NodeConfiguration
+        internal class NodeConfiguration
         {
             [JsonProperty("name")]
             public string NodeName { get; set; }

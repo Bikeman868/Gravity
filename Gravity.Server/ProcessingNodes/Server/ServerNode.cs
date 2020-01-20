@@ -8,15 +8,27 @@ using System.Threading.Tasks;
 using Gravity.Server.Interfaces;
 using Gravity.Server.Utility;
 using Gravity.Server.Pipeline;
+using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes.Server
 {
+    internal class ServerNodeException : ApplicationException
+    {
+        public ServerNode ServerNode;
+
+        public ServerNodeException(ServerNode serverNode, string message, Exception innerException = null) :
+            base("Server node '" + serverNode.Name + "' " + message, innerException)
+        {
+            ServerNode = serverNode;
+        }
+    }
+
     internal class ServerNode: INode
     {
         public string Name { get; set; }
         public bool Disabled { get; set; }
-        public string Host { get; set; }
-        public int? Port { get; set; }
+        public string DomainName { get; set; }
+        public ushort? Port { get; set; }
 
         public TimeSpan ConnectionTimeout { get; set; }
         public TimeSpan ResponseTimeout { get; set; }
@@ -25,8 +37,8 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         public string HealthCheckMethod { get; set; }
         public string HealthCheckHost { get; set; }
-        public int HealthCheckPort { get; set; }
-        public string HealthCheckPath { get; set; }
+        public ushort HealthCheckPort { get; set; }
+        public PathString HealthCheckPath { get; set; }
         public int[] HealthCheckCodes { get; set; }
         public bool HealthCheckLog { get; set; }
         public TimeSpan HealthCheckInterval { get; set; }
@@ -40,13 +52,14 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         public ServerIpAddress[] IpAddresses;
         private readonly Dictionary<string, ConnectionPool> _connectionPools;
-
+        private readonly IBufferPool _bufferPool;
         private Thread _backgroundThread;
-        private DateTime _nextDnsLookup;
         private int _lastIpAddressIndex;
 
-        public ServerNode()
+        public ServerNode(IBufferPool bufferPool)
         {
+            _bufferPool = bufferPool;
+
             ConnectionTimeout = TimeSpan.FromSeconds(20);
             ResponseTimeout = TimeSpan.FromSeconds(10);
             ReadTimeoutMs = 200;
@@ -55,7 +68,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             RecalculateInterval = TimeSpan.FromSeconds(5);
             HealthCheckPort = 80;
             HealthCheckMethod = "GET";
-            HealthCheckPath = "/";
+            HealthCheckPath = new PathString("/");
             HealthCheckInterval = TimeSpan.FromMinutes(1);
             HealthCheckCodes = new[] { 200 };
 
@@ -66,7 +79,8 @@ namespace Gravity.Server.ProcessingNodes.Server
         {
             _backgroundThread = new Thread(() =>
             {
-                var nextHealthCheck = DateTime.UtcNow;
+                var nextDnsLookup = DateTime.UtcNow;
+                var nextHealthCheck = DateTime.UtcNow.AddSeconds(2);
                 var nextRecalculate = DateTime.UtcNow.AddSeconds(5);
 
                 while (true)
@@ -75,16 +89,6 @@ namespace Gravity.Server.ProcessingNodes.Server
                     {
                         Thread.Sleep(100);
                         var timeNow = DateTime.UtcNow;
-
-                        if (!Disabled && timeNow > nextHealthCheck && !string.IsNullOrEmpty(Host))
-                        {
-                            nextHealthCheck = timeNow + HealthCheckInterval;
-
-                            using (var log = HealthCheckLog ? new HealthCheckLogger() : null)
-                            {
-                                CheckHealth(log);
-                            }
-                        }
 
                         if (timeNow > nextRecalculate)
                         {
@@ -96,6 +100,27 @@ namespace Gravity.Server.ProcessingNodes.Server
                                     ipAddresses[i].TrafficAnalytics.Recalculate();
                             }
                         }
+
+                        if (Disabled || string.IsNullOrEmpty(DomainName)) continue;
+
+                        if (timeNow > nextDnsLookup)
+                        {
+                            using (var log = HealthCheckLog ? new HealthCheckLogger() : null)
+                            {
+                                nextDnsLookup = timeNow + LookupDomainName(log);
+                            }
+                        }
+
+                        if (timeNow > nextHealthCheck)
+                        {
+                            nextHealthCheck = timeNow + HealthCheckInterval;
+
+                            using (var log = HealthCheckLog ? new HealthCheckLogger() : null)
+                            {
+                                CheckHealth(log);
+                            }
+                        }
+
                     }
                     catch (ThreadAbortException)
                     {
@@ -174,170 +199,115 @@ namespace Gravity.Server.ProcessingNodes.Server
             var ipAddressIndex = Interlocked.Increment(ref _lastIpAddressIndex) % ipAddresses.Count;
             var ipAddress = ipAddresses[ipAddressIndex];
 
-            var port = 80;
-            var protocol = context.Incoming.Scheme;
+            var port = (ushort)80;
+            var scheme = context.Incoming.Scheme;
 
             if (Port.HasValue)
             {
                 port = Port.Value;
-                protocol = port == 443 ? "https" : "http";
+                scheme = port == 443 ? Scheme.Https : Scheme.Http;
             }
-            else if (string.Equals(protocol, "https", StringComparison.OrdinalIgnoreCase))
+            else if (scheme == Scheme.Https)
             {
                 port = 443;
             }
 
-            var host = context.Incoming.Headers["Host"];
-            var hostColon = host.IndexOf(':');
-            if (hostColon > 0)
-                host = host.Substring(0, hostColon);
+            var serverRequestContext = (IRequestContext)new ServerRequestContext(context, ipAddress.Address, port, scheme);
 
-            var request = new IncomingMessage
-            {
-                Scheme = protocol,
-                HostName = host,
-                IpAddress = ipAddress.Address,
-                PortNumber = port,
-                Method = context.Incoming.Method,
-                PathAndQuery = context.Incoming.Path.ToString(),
-                Headers = context.Incoming.Headers
-                    .Where(h => h.Value != null && h.Value.Length > 0)
-                    .Select(h => new Tuple<string, string>(h.Key, h.Value[0]))
-                    .ToArray()
-            };
-
-            if (context.Incoming.QueryString.HasValue)
-                request.PathAndQuery += "?" + context.Incoming.QueryString.Value;
-
-            var contentLengthHeader = context.Incoming.Headers["Content-Length"];
-            if (contentLengthHeader != null && context.Incoming.Body != null && context.Incoming.Body.CanRead)
-            {
-                var contentLength = int.Parse(contentLengthHeader);
-                request.Content = new byte[contentLength];
-                context.Incoming.Body.Read(request.Content, 0, contentLength);
-            }
-
-            OutgoingMessage response;
             ipAddress.IncrementConnectionCount();
             var startTicks = ipAddress.TrafficAnalytics.BeginRequest();
+
+            return Send(serverRequestContext)
+                .ContinueWith(sendTask =>
+                {
+                    if (sendTask.IsFaulted)
+                    {
+                        context.Log?.Log(LogType.Exception, LogLevel.Important, () => $"Server node '{Name}' failed to send the request. {sendTask.Exception.Message}");
+                        throw new ServerNodeException(this, "failed to send to server", sendTask.Exception);
+                    }
+
+                    if (sendTask.IsCanceled)
+                    {
+                        context.Log?.Log(LogType.Exception, LogLevel.Important, () => $"Server node '{Name}' timeout sending to server");
+                        throw new ServerNodeException(this, "timeout sending to server");
+                    }
+
+                    ipAddress.TrafficAnalytics.EndRequest(startTicks);
+                    ipAddress.DecrementConnectionCount();
+                });
+        }
+
+        private TimeSpan LookupDomainName(ILog log)
+        {
+            if (IPAddress.TryParse(DomainName, out var ipAddress))
+            {
+                IpAddresses = new[]
+                {
+                    new ServerIpAddress
+                    {
+                        Address = ipAddress
+                    }
+                };
+                return TimeSpan.FromMinutes(1);
+            }
+             
             try
             {
-                var retry = 0;
-                while (true)
+                log?.Log(LogType.Dns, LogLevel.Detailed, () => $"Looking up IP address for {DomainName}");
+
+                var hostEntry = Dns.GetHostEntry(DomainName);
+
+                if (hostEntry.AddressList == null || hostEntry.AddressList.Length == 0)
                 {
-                    try
+                    log?.Log(LogType.Dns, LogLevel.Important, () => "DNS returned no IP addresses");
+
+                    UnhealthyReason = "DNS returned no IP addresses for " + DomainName;
+                    Healthy = false;
+                    return TimeSpan.FromSeconds(10);
+                }
+
+                log?.Log(LogType.Dns, LogLevel.Detailed, () => "DNS returned " + string.Join(", ", hostEntry.AddressList.Select(a => a.ToString())));
+
+                var newIpAddresses = hostEntry.AddressList
+                    .Select(a => new ServerIpAddress { Address = a })
+                    .ToArray();
+
+                if (IpAddresses == null)
+                {
+                    IpAddresses = newIpAddresses;
+                }
+                else
+                {
+                    if (IpAddresses.Length == newIpAddresses.Length)
                     {
-                        response = Send(request, log);
-                        break;
+                        for (var i = 0; i < IpAddresses.Length; i++)
+                        {
+                            if (!IpAddresses[i].Address.Equals(newIpAddresses[i].Address))
+                            {
+                                IpAddresses[i] = newIpAddresses[i];
+                            }
+                        }
                     }
-                    catch
+                    else
                     {
-                        if (++retry > 2)
-                        {
-                            log?.Log(LogType.Exception, LogLevel.Important, () => $"Request to server node {Name} failed {retry} times and will not be retried");
-                            throw;
-                        }
-                        else
-                        {
-                            log?.Log(LogType.Exception, LogLevel.Standard, () => $"Request to server node {Name} failed and will be retried");
-                        }
+                        IpAddresses = newIpAddresses;
                     }
                 }
+                return DnsLookupInterval;
             }
-            finally
+            catch (Exception ex)
             {
-                ipAddress.TrafficAnalytics.EndRequest(startTicks);
-                ipAddress.DecrementConnectionCount();
+                log?.Log(LogType.Exception, LogLevel.Important, () => "Exception in DNS lookup of " + DomainName + ". " + ex.Message);
+
+                UnhealthyReason = ex.Message + " " + DomainName;
+                Healthy = false;
+                return TimeSpan.FromSeconds(10);
             }
-
-            context.Outgoing.StatusCode = response.StatusCode;
-            context.Outgoing.ReasonPhrase = response.ReasonPhrase;
-
-            if (response.Headers != null)
-                foreach (var header in response.Headers)
-                    context.Outgoing.Headers[header.Item1] = header.Item2;
-
-            return context.Outgoing.WriteAsync(response.Content);
         }
 
         private void CheckHealth(ILog log)
         {
-            if (IpAddresses == null || DateTime.UtcNow > _nextDnsLookup)
-            {
-                IPAddress ipAddress;
-
-                if (IPAddress.TryParse(Host, out ipAddress))
-                {
-                    IpAddresses = new[]
-                    {
-                        new ServerIpAddress
-                        {
-                            Address = ipAddress
-                        }
-                    };
-                    _nextDnsLookup = DateTime.UtcNow.AddHours(1);
-                }
-                else
-                {
-                    try
-                    {
-                        log?.Log(LogType.Health, LogLevel.Detailed, () => $"Looking up IP address for {Host}");
-
-                        var hostEntry = Dns.GetHostEntry(Host);
-
-                        if (hostEntry.AddressList == null || hostEntry.AddressList.Length == 0)
-                        {
-                            log?.Log(LogType.Health, LogLevel.Important, () => "DNS returned no IP addresses");
-
-                            UnhealthyReason = "DNS returned no IP addresses for " + Host;
-                            Healthy = false;
-                            _nextDnsLookup = DateTime.UtcNow.AddSeconds(10);
-                            return;
-                        }
-
-                        log?.Log(LogType.Health, LogLevel.Detailed, () => "DNS returned " + string.Join(", ", hostEntry.AddressList.Select(a => a.ToString())));
-
-                        var newIpAddresses = hostEntry.AddressList
-                                .Select(a => new ServerIpAddress {Address = a})
-                                .ToArray();
-
-                        if (IpAddresses == null)
-                        {
-                            IpAddresses = newIpAddresses;
-                        }
-                        else
-                        {
-                            if (IpAddresses.Length == newIpAddresses.Length)
-                            {
-                                for (var i = 0; i < IpAddresses.Length; i++)
-                                {
-                                    if (!IpAddresses[i].Address.Equals(newIpAddresses[i].Address))
-                                    {
-                                        IpAddresses[i] = newIpAddresses[i];
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                IpAddresses = newIpAddresses;
-                            }
-                        }
-                        _nextDnsLookup = DateTime.UtcNow + DnsLookupInterval;
-                    }
-                    catch (Exception ex)
-                    {
-                        log?.Log(LogType.Exception, LogLevel.Important, () => "Exception in DNS lookup of " + Host + ". " + ex.Message);
-
-                        UnhealthyReason = ex.Message + " " + Host;
-                        Healthy = false;
-                        _nextDnsLookup = DateTime.UtcNow.AddSeconds(10);
-                        return;
-                    }
-                }
-            }
-
-            var host = HealthCheckHost ?? Host;
-            var hostHeader = HealthCheckPort == 80 ? host : host + ":" + HealthCheckPort;
+            var host = HealthCheckHost ?? DomainName;
 
             var healthy = false;
 
@@ -345,36 +315,47 @@ namespace Gravity.Server.ProcessingNodes.Server
             {
                 try
                 {
-                    log?.Log(LogType.Health, LogLevel.Important, () => "Checking health of endpoint " + IpAddresses[i].Address);
+                    log?.Log(LogType.Health, LogLevel.Important, () => $"Checking health of endpoint {IpAddresses[i].Address}");
 
-                    var request = new IncomingMessage
-                    {
-                        Scheme = HealthCheckPort == 443 ? "https" : "http",
-                        HostName = host,
-                        IpAddress = IpAddresses[i].Address,
-                        PortNumber = HealthCheckPort,
-                        Method = HealthCheckMethod,
-                        PathAndQuery = HealthCheckPath,
-                        Headers = new[]
+                    var requestContext = (IRequestContext)new ServerRequestContext(
+                        log,
+                        IpAddresses[i].Address, 
+                        HealthCheckPort,
+                        HealthCheckPort == 443 ? Scheme.Https : Scheme.Http,
+                        HealthCheckHost ?? DomainName,
+                        HealthCheckMethod,
+                        HealthCheckPath,
+                        new QueryString());
+
+                    Send(requestContext)
+                        .ContinueWith(sendTask =>
                         {
-                            new Tuple<string, string>("Host", hostHeader)
-                        }
-                    };
+                            if (sendTask.IsFaulted)
+                            {
+                                log?.Log(LogType.Health, LogLevel.Important, () => $"Endpoint {IpAddresses[i].Address} failed health check, send exception {sendTask.Exception.Message}");
+                                IpAddresses[i].SetUnhealthy(sendTask.Exception.Message);
+                            }
+                            else if (sendTask.IsCanceled)
+                            {
+                                log?.Log(LogType.Health, LogLevel.Important, () => $"Endpoint {IpAddresses[i].Address} failed health check, send task timeout");
+                                IpAddresses[i].SetUnhealthy("Send task timeout");
+                            }
+                            else
+                            {
+                                if (HealthCheckCodes.Contains(requestContext.Outgoing.StatusCode))
+                                {
+                                    log?.Log(LogType.Health, LogLevel.Important, () => $"Endpoint {IpAddresses[i].Address} passed its health check");
 
-                    var response = Send(request, log);
-
-                    if (HealthCheckCodes.Contains(response.StatusCode))
-                    {
-                        log?.Log(LogType.Health, LogLevel.Important, () => "Endpoint " + IpAddresses[i].Address + " passed its health check");
-
-                        healthy = true;
-                        IpAddresses[i].SetHealthy();
-                    }
-                    else
-                    {
-                        log?.Log(LogType.Health, LogLevel.Important, () => "Endpoint " + IpAddresses[i].Address + " failed health check with status code " + response.StatusCode + " " + response.ReasonPhrase);
-                        IpAddresses[i].SetUnhealthy(response.StatusCode + " " + response.ReasonPhrase);
-                    }
+                                    healthy = true;
+                                    IpAddresses[i].SetHealthy();
+                                }
+                                else
+                                {
+                                    log?.Log(LogType.Health, LogLevel.Important, () => $"Endpoint {IpAddresses[i].Address} failed health check with status code {requestContext.Outgoing.StatusCode} {requestContext.Outgoing.ReasonPhrase}");
+                                    IpAddresses[i].SetUnhealthy(requestContext.Outgoing.StatusCode + " " + requestContext.Outgoing.ReasonPhrase);
+                                }
+                            }
+                        });
                 }
                 catch (Exception ex)
                 {
@@ -391,61 +372,56 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
         }
 
-        private OutgoingMessage Send(IncomingMessage request, ILog log)
+        private Task Send(IRequestContext context)
         {
-            try
+            var endpoint = new IPEndPoint(context.Incoming.DestinationAddress, context.Incoming.DestinationPort);
+            var key = context.Incoming.Scheme + "://" + context.Incoming.DomainName + ":" + context.Incoming.DestinationPort + " " + context.Incoming.DestinationAddress;
+
+            ConnectionPool connectionPool;
+            lock (_connectionPools)
             {
-                var endpoint = new IPEndPoint(request.IpAddress, request.PortNumber);
-                var key = request.Scheme + "://" + request.HostName + ":" + request.PortNumber + " " + request.IpAddress;
-
-                ConnectionPool connectionPool;
-                lock (_connectionPools)
+                if (_connectionPools.TryGetValue(key, out connectionPool))
                 {
-                    if (_connectionPools.TryGetValue(key, out connectionPool))
-                    {
-                        log?.Log(LogType.Pooling, LogLevel.VeryDetailed, () => "A connection pool exists for " + key);
-                    }
-                    else
-                    {
-                        log?.Log(LogType.Pooling, LogLevel.Important, () => "Creating new connection pool " + key);
-                        connectionPool = new ConnectionPool(endpoint, request.HostName, request.Scheme, ConnectionTimeout);
-                        _connectionPools.Add(key, connectionPool);
-                    }
+                    context.Log?.Log(LogType.Pooling, LogLevel.VeryDetailed, () => "A connection pool exists for " + key);
                 }
-
-                var connection = connectionPool.GetConnection(log, ResponseTimeout, ReadTimeoutMs);
-                try
+                else
                 {
-                    return connection.Send(request, log);
-                }
-                catch (Exception ex)
-                {
-                    log?.Log(LogType.TcpIp, LogLevel.Important, () => "Exception thrown sending request - " + ex.Message);
-                    connection.Dispose();
-                    throw;
-                }
-                finally
-                {
-                    if (ReuseConnections)
-                        connectionPool.ReuseConnection(log, connection);
-                    else
-                        connection.Dispose();
+                    context.Log?.Log(LogType.Pooling, LogLevel.Important, () => "Creating new connection pool " + key);
+                    connectionPool = new ConnectionPool(_bufferPool, endpoint, context.Incoming.DomainName, context.Incoming.Scheme, ConnectionTimeout);
+                    _connectionPools.Add(key, connectionPool);
                 }
             }
-            catch (Exception ex)
-            {
-                log?.Log(LogType.TcpIp, LogLevel.Important, () => "Returning 503 response because " + ex.Message);
-                return new OutgoingMessage
+
+            return connectionPool.GetConnection(context.Log, ResponseTimeout, ReadTimeoutMs)
+                .ContinueWith(async connectionTask =>
                 {
-                    StatusCode = 503,
-                    ReasonPhrase = "Exception forwarding request to real server",
-                    Headers = new[]
+                    if (connectionTask.IsFaulted)
                     {
-                        new Tuple<string, string>("Retry-After", "60"),
-                        new Tuple<string, string>("X-Exception", ex.Message)
+                        context.Log?.Log(LogType.TcpIp, LogLevel.Important, () => "Connection task faulted with " + connectionTask.Exception.Message);
+                        throw new ServerNodeException(this, "Connection task timed out", connectionTask.Exception);
                     }
-                };
-            }
+
+                    if (connectionTask.IsCanceled)
+                    {
+                        context.Log?.Log(LogType.TcpIp, LogLevel.Important, () => "Connection task timed out");
+                        throw new ServerNodeException(this, "Connection task timed out");
+                    }
+
+                    var connection = connectionTask.Result;
+
+                    try
+                    {
+                        await connection.Send(context, ResponseTimeout, ReadTimeoutMs);
+                    }
+                    catch (Exception ex)
+                    {
+                        context.Log?.Log(LogType.TcpIp, LogLevel.Important, () => "Returning 503 response because " + ex.Message);
+
+                        context.Outgoing.StatusCode = 503;
+                        context.Outgoing.ReasonPhrase = "Exception forwarding request to real server";
+                        context.Outgoing.SendHeaders(context);
+                    }
+                });
         }
 
         private class HealthCheckLogger : ILog

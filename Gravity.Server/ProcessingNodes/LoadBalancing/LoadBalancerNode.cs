@@ -7,7 +7,7 @@ using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.ProcessingNodes.LoadBalancing
 {
-    internal abstract class LoadBalancerNode: INode
+    public abstract class LoadBalancerNode: INode
     {
         public string Name { get; set; }
         public string[] Outputs { get; set; }

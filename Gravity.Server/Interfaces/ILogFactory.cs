@@ -11,7 +11,7 @@ namespace Gravity.Server.Interfaces
         ILog Create(IRequestContext context);
     }
 
-    internal enum LogLevel
+    public enum LogLevel
     {
         Important = 1,
         Standard = 2,
@@ -20,7 +20,7 @@ namespace Gravity.Server.Interfaces
     }
 
     [Flags]
-    internal enum LogType
+    public enum LogType
     {
         Stats = 1,
         Step = 2,
@@ -31,7 +31,8 @@ namespace Gravity.Server.Interfaces
         Pooling = 64,
         TcpIp = 128,
         Exception = 256,
-        Health = 512
+        Health = 512,
+        Dns = 1024
     }
 
     internal interface ILog: IDisposable

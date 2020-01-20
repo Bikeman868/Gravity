@@ -2,7 +2,7 @@
 
 namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Actions
 {
-    public interface IKeepAction: IAction
+    internal interface IKeepAction: IAction
     {
         IKeepAction Initialize(Scope scope, string scopeIndex);
     }

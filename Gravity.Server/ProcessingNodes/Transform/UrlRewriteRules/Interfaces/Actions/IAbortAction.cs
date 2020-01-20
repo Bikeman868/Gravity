@@ -1,6 +1,6 @@
 ﻿namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Actions
 {
-    public interface IAbortAction: IAction
+    internal interface IAbortAction: IAction
     {
         IAbortAction Initialize();
     }

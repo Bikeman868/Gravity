@@ -21,7 +21,7 @@ using OwinFramework.Pages.DebugMiddleware;
 
 namespace Gravity.Server
 {
-    public class Startup
+    internal class Startup
     {
         private static IDisposable _configurationFileSource;
 

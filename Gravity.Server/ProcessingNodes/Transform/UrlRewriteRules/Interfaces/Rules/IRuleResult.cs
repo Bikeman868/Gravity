@@ -2,7 +2,7 @@
 
 namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Rules
 {
-    public interface IRuleResult
+    internal interface IRuleResult
     {
         /// <summary>
         /// When set to true, no more rules within this rule list should be eveluated

@@ -11,7 +11,6 @@ namespace Gravity.Server.ProcessingNodes.Server
     {
         private readonly IPEndPoint _endpoint;
         private readonly string _domainName;
-        private readonly ushort _portNumber;
         private readonly Scheme _scheme;
         private readonly TimeSpan _connectionTimeout;
         private readonly Queue<Connection> _pool;
@@ -22,13 +21,11 @@ namespace Gravity.Server.ProcessingNodes.Server
             IPEndPoint endpoint,
             string domainName,
             Scheme scheme,
-            ushort portNumber,
             TimeSpan connectionTimeout)
         {
             _endpoint = endpoint;
             _domainName = domainName;
             _scheme = scheme;
-            _portNumber = portNumber;
             _connectionTimeout = connectionTimeout;
             _bufferPool = bufferPool;
             _pool = new Queue<Connection>();

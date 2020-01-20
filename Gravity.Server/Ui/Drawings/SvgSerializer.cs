@@ -9,7 +9,7 @@ using Svg;
 
 namespace Gravity.Server.Ui.Drawings
 {
-    public class SvgSerializer: SerializerBase, IResponseSerializer
+    internal class SvgSerializer: SerializerBase, IResponseSerializer
     {
         public Task HttpStatus(IOwinContext context, HttpStatusCode statusCode, string message = null)
         {
