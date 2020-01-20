@@ -8,7 +8,8 @@ namespace Gravity.Server.Pipeline
 {
     internal class IncomingMessage: Message, IIncomingMessage
     {
-        public Protocol Protocol { get; set; }
+        public string Method { get; set; }
+        public Scheme Scheme { get; set; }
         public string DomainName { get; set; }
         public PathString Path { get; set; }
         public QueryString Query { get; set; }

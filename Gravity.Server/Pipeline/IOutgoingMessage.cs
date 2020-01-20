@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-
-namespace Gravity.Server.Pipeline
+﻿namespace Gravity.Server.Pipeline
 {
+    /// <summary>
+    /// Represents a stream of HTTP data coming from a back-end server and
+    /// being sent to the outside world as an HTTP reply
+    /// </summary>
     internal interface IOutgoingMessage: IMessage
     {
         /// <summary>

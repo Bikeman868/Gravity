@@ -12,7 +12,7 @@ namespace Gravity.Server.ProcessingNodes.Server
         private readonly IPEndPoint _endpoint;
         private readonly string _domainName;
         private readonly ushort _portNumber;
-        private readonly Protocol _protocol;
+        private readonly Scheme _scheme;
         private readonly TimeSpan _connectionTimeout;
         private readonly Queue<Connection> _pool;
         private readonly IBufferPool _bufferPool;
@@ -21,13 +21,13 @@ namespace Gravity.Server.ProcessingNodes.Server
             IBufferPool bufferPool,
             IPEndPoint endpoint,
             string domainName,
-            Protocol protocol,
+            Scheme scheme,
             ushort portNumber,
             TimeSpan connectionTimeout)
         {
             _endpoint = endpoint;
             _domainName = domainName;
-            _protocol = protocol;
+            _scheme = scheme;
             _portNumber = portNumber;
             _connectionTimeout = connectionTimeout;
             _bufferPool = bufferPool;
@@ -79,7 +79,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
 
             log?.Log(LogType.Pooling, LogLevel.Detailed, () => "The connection pool is empty, creating a new connection");
-            var newConnection = new Connection(_bufferPool, _endpoint, _domainName, _protocol, _connectionTimeout);
+            var newConnection = new Connection(_bufferPool, _endpoint, _domainName, _scheme, _connectionTimeout);
             return newConnection.Connect(log)
                 .ContinueWith(connectTask => 
                 {

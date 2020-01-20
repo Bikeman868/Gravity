@@ -1,23 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using Microsoft.Owin;
+using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.Interfaces
 {
     internal interface ILogFactory
     {
         /// <summary>
-        /// Creates a new logger and adds it to the Owin context
+        /// Creates a new logger
         /// </summary>
-        ILog Create(IOwinContext context);
-
-        /// <summary>
-        /// Gets the log associated with an Owin context or null
-        /// if no log was created
-        /// </summary>
-        ILog Get(IOwinContext context);
+        ILog Create(IRequestContext context);
     }
 
     internal enum LogLevel

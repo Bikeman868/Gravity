@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Gravity.Server.Interfaces;
 using Gravity.Server.Utility;
-using Microsoft.Owin;
+using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.ProcessingNodes.LoadBalancing
 {
@@ -64,6 +64,6 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
             Offline = offline;
         }
 
-        public abstract Task ProcessRequest(IOwinContext context, ILog log);
+        public abstract Task ProcessRequest(IRequestContext context);
     }
 }

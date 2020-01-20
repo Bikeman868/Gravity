@@ -1,19 +1,23 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using Gravity.Server.Interfaces;
+using Gravity.Server.Pipeline;
 using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes.LoadBalancing
 {
     internal class LeastConnectionsNode: LoadBalancerNode
     {
-        public override Task ProcessRequest(IOwinContext context, ILog log)
+        public override Task ProcessRequest(IRequestContext context)
         {
             if (Disabled)
             {
-                context.Response.StatusCode = 503;
-                context.Response.ReasonPhrase = "Balancer " + Name + " is disabled";
-                return context.Response.WriteAsync(string.Empty);
+                return Task.Run(() => 
+                {
+                    context.Outgoing.StatusCode = 503;
+                    context.Outgoing.ReasonPhrase = "Balancer " + Name + " is disabled";
+                    context.Outgoing.SendHeaders(context);
+                });
             }
 
             var output = OutputNodes
@@ -23,19 +27,23 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
 
             if (output == null)
             {
-                context.Response.StatusCode = 503;
-                context.Response.ReasonPhrase = "Balancer " + Name + " has no enabled outputs";
-                return context.Response.WriteAsync(string.Empty);
+                return Task.Run(() =>
+                {
+                    context.Outgoing.StatusCode = 503;
+                    context.Outgoing.ReasonPhrase = "Balancer " + Name + " has no enabled outputs";
+                    context.Outgoing.SendHeaders(context);
+                });
             }
 
             output.IncrementConnectionCount();
             var startTime = output.TrafficAnalytics.BeginRequest();
 
-            return output.Node.ProcessRequest(context, log).ContinueWith(t =>
-            {
-                output.TrafficAnalytics.EndRequest(startTime);
-                output.DecrementConnectionCount();
-            });
+            return output.Node.ProcessRequest(context)
+                .ContinueWith(t =>
+                {
+                    output.TrafficAnalytics.EndRequest(startTime);
+                    output.DecrementConnectionCount();
+                });
         }
     }
 }

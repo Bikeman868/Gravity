@@ -97,7 +97,8 @@
     <Compile Include="Pipeline\IOutgoingMessage.cs" />
     <Compile Include="Pipeline\IIncomingMessage.cs" />
     <Compile Include="Pipeline\IRequestContext.cs" />
-    <Compile Include="Pipeline\Protocol.cs" />
+    <Compile Include="Pipeline\OwinRequestContext.cs" />
+    <Compile Include="Pipeline\Scheme.cs" />
     <Compile Include="Pipeline\Message.cs" />
     <Compile Include="ProcessingNodes\LoadBalancing\LoadBalancerNode.cs" />
     <Compile Include="Pipeline\RequestListener.cs" />
@@ -167,8 +168,8 @@
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Operations\UrlEncodeOperation.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Package.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\ParserContext.cs" />
-    <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\ResponseContext.cs" />
-    <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\RequestContext.cs" />
+    <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\OutgoingContext.cs" />
+    <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\IncomingContext.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Rules\Rule.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Rules\RuleList.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Rules\RuleListResult.cs" />
@@ -208,7 +209,6 @@
     <Compile Include="ProcessingNodes\LoadBalancing\StickySessionNode.cs" />
     <Compile Include="ProcessingNodes\SpecialPurpose\ResponseNode.cs" />
     <Compile Include="ProcessingNodes\SpecialPurpose\CorsNode.cs" />
-    <Compile Include="ProcessingNodes\Transform\IResponseTransform.cs" />
     <Compile Include="ProcessingNodes\Transform\IRequestTransform.cs" />
     <Compile Include="ProcessingNodes\Transform\TransformNode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -8,6 +8,7 @@ using System.Web.Compilation;
 using System.Xml;
 using System.Xml.Linq;
 using Gravity.Server.Interfaces;
+using Gravity.Server.Pipeline;
 using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
 using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Actions;
 using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Conditions;
@@ -17,7 +18,7 @@ using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
 {
-    internal class Script: IRequestTransform, IResponseTransform
+    internal class Script: IRequestTransform
     {
         private readonly IFactory _factory;
         private readonly ICustomTypeRegistrar _customTypeRegistrar;
@@ -61,11 +62,11 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
             }
         }
 
-        bool IRequestTransform.Transform(IOwinContext context)
+        void IRequestTransform.Transform(IRequestContext context)
         {
-            if (_rules == null) return false;
+            if (_rules == null) return;
 
-            var requestContext = new RequestContext(context);
+            var requestContext = new IncomingContext(context);
             var ruleResult = _rules.Evaluate(requestContext);
 
             if (ruleResult.EndRequest)
@@ -90,7 +91,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
         {
             if (_rules == null) return false;
 
-            var requestContext = new ResponseContext(wrappedContext);
+            var requestContext = new OutgoingContext(wrappedContext);
             var ruleResult = _rules.Evaluate(requestContext);
             return ruleResult.EndRequest;
         }

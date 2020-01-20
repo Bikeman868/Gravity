@@ -151,18 +151,24 @@ namespace Gravity.Server.ProcessingNodes.Server
 
             if (allIpAddresses == null || allIpAddresses.Length == 0)
             {
-                context.Outgoing.StatusCode = 503;
-                context.Outgoing.ReasonPhrase = "No servers found with this host name";
-                return context.Outgoing.WriteAsync(string.Empty);
+                return Task.Run(() =>
+                {
+                    context.Outgoing.StatusCode = 503;
+                    context.Outgoing.ReasonPhrase = "No servers found with this host name";
+                    context.Outgoing.SendHeaders(context);
+                });
             }
 
             var ipAddresses = allIpAddresses.Where(i => i.Healthy == true).ToList();
 
             if (ipAddresses.Count == 0 || Healthy != true)
             {
-                context.Outgoing.StatusCode = 503;
-                context.Outgoing.ReasonPhrase = "No healthy servers";
-                return context.Outgoing.WriteAsync(string.Empty);
+                return Task.Run(() =>
+                {
+                    context.Outgoing.StatusCode = 503;
+                    context.Outgoing.ReasonPhrase = "No healthy servers";
+                    context.Outgoing.SendHeaders(context);
+                });
             }
 
             var ipAddressIndex = Interlocked.Increment(ref _lastIpAddressIndex) % ipAddresses.Count;
@@ -188,7 +194,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
             var request = new IncomingMessage
             {
-                Protocol = protocol,
+                Scheme = protocol,
                 HostName = host,
                 IpAddress = ipAddress.Address,
                 PortNumber = port,
@@ -343,7 +349,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                     var request = new IncomingMessage
                     {
-                        Protocol = HealthCheckPort == 443 ? "https" : "http",
+                        Scheme = HealthCheckPort == 443 ? "https" : "http",
                         HostName = host,
                         IpAddress = IpAddresses[i].Address,
                         PortNumber = HealthCheckPort,
@@ -390,7 +396,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             try
             {
                 var endpoint = new IPEndPoint(request.IpAddress, request.PortNumber);
-                var key = request.Protocol + "://" + request.HostName + ":" + request.PortNumber + " " + request.IpAddress;
+                var key = request.Scheme + "://" + request.HostName + ":" + request.PortNumber + " " + request.IpAddress;
 
                 ConnectionPool connectionPool;
                 lock (_connectionPools)
@@ -402,7 +408,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                     else
                     {
                         log?.Log(LogType.Pooling, LogLevel.Important, () => "Creating new connection pool " + key);
-                        connectionPool = new ConnectionPool(endpoint, request.HostName, request.Protocol, ConnectionTimeout);
+                        connectionPool = new ConnectionPool(endpoint, request.HostName, request.Scheme, ConnectionTimeout);
                         _connectionPools.Add(key, connectionPool);
                     }
                 }

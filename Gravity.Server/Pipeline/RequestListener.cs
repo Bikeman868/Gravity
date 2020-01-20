@@ -7,7 +7,7 @@ using Gravity.Server.Utility;
 using Microsoft.Owin;
 using OwinFramework.Interfaces.Builder;
 
-namespace Gravity.Server.ProcessingNodes
+namespace Gravity.Server.Pipeline
 {
     internal class RequestListener: IRequestListener
     {
@@ -70,13 +70,13 @@ namespace Gravity.Server.ProcessingNodes
 
         ListenerEndpointConfiguration[] IRequestListener.Endpoints { get { return _configuration.Endpoints; } }
 
-        Task IRequestListener.ProcessRequest(IOwinContext context, Func<Task> next)
+        Task IRequestListener.ProcessRequest(IOwinContext owinContext, Func<Task> next)
         {
             var configuration = _configuration;
             if (configuration.Disabled) return next();
 
-            var localIp = context.Request.LocalIpAddress;
-            var localPort = context.Request.LocalPort;
+            var localIp = owinContext.Request.LocalIpAddress;
+            var localPort = owinContext.Request.LocalPort;
 
             var endpoints = _configuration.Endpoints;
             for (var i = 0; i < endpoints.Length; i++)
@@ -107,45 +107,38 @@ namespace Gravity.Server.ProcessingNodes
 
                     if (output.Node == null)
                     {
-                        context.Response.StatusCode = 500;
-                        context.Response.ReasonPhrase = "Listener endpoint configuration error";
-                        return context.Response.WriteAsync(string.Empty);
-                    }
-
-                    if (output.Disabled)
-                    {
-                        context.Response.StatusCode = 503;
-                        context.Response.ReasonPhrase = "Listener endpoint disabled";
-                        return context.Response.WriteAsync(string.Empty);
-                    }
-
-                    using (var log = _logFactory.Create(context))
-                    {
-                        log?.Log(LogType.Request, LogLevel.Standard, () => $"Starting new request for {context.Request.Uri}");
-
-                        try
+                        return Task.Run(() =>
                         {
-                            var startTime = output.TrafficAnalytics.BeginRequest();
-                            {
-                                var task = output.Node.ProcessRequest(context, log);
-
-                                if (task == null)
-                                    return next();
-
-                                return task.ContinueWith(t => output.TrafficAnalytics.EndRequest(startTime));
-                            }
-                        }
-                        finally
-                        {
-                            log?.Log(LogType.Request, LogLevel.Standard, () => $"Completed request for {context.Request.Uri}");
-                        }
+                            owinContext.Response.StatusCode = 500;
+                            owinContext.Response.ReasonPhrase = "Listener endpoint configuration error";
+                        });
                     }
+
+                    if (output.Disabled) continue;
+
+                    var requestContext = (IRequestContext)new OwinRequestContext(owinContext, _logFactory);
+                    requestContext.Log?.Log(LogType.Request, LogLevel.Standard, () => $"Starting new request for {owinContext.Request.Uri}");
+
+                    var startTime = output.TrafficAnalytics.BeginRequest();
+
+                    var task = output.Node.ProcessRequest(requestContext);
+
+                    if (task == null) return next();
+
+                    return task.ContinueWith(t =>
+                    {
+                        output.TrafficAnalytics.EndRequest(startTime);
+                        requestContext.Log?.Log(LogType.Request, LogLevel.Standard, () => $"Completed request for {owinContext.Request.Uri}");
+                        requestContext.Dispose();
+                    });
                 }
             }
 
-            context.Response.StatusCode = 500;
-            context.Response.ReasonPhrase = "No matching endpoints";
-            return context.Response.WriteAsync(string.Empty);
+            return Task.Run(() =>
+            {
+                owinContext.Response.StatusCode = 500;
+                owinContext.Response.ReasonPhrase = "No matching endpoints are enabled";
+            });
         }
     }
 }

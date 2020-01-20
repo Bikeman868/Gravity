@@ -5,6 +5,7 @@ using Gravity.Server.Configuration;
 using Gravity.Server.Interfaces;
 using Gravity.Server.Utility;
 using Microsoft.Owin;
+using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.ProcessingNodes.Routing
 {

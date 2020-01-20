@@ -1,22 +1,23 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Gravity.Server.Pipeline;
 using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
 using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
 {
     /// <summary>
-    /// Implements rule execution context that modifies the outgoing response
+    /// Implements rule execution context that modifies the incomming request
     /// </summary>
-    internal class ResponseContext : IRuleExecutionContext
+    internal class IncomingContext : IRuleExecutionContext
     {
-        public IOwinContext Context { get; private set; }
+        public IRequestContext Context { get; private set; }
         public bool UrlIsModified { get; private set; }
 
         private IList<System.Action<IRuleExecutionContext>> _deferredActions;
 
-        public ResponseContext(IOwinContext context)
+        public IncomingContext(IRequestContext context)
         {
             Context = context;
         }
@@ -38,14 +39,11 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
             get { return _originalHost ?? (_originalHost = Context.Request.Uri.Host); }
         }
 
-        private string _originalUrlString;
+        private string _originalPathAndQueryString;
 
         public string OriginalPathAndQueryString
         {
-            get
-            {
-                return _originalUrlString ?? (_originalUrlString = Context.Request.Uri.ToString());
-            }
+            get { return _originalPathAndQueryString ?? (_originalPathAndQueryString = Context.Request.Uri.PathAndQuery); }
         }
 
         private int? _originalQueryPos;
@@ -56,7 +54,10 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
             {
                 if (!_originalQueryPos.HasValue)
                 {
-                    _originalQueryPos = OriginalPathAndQueryString.IndexOf('?');
+                    if (Context.Request.QueryString.HasValue)
+                        _originalQueryPos = Context.Request.Path.Value.Length;
+                    else
+                        _originalQueryPos = -1;
                 }
                 return _originalQueryPos.Value;
             }
@@ -399,7 +400,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
         public string GetOriginalHeader(string name)
         {
             if (ReferenceEquals(_originalHeaders, null))
-                return Context.Response.Headers[name];
+                return Context.Request.Headers[name];
 
             string value;
             return _originalHeaders.TryGetValue(name, out value) ? value : string.Empty;
@@ -415,7 +416,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
 
         public string GetHeader(string name)
         {
-            return Context.Response.Headers[name];
+            return Context.Request.Headers[name];
         }
 
         public void SetServerVariable(string name, string value)
@@ -441,15 +442,15 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
             if (ReferenceEquals(_originalHeaders, null))
             {
                 _originalHeaders = new Dictionary<string, string>();
-                foreach (var header in Context.Response.Headers)
+                foreach (var header in Context.Request.Headers)
                     _originalHeaders[header.Key] = Context.Request.Headers[header.Key];
             }
-            Context.Response.Headers[name] = value;
+            Context.Request.Headers[name] = value;
         }
 
         public IEnumerable<string> GetHeaderNames()
         {
-            return Context.Response.Headers.Keys;
+            return Context.Request.Headers.Keys;
         }
     }
 }

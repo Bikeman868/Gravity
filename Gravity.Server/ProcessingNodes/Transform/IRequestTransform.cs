@@ -1,9 +1,15 @@
-﻿using Microsoft.Owin;
+﻿using Gravity.Server.Pipeline;
+using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes.Transform
 {
+    /// <summary>
+    /// Represents an object that can replace the content stream for
+    /// the incoming or outgoing stream and transform the content as
+    /// it is streamed
+    /// </summary>
     internal interface IRequestTransform
     {
-        bool Transform(IOwinContext context);
+        void Transform(IRequestContext context);
     }
 }

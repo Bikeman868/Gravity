@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Gravity.Server.Interfaces;
-using Microsoft.Owin;
+using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.ProcessingNodes.SpecialPurpose
 {
@@ -22,7 +22,7 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
         {
         }
 
-        Task INode.ProcessRequest(IOwinContext context, ILog log)
+        Task INode.ProcessRequest(IRequestContext context)
         {
             // returning null here will make the listener middleware chain the
             // next middleware in the OWIN pipeline

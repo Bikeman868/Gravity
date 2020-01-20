@@ -3,8 +3,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Gravity.Server.Configuration;
 using Gravity.Server.Interfaces;
-using Microsoft.Owin;
 using OwinFramework.Interfaces.Utility;
+using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.ProcessingNodes.Transform
 {
@@ -26,7 +26,7 @@ namespace Gravity.Server.ProcessingNodes.Transform
 
         private INode _nextNode;
         private IRequestTransform _requestTransform;
-        private IResponseTransform _responseTransform;
+        private IRequestTransform _responseTransform;
 
         public TransformNode(
             IHostingEnvironment hostingEnvironment,
@@ -117,28 +117,28 @@ namespace Gravity.Server.ProcessingNodes.Transform
                 Offline = _nextNode.Offline;
         }
 
-        Task INode.ProcessRequest(IOwinContext context, ILog log)
+        Task INode.ProcessRequest(IRequestContext context)
         {
             if (_nextNode == null)
             {
-                context.Response.StatusCode = 503;
-                context.Response.ReasonPhrase = "Transform " + Name + " has no downstream";
-                return context.Response.WriteAsync(string.Empty);
+                return Task.Run(() => 
+                { 
+                    context.Outgoing.StatusCode = 503;
+                    context.Outgoing.ReasonPhrase = "Transform " + Name + " has no downstream";
+                    context.Outgoing.SendHeaders(context);
+                });
             }
 
-            if (!Disabled && _requestTransform != null)
+            if (!Disabled)
             {
-                _requestTransform.Transform(context);
+                if (_requestTransform != null)
+                    _requestTransform.Transform(context);
+
+                if (_responseTransform != null)
+                    _responseTransform.Transform(context);
             }
 
-            if (Disabled || _responseTransform == null)
-                return _nextNode.ProcessRequest(context, log);
-
-            var wrappedContext = _responseTransform.WrapOriginalRequest(context);
-            return _nextNode.ProcessRequest(wrappedContext, log).ContinueWith(t =>
-            {
-                _responseTransform.Transform(context, wrappedContext);
-            });
+            return _nextNode.ProcessRequest(context);
         }
     }
 }

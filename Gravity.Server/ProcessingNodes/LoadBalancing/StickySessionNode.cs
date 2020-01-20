@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Gravity.Server.Interfaces;
+using Gravity.Server.Pipeline;
 using Gravity.Server.Utility;
 using Microsoft.Owin;
 
@@ -79,23 +80,30 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
             _cleanupThread.Join(TimeSpan.FromSeconds(10));
         }
 
-        public override Task ProcessRequest(IOwinContext context, ILog log)
+        public override Task ProcessRequest(IRequestContext context)
         {
             if (Disabled)
             {
-                context.Response.StatusCode = 503;
-                context.Response.ReasonPhrase = "Balancer " + Name + " is disabled";
-                return context.Response.WriteAsync(string.Empty);
+                return Task.Run(() =>
+                {
+                    context.Outgoing.StatusCode = 503;
+                    context.Outgoing.ReasonPhrase = "Balancer " + Name + " is disabled";
+                    context.Outgoing.SendHeaders(context);
+                });
             }
 
             if (string.IsNullOrEmpty(SessionCookie))
             {
-                context.Response.StatusCode = 503;
-                context.Response.ReasonPhrase = "Balancer " + Name + " has no session cookie configured";
-                return context.Response.WriteAsync(string.Empty);
+                return Task.Run(() =>
+                {
+                    context.Outgoing.StatusCode = 503;
+                    context.Outgoing.ReasonPhrase = "Balancer " + Name + " has no session cookie configured";
+                    context.Outgoing.SendHeaders(context);
+                });
             }
 
-            var sessionId = context.Request.Cookies[SessionCookie];
+            var cookies = context.Incoming.GetCookies();
+            var sessionId = cookies.ContainsKey(SessionCookie) ? cookies[SessionCookie] : null;
             long startTime;
 
             if (string.IsNullOrEmpty(sessionId))
@@ -108,36 +116,40 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
 
                 if (output == null)
                 {
-                    context.Response.StatusCode = 503;
-                    context.Response.ReasonPhrase = "Balancer " + Name + " has no enabled outputs";
-                    return context.Response.WriteAsync(string.Empty);
+                    return Task.Run(() =>
+                    {
+                        context.Outgoing.StatusCode = 503;
+                        context.Outgoing.ReasonPhrase = "Balancer " + Name + " has no enabled outputs";
+                        context.Outgoing.SendHeaders(context);
+                    });
                 }
 
                 startTime = output.TrafficAnalytics.BeginRequest();
                 output.IncrementConnectionCount();
 
-                return output.Node.ProcessRequest(context, log).ContinueWith(t =>
-                {
-                    output.TrafficAnalytics.EndRequest(startTime);
-                    output.DecrementConnectionCount();
-
-                    var setCookieHeaders = context.Response.Headers.FirstOrDefault(h => h.Key == "Set-Cookie");
-                    if (setCookieHeaders.Value != null && setCookieHeaders.Value.Length > 0)
+                return output.Node.ProcessRequest(context)
+                    .ContinueWith(() =>
                     {
-                        var setSession = setCookieHeaders.Value.FirstOrDefault(c => c.StartsWith(SessionCookie + "="));
-                        if (setSession != null)
-                        {
-                            var start = SessionCookie.Length + 1;
-                            var end = setSession.IndexOf(';', start);
-                            if (end < 0) end = setSession.Length;
-                            sessionId = setSession.Substring(start, end - start);
+                        output.TrafficAnalytics.EndRequest(startTime);
+                        output.DecrementConnectionCount();
 
-                            output.IncrementSessionCount();
-                            lock (_sessionNodes) _sessionNodes[sessionId] = output;
-                            lock (_sessionExpiry) _sessionExpiry.Add(new Tuple<string, DateTime>(sessionId, DateTime.UtcNow + SessionDuration));
+                        var setCookieHeaders = context.Response.Headers.FirstOrDefault(h => h.Key == "Set-Cookie");
+                        if (setCookieHeaders.Value != null && setCookieHeaders.Value.Length > 0)
+                        {
+                            var setSession = setCookieHeaders.Value.FirstOrDefault(c => c.StartsWith(SessionCookie + "="));
+                            if (setSession != null)
+                            {
+                                var start = SessionCookie.Length + 1;
+                                var end = setSession.IndexOf(';', start);
+                                if (end < 0) end = setSession.Length;
+                                sessionId = setSession.Substring(start, end - start);
+
+                                output.IncrementSessionCount();
+                                lock (_sessionNodes) _sessionNodes[sessionId] = output;
+                                lock (_sessionExpiry) _sessionExpiry.Add(new Tuple<string, DateTime>(sessionId, DateTime.UtcNow + SessionDuration));
+                            }
                         }
-                    }
-                });
+                    });
             }
 
             NodeOutput sessionOutput;
@@ -154,9 +166,12 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
 
                 if (sessionOutput == null)
                 {
-                    context.Response.StatusCode = 503;
-                    context.Response.ReasonPhrase = "Balancer " + Name + " has no enabled outputs";
-                    return context.Response.WriteAsync(string.Empty);
+                    return Task.Run(() =>
+                    {
+                        context.Outgoing.StatusCode = 503;
+                        context.Outgoing.ReasonPhrase = "Balancer " + Name + " has no enabled outputs";
+                        context.Outgoing.SendHeaders(context);
+                    });
                 }
 
                 sessionOutput.IncrementSessionCount();
@@ -166,9 +181,12 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
 
             if (sessionOutput.Disabled)
             {
-                context.Response.StatusCode = 503;
-                context.Response.ReasonPhrase = "Balancer " + Name + " sticky output is down";
-                return context.Response.WriteAsync(string.Empty);
+                return Task.Run(() =>
+                {
+                    context.Outgoing.StatusCode = 503;
+                    context.Outgoing.ReasonPhrase = "Balancer " + Name + " sticky output is down";
+                    context.Outgoing.SendHeaders(context);
+                });
             }
 
             startTime = sessionOutput.TrafficAnalytics.BeginRequest();

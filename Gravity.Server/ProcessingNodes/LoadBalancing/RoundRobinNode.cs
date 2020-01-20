@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Gravity.Server.Interfaces;
+using Gravity.Server.Pipeline;
 using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes.LoadBalancing
@@ -10,41 +11,51 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
     {
         private int _next;
 
-        public override Task ProcessRequest(IOwinContext context, ILog log)
+        public override Task ProcessRequest(IRequestContext context)
         {
             if (Disabled)
             {
-                context.Response.StatusCode = 503;
-                context.Response.ReasonPhrase = "Balancer " + Name + " is disabled";
-                return context.Response.WriteAsync(string.Empty);
+                return Task.Run(() =>
+                {
+                    context.Outgoing.StatusCode = 503;
+                    context.Outgoing.ReasonPhrase = "Balancer " + Name + " is disabled";
+                    context.Outgoing.SendHeaders(context);
+                });
             }
 
             var outputs = OutputNodes;
 
             if (outputs == null || outputs.Length == 0)
             {
-                context.Response.StatusCode = 503;
-                context.Response.ReasonPhrase = "Balancer " + Name + " has no outputs";
-                return context.Response.WriteAsync(string.Empty);
+                return Task.Run(() =>
+                {
+                    context.Outgoing.StatusCode = 503;
+                    context.Outgoing.ReasonPhrase = "Balancer " + Name + " has no outputs";
+                    context.Outgoing.SendHeaders(context);
+                });
             }
 
             var enabledOutputs = outputs.Where(o => !o.Disabled && o.Node != null).ToList();
 
             if (enabledOutputs.Count == 0)
             {
-                context.Response.StatusCode = 503;
-                context.Response.ReasonPhrase = "All balancer " + Name + " outputs are disabled";
-                return context.Response.WriteAsync(string.Empty);
+                return Task.Run(() =>
+                {
+                    context.Outgoing.StatusCode = 503;
+                    context.Outgoing.ReasonPhrase = "Balancer " + Name + " outputs are all disabled";
+                    context.Outgoing.SendHeaders(context);
+                });
             }
 
             var index = Interlocked.Increment(ref _next) % enabledOutputs.Count;
             var output = enabledOutputs[index];
 
             var startTime = output.TrafficAnalytics.BeginRequest();
-            return output.Node.ProcessRequest(context, log).ContinueWith(t =>
-            {
-                output.TrafficAnalytics.EndRequest(startTime);
-            });
+            return output.Node.ProcessRequest(context)
+                .ContinueWith(() =>
+                {
+                    output.TrafficAnalytics.EndRequest(startTime);
+                });
         }
     }
 }

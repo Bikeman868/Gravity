@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Gravity.Server.Interfaces;
+using Gravity.Server.Pipeline;
 using Microsoft.Owin;
 using Urchin.Client.Interfaces;
 
@@ -12,8 +13,6 @@ namespace Gravity.Server.Utility
 {
     internal class LogFactory: ILogFactory, IDisposable
     {
-        private const string OwinEnvironmentKey = "GRAVITY_LOG";
-
         private IDisposable _configRegistration;
         private Configuration _configuration;
         private Func<LogType, LogLevel, bool> _filter;
@@ -69,11 +68,9 @@ namespace Gravity.Server.Utility
             _configRegistration = null;
         }
 
-        public ILog Create(IOwinContext context)
+        public ILog Create(IRequestContext context)
         {
             if (!_configuration.Enabled) return null;
-
-            context.Request.Protocol
 
             ILog log = null;
 
@@ -88,17 +85,7 @@ namespace Gravity.Server.Utility
                     break;
             }
 
-            if (log != null)
-                context.Set(OwinEnvironmentKey, log);
-
             return log;
-        }
-
-        public ILog Get(IOwinContext context)
-        {
-            if (!_configuration.Enabled) return null;
-
-            return context.Get<ILog>(OwinEnvironmentKey);
         }
 
         private class FileLog: ILog

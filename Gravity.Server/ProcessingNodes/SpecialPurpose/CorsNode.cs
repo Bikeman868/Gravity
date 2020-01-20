@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Gravity.Server.Interfaces;
-using Microsoft.Owin;
+using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.ProcessingNodes.SpecialPurpose
 {
@@ -42,79 +42,82 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
                 Offline = _nextNode.Offline;
         }
 
-        Task INode.ProcessRequest(IOwinContext context, ILog log)
+        Task INode.ProcessRequest(IRequestContext context)
         {
             if (_nextNode == null)
             {
-                context.Response.StatusCode = 503;
-                context.Response.ReasonPhrase = "CORS node " + Name + " has no downstream";
-                return context.Response.WriteAsync(string.Empty);
+                return Task.Run(() =>
+                {
+                    context.Outgoing.StatusCode = 503;
+                    context.Outgoing.ReasonPhrase = "CORS node " + Name + " has no downstream";
+                    context.Outgoing.SendHeaders(context);
+                });
             }
 
             if (!Disabled)
             {
-                var origin = context.Request.Headers["Origin"];
+                var origin = context.Incoming.Headers["Origin"];
                 var handled = false;
 
                 var isCrossOrigin =
                     !string.IsNullOrEmpty(origin) &&
                     !origin.Equals(WebsiteOrigin, StringComparison.OrdinalIgnoreCase);
 
-                if (context.Request.Method == "OPTIONS")
+                if (context.Incoming.Method == "OPTIONS")
                 {
                     if (string.IsNullOrEmpty(origin))
                     {
-                        context.Response.StatusCode = 403;
+                        context.Outgoing.StatusCode = 403;
                     }
                     else
                     {
                         if (!isCrossOrigin || _allowedOriginsRegex.IsMatch(origin))
                         {
-                            context.Response.Headers["Access-Control-Allow-Origin"] = origin;
+                            context.Outgoing.Headers["Access-Control-Allow-Origin"] = origin;
                         }
                         else
                         {
-                            context.Response.Headers["Access-Control-Allow-Origin"] = WebsiteOrigin;
+                            context.Outgoing.Headers["Access-Control-Allow-Origin"] = WebsiteOrigin;
                         }
 
-                        context.Response.Headers["Access-Control-Allow-Headers"] = AllowedHeaders;
-                        context.Response.Headers["Access-Control-Allow-Methods"] = AllowedMethods;
-                        context.Response.Headers["Access-Control-Max-Age"] = ((int)MaxAge.TotalSeconds).ToString();;
-                        context.Response.Headers["Access-Control-Allow-Credentials"] = AllowCredentials.ToString().ToLower();
+                        context.Outgoing.Headers["Access-Control-Allow-Headers"] = AllowedHeaders;
+                        context.Outgoing.Headers["Access-Control-Allow-Methods"] = AllowedMethods;
+                        context.Outgoing.Headers["Access-Control-Max-Age"] = ((int)MaxAge.TotalSeconds).ToString();;
+                        context.Outgoing.Headers["Access-Control-Allow-Credentials"] = AllowCredentials.ToString().ToLower();
                     }
                     handled = true;
                 }
 
                 if (isCrossOrigin)
                 {
-                    if (context.Request.Method == "POST" ||
-                        context.Request.Method == "PUT" ||
-                        context.Request.Method == "DELETE")
+                    if (context.Incoming.Method == "POST" ||
+                        context.Incoming.Method == "PUT" ||
+                        context.Incoming.Method == "DELETE")
                     {
                         // Note that the browser will never send this header in a cross-site request
                         // without first obtaining permission from the server using a pre-flight CORS check.
-                        if (!string.Equals(context.Request.Headers["X-Requested-With"], "XMLHttpRequest", StringComparison.OrdinalIgnoreCase))
+                        if (!string.Equals(context.Incoming.Headers["X-Requested-With"], "XMLHttpRequest", StringComparison.OrdinalIgnoreCase))
                         {
-                            context.Response.StatusCode = 403;
+                            context.Outgoing.StatusCode = 403;
                             handled = true;
                         }
                     }
 
                     if (!handled && !string.IsNullOrEmpty(origin) && _allowedOriginsRegex.IsMatch(origin))
                     {
-                        context.Response.Headers["Access-Control-Allow-Origin"] = origin;
-                        context.Response.Headers["Access-Control-Allow-Credentials"] = AllowCredentials.ToString().ToLower();
-                        context.Response.Headers["Access-Control-Expose-Headers"] = ExposedHeaders;
+                        context.Outgoing.Headers["Access-Control-Allow-Origin"] = origin;
+                        context.Outgoing.Headers["Access-Control-Allow-Credentials"] = AllowCredentials.ToString().ToLower();
+                        context.Outgoing.Headers["Access-Control-Expose-Headers"] = ExposedHeaders;
                     }
                 }
 
                 if (handled)
                 {
-                    return context.Response.WriteAsync(string.Empty);
+                    return Task.Run(() => context.Outgoing.SendHeaders(context));
                 }
             }
 
-            return _nextNode.ProcessRequest(context, log);
+            return _nextNode.ProcessRequest(context);
         }
     }
 }

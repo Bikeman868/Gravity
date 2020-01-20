@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using Gravity.Server.Pipeline;
 using Microsoft.Owin;
 
 namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces
 {
-    public interface IRuleExecutionContext
+    internal interface IRuleExecutionContext
     {
         // Contextual properties
-        IOwinContext Context { get; }
+        IRequestContext Context { get; }
         IList<Action<IRuleExecutionContext>> DeferredActions { get; }
         bool UrlIsModified { get; }
 

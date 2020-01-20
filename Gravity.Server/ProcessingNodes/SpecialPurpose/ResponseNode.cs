@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
+using System.Text;
 using Gravity.Server.Interfaces;
-using Microsoft.Owin;
+using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.ProcessingNodes.SpecialPurpose
 {
@@ -8,7 +9,7 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
     {
         public string Name { get; set; }
         public bool Disabled { get; set; }
-        public int StatusCode { get; set; }
+        public ushort StatusCode { get; set; }
         public string ReasonPhrase { get; set; }
         public string Content { get; set; }
         public string ContentFile { get; set; }
@@ -32,18 +33,23 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
         {
         }
 
-        Task INode.ProcessRequest(IOwinContext context, ILog log)
+        Task INode.ProcessRequest(IRequestContext context)
         {
-            context.Response.StatusCode = StatusCode;
-            context.Response.ReasonPhrase = ReasonPhrase;
+            context.Outgoing.StatusCode = StatusCode;
+            context.Outgoing.ReasonPhrase = ReasonPhrase;
 
             if (HeaderNames != null)
             {
                 for (var i = 0; i < HeaderNames.Length; i++) 
-                    context.Response.Headers[HeaderNames[i]] = HeaderValues[i];
+                    context.Outgoing.Headers[HeaderNames[i]] = HeaderValues[i];
             }
 
-            return context.Response.WriteAsync(Content);
+            var bytes = Encoding.UTF8.GetBytes(Content);
+
+            context.Outgoing.Headers["Content-Length"] = bytes.Length.ToString();
+            context.Outgoing.SendHeaders(context);
+
+            return context.Outgoing.Content.WriteAsync(bytes, 0, bytes.Length);
         }
     }
 }

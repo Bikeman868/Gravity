@@ -3,6 +3,10 @@ using System.Net;
 
 namespace Gravity.Server.Pipeline
 {
+    /// <summary>
+    /// Represents a stream of HTTP data comming into the load balancer from
+    /// the outside world and being sent to a back-end server. This is an HTTP request
+    /// </summary>
     internal interface IIncomingMessage : IMessage
     {
         /// <summary>
@@ -13,7 +17,7 @@ namespace Gravity.Server.Pipeline
         /// <summary>
         /// For example http or https
         /// </summary>
-        Protocol Protocol { get; set; }
+        Scheme Scheme { get; set; }
 
         /// <summary>
         /// For example "mydomain.com"

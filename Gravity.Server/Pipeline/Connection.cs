@@ -29,7 +29,7 @@ namespace Gravity.Server.ProcessingNodes.Server
         private readonly IPEndPoint _endpoint;
         private readonly string _domainName;
         private readonly TimeSpan _connectionTimeout;
-        private readonly Protocol _protocol;
+        private readonly Scheme _scheme;
 
         private TcpClient _tcpClient;
         private Stream _stream;
@@ -39,13 +39,13 @@ namespace Gravity.Server.ProcessingNodes.Server
             IBufferPool bufferPool,
             IPEndPoint endpoint,
             string domainName,
-            Protocol protocol,
+            Scheme scheme,
             TimeSpan connectionTimeout)
         {
             _bufferPool = bufferPool;
             _endpoint = endpoint;
             _domainName = domainName;
-            _protocol = protocol;
+            _scheme = scheme;
             _connectionTimeout = connectionTimeout;
         }
 
@@ -58,7 +58,7 @@ namespace Gravity.Server.ProcessingNodes.Server
         public Task Connect(ILog log)
         {
             log?.Log(LogType.TcpIp, LogLevel.Standard, 
-                () => $"Opening a new Tcp connection to {_protocol}://{_domainName}:{_endpoint.Port} at {_endpoint.Address}");
+                () => $"Opening a new Tcp connection to {_scheme}://{_domainName}:{_endpoint.Port} at {_endpoint.Address}");
 
             _tcpClient = new TcpClient
             {
@@ -84,7 +84,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                     _stream = _tcpClient.GetStream();
 
-                    if (_protocol == Protocol.Https)
+                    if (_scheme == Scheme.Https)
                     {
                         log?.Log(LogType.TcpIp, LogLevel.Standard, () => "Wrapping Tcp connection in SSL stream");
                         var sslStream = new SslStream(_stream);
@@ -103,7 +103,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         public bool IsStale => (DateTime.UtcNow - _lastUsedUtc) > _maximumIdleTime;
 
-        public Protocol Protocol { get; }
+        public Scheme Scheme { get; }
 
         public Task Send(IRequestContext context, TimeSpan responseTimeout, TimeSpan readTimeout)
         {
@@ -116,18 +116,13 @@ namespace Gravity.Server.ProcessingNodes.Server
         private Task SendHttp(IRequestContext context)
         {
             var incoming = context.Incoming;
-
-            if (incoming.OnSendHeaders != null)
-            {
-                foreach (var action in incoming.OnSendHeaders)
-                    action(context);
-            }
+            incoming.SendHeaders(context);
 
             var head = new StringBuilder();
 
             head.Append(incoming.Method);
             head.Append(' ');
-            head.Append(incoming.Protocol == Protocol.Https ? "https" : " http");
+            head.Append(incoming.Scheme == Scheme.Https ? "https" : " http");
             head.Append("://");
             head.Append(incoming.DomainName);
             head.Append(':');
@@ -330,11 +325,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                     }
                 }
 
-                if (context.Outgoing.OnSendHeaders != null)
-                {
-                    foreach (var action in context.Outgoing.OnSendHeaders)
-                        action(context);
-                }
+                context.Outgoing.SendHeaders(context);
             }
 
             int Read(byte[] buffer)
