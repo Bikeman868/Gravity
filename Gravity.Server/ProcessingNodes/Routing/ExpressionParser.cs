@@ -93,12 +93,13 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
             T IExpression<T>.Evaluate(IRequestContext context)
             {
-                var header = context.Request.Headers[_headerName];
+                if (!context.Incoming.Headers.TryGetValue(_headerName, out var header))
+                    header = new[] { string.Empty };
 
                 if (typeof (string) == typeof (T))
-                    return (T)(object)header;
+                    return (T)(object)header[0];
 
-                return (T)Convert.ChangeType(header, typeof(T));
+                return (T)Convert.ChangeType(header[0], typeof(T));
             }
         }
 
@@ -192,7 +193,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
                     object splitPath;
                     if (!context.Environment.TryGetValue(key, out splitPath))
                     {
-                        splitPath = context.Request.Path.Value.Split('/');
+                        splitPath = context.Incoming.Path.Value.Split('/');
                         context.Environment[key] = splitPath;
                     }
 

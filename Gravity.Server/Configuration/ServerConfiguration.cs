@@ -15,7 +15,7 @@ namespace Gravity.Server.Configuration
         /// Port number of the server or null to pass through from the request
         /// </summary>
         [JsonProperty("port")]
-        public int? Port { get; set; }
+        public ushort? Port { get; set; }
 
         /// <summary>
         /// How long to wait for a connection to be opened
@@ -74,7 +74,7 @@ namespace Gravity.Server.Configuration
         /// The path of the URL to send as a health check
         /// </summary>
         [JsonProperty("healthCheckPort")]
-        public int HealthCheckPort { get; set; }
+        public ushort HealthCheckPort { get; set; }
 
         /// <summary>
         /// The path of the URL to send as a health check

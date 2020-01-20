@@ -16,6 +16,7 @@ namespace Gravity.Server.Pipeline
             _log = logFactory.Create(this);
             _incoming = new IncommingMessageWrapper(owinContext);
             _outgoing = new OutgoingMessageWrapper(owinContext);
+            _environment = owinContext.Environment;
         }
 
         public void Dispose()
@@ -31,6 +32,9 @@ namespace Gravity.Server.Pipeline
 
         private readonly IOutgoingMessage _outgoing;
         IOutgoingMessage IRequestContext.Outgoing => _outgoing;
+
+        private readonly IDictionary<string, object> _environment;
+        IDictionary<string, object> IRequestContext.Environment => _environment;
 
         private class IncommingMessageWrapper : IIncomingMessage
         {

@@ -5,7 +5,7 @@ namespace Gravity.Server.Configuration
     internal class ResponseConfiguration: NodeConfiguration
     {
         [JsonProperty("statusCode")]
-        public int StatusCode { get; set; }
+        public ushort StatusCode { get; set; }
 
         [JsonProperty("reasonPhrase")]
         public string ReasonPhrase { get; set; }

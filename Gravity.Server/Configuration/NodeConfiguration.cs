@@ -1,4 +1,5 @@
 ﻿using Gravity.Server.Interfaces;
+using Gravity.Server.Pipeline;
 using Newtonsoft.Json;
 
 namespace Gravity.Server.Configuration

@@ -41,12 +41,12 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
             if (HeaderNames != null)
             {
                 for (var i = 0; i < HeaderNames.Length; i++) 
-                    context.Outgoing.Headers[HeaderNames[i]] = HeaderValues[i];
+                    context.Outgoing.Headers[HeaderNames[i]] = new [] { HeaderValues[i] };
             }
 
             var bytes = Encoding.UTF8.GetBytes(Content);
 
-            context.Outgoing.Headers["Content-Length"] = bytes.Length.ToString();
+            context.Outgoing.Headers["Content-Length"] = new [] { bytes.Length.ToString() };
             context.Outgoing.SendHeaders(context);
 
             return context.Outgoing.Content.WriteAsync(bytes, 0, bytes.Length);

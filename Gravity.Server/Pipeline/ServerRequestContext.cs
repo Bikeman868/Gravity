@@ -18,6 +18,8 @@ namespace Gravity.Server.Pipeline
         private readonly IOutgoingMessage _outgoing;
         IOutgoingMessage IRequestContext.Outgoing => _outgoing;
 
+        IDictionary<string, object> IRequestContext.Environment { get; } = new Dictionary<string, object>();
+
         /// <summary>
         /// This version is used to forward an incoming request to a server
         /// </summary>

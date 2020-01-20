@@ -42,8 +42,8 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
                     _code = "302";
                     _redirectAction = (ri, url) =>
                     {
-                        ri.Context.Response.Redirect(url);
-                        ri.Context.Response.StatusCode = 302;
+                        ri.Context.Outgoing.Headers["Location"] = new[] { url };
+                        ri.Context.Outgoing.StatusCode = 302;
                     };
                     break;
                 case "seeother":
@@ -52,14 +52,18 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
                     _code = "303";
                     _redirectAction = (ri, url) =>
                     {
-                        ri.Context.Response.Redirect(url);
-                        ri.Context.Response.StatusCode = 303;
+                        ri.Context.Outgoing.Headers["Location"] = new[] { url };
+                        ri.Context.Outgoing.StatusCode = 303;
                     };
                     break;
                 case "temporary":
                 case "307":
                     _code = "307";
-                    _redirectAction = (ri, url) => ri.Context.Response.Redirect(url);
+                    _redirectAction = (ri, url) =>
+                    {
+                        ri.Context.Outgoing.Headers["Location"] = new[] { url };
+                        ri.Context.Outgoing.StatusCode = 307;
+                    };
                     break;
                 default:
                     throw new Exception(

@@ -1,5 +1,6 @@
 ﻿using Gravity.Server.Interfaces;
 using System;
+using System.Collections.Generic;
 
 namespace Gravity.Server.Pipeline
 {
@@ -22,5 +23,10 @@ namespace Gravity.Server.Pipeline
         /// The outgoing reply from the back-end server
         /// </summary>
         IOutgoingMessage Outgoing { get; }
+
+        /// <summary>
+        /// Provides a place to store arbitrary state associated with the request
+        /// </summary>
+        IDictionary<string, object> Environment { get; }
     }
 }

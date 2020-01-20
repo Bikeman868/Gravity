@@ -56,7 +56,10 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
 
             if (!Disabled)
             {
-                var origin = context.Incoming.Headers["Origin"];
+                if (!context.Incoming.Headers.TryGetValue("Origin", out var origins))
+                    origins = new string[] { null };
+                var origin = origins[0];
+
                 var handled = false;
 
                 var isCrossOrigin =
@@ -73,17 +76,17 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
                     {
                         if (!isCrossOrigin || _allowedOriginsRegex.IsMatch(origin))
                         {
-                            context.Outgoing.Headers["Access-Control-Allow-Origin"] = origin;
+                            context.Outgoing.Headers["Access-Control-Allow-Origin"] = new [] { origin };
                         }
                         else
                         {
-                            context.Outgoing.Headers["Access-Control-Allow-Origin"] = WebsiteOrigin;
+                            context.Outgoing.Headers["Access-Control-Allow-Origin"] = new[] { WebsiteOrigin };
                         }
 
-                        context.Outgoing.Headers["Access-Control-Allow-Headers"] = AllowedHeaders;
-                        context.Outgoing.Headers["Access-Control-Allow-Methods"] = AllowedMethods;
-                        context.Outgoing.Headers["Access-Control-Max-Age"] = ((int)MaxAge.TotalSeconds).ToString();;
-                        context.Outgoing.Headers["Access-Control-Allow-Credentials"] = AllowCredentials.ToString().ToLower();
+                        context.Outgoing.Headers["Access-Control-Allow-Headers"] = new[] { AllowedHeaders };
+                        context.Outgoing.Headers["Access-Control-Allow-Methods"] = new[] { AllowedMethods };
+                        context.Outgoing.Headers["Access-Control-Max-Age"] = new[] {((int) MaxAge.TotalSeconds).ToString()};
+                        context.Outgoing.Headers["Access-Control-Allow-Credentials"] = new[] { AllowCredentials.ToString().ToLower() };
                     }
                     handled = true;
                 }
@@ -96,7 +99,8 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
                     {
                         // Note that the browser will never send this header in a cross-site request
                         // without first obtaining permission from the server using a pre-flight CORS check.
-                        if (!string.Equals(context.Incoming.Headers["X-Requested-With"], "XMLHttpRequest", StringComparison.OrdinalIgnoreCase))
+                        if (!context.Incoming.Headers.TryGetValue("X-Requested-With", out var requestedWithHeaders) ||
+                            !string.Equals(requestedWithHeaders[0], "XMLHttpRequest", StringComparison.OrdinalIgnoreCase))
                         {
                             context.Outgoing.StatusCode = 403;
                             handled = true;
@@ -105,9 +109,9 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
 
                     if (!handled && !string.IsNullOrEmpty(origin) && _allowedOriginsRegex.IsMatch(origin))
                     {
-                        context.Outgoing.Headers["Access-Control-Allow-Origin"] = origin;
-                        context.Outgoing.Headers["Access-Control-Allow-Credentials"] = AllowCredentials.ToString().ToLower();
-                        context.Outgoing.Headers["Access-Control-Expose-Headers"] = ExposedHeaders;
+                        context.Outgoing.Headers["Access-Control-Allow-Origin"] = new[] { origin };
+                        context.Outgoing.Headers["Access-Control-Allow-Credentials"] = new[] { AllowCredentials.ToString().ToLower() };
+                        context.Outgoing.Headers["Access-Control-Expose-Headers"] = new[] { ExposedHeaders };
                     }
                 }
 

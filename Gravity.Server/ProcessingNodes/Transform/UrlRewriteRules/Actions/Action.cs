@@ -6,7 +6,7 @@ using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Rules;
 
 namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
 {
-    public abstract class Action : IAction
+    internal abstract class Action : IAction
     {
         protected bool _stopProcessing;
         protected bool _endRequest;

@@ -392,18 +392,12 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
 
         public string GetOriginalServerVariable(string name)
         {
-            throw new NotImplementedException();
+            if (ReferenceEquals(_originalServerVraiables, null))
+                return GetServerVariable(name);
 
-            //name = "server." + name;
-
-            //if (ReferenceEquals(_originalServerVraiables, null))
-            //{
-            //    var value = Context.Incoming.Environment[name];
-            //    return value == null ? string.Empty : value.ToString();
-            //}
-
-            //string stringValue;
-            //return _originalServerVraiables.TryGetValue(name, out stringValue) ? stringValue : string.Empty;
+            return _originalServerVraiables.TryGetValue("server." + name, out var stringValue) 
+                ? stringValue 
+                : string.Empty;
         }
 
         public string GetOriginalHeader(string name)
@@ -426,12 +420,9 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
 
         public string GetServerVariable(string name)
         {
-            throw new NotImplementedException();
-
-            //name = "server." + name;
-
-            //object value;
-            //return Context.Incoming.Environment.TryGetValue(name, out value) ? value.ToString() : null;
+            return Context.Environment.TryGetValue("server." + name, out var value)
+                ? value.ToString()
+                : string.Empty;
         }
 
         public string GetHeader(string name)
@@ -445,22 +436,20 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
 
         public void SetServerVariable(string name, string value)
         {
-            throw new NotImplementedException();
+            name = "server." + name;
 
-            //name = "server." + name;
-
-            //if (ReferenceEquals(_originalServerVraiables, null))
-            //{
-            //    _originalServerVraiables = new Dictionary<string, string>();
-            //    foreach (var serverVariable in Context.Incoming.Environment.Keys.Where(k => k.StartsWith("server.")))
-            //    {
-            //        var environmentValue = Context.Incoming.Environment[serverVariable];
-            //        _originalServerVraiables[serverVariable] = environmentValue == null 
-            //            ? string.Empty 
-            //            : environmentValue.ToString();
-            //    }
-            //}
-            //Context.Incoming.Environment[name] = value;
+            if (ReferenceEquals(_originalServerVraiables, null))
+            {
+                _originalServerVraiables = new Dictionary<string, string>();
+                foreach (var serverVariable in Context.Environment.Keys.Where(k => k.StartsWith("server.")))
+                {
+                    var environmentValue = Context.Environment[serverVariable];
+                    _originalServerVraiables[serverVariable] = environmentValue == null
+                        ? string.Empty
+                        : environmentValue.ToString();
+                }
+            }
+            Context.Environment[name] = value;
         }
 
         public void SetHeader(string name, string value)

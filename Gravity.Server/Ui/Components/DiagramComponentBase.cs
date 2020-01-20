@@ -10,7 +10,7 @@ using OwinFramework.Pages.Html.Elements;
 
 namespace Gravity.Server.Ui.Components
 {
-    public abstract class DiagramComponentBase: Component
+    internal abstract class DiagramComponentBase: Component
     {
         protected readonly IDrawingGenerator DiagramGenerator;
 

@@ -52,7 +52,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
 
             var startTime = output.TrafficAnalytics.BeginRequest();
             return output.Node.ProcessRequest(context)
-                .ContinueWith(() =>
+                .ContinueWith(nodeTask =>
                 {
                     output.TrafficAnalytics.EndRequest(startTime);
                 });

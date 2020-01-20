@@ -1,5 +1,6 @@
 ﻿using System;
 using Gravity.Server.Configuration;
+using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.Interfaces
 {

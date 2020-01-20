@@ -127,28 +127,33 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
                 startTime = output.TrafficAnalytics.BeginRequest();
                 output.IncrementConnectionCount();
 
+                context.Outgoing.OnSendHeaders.Add(ctx =>
+                {
+                    if (ctx.Outgoing.Headers.TryGetValue("Set-Cookie", out var setCookieHeaders))
+                    {
+                        var setSession = setCookieHeaders.FirstOrDefault(c => c.StartsWith(SessionCookie + "="));
+                        if (setSession != null)
+                        {
+                            var start = SessionCookie.Length + 1;
+                            var end = setSession.IndexOf(';', start);
+                            if (end < 0) end = setSession.Length;
+                            sessionId = setSession.Substring(start, end - start);
+
+                            output.IncrementSessionCount();
+                            lock (_sessionNodes) _sessionNodes[sessionId] = output;
+                            lock (_sessionExpiry)
+                                _sessionExpiry.Add(new Tuple<string, DateTime>(sessionId,
+                                    DateTime.UtcNow + SessionDuration));
+                        }
+                    }
+                });
+
                 return output.Node.ProcessRequest(context)
-                    .ContinueWith(() =>
+                    .ContinueWith(nodeTask =>
                     {
                         output.TrafficAnalytics.EndRequest(startTime);
                         output.DecrementConnectionCount();
 
-                        var setCookieHeaders = context.Response.Headers.FirstOrDefault(h => h.Key == "Set-Cookie");
-                        if (setCookieHeaders.Value != null && setCookieHeaders.Value.Length > 0)
-                        {
-                            var setSession = setCookieHeaders.Value.FirstOrDefault(c => c.StartsWith(SessionCookie + "="));
-                            if (setSession != null)
-                            {
-                                var start = SessionCookie.Length + 1;
-                                var end = setSession.IndexOf(';', start);
-                                if (end < 0) end = setSession.Length;
-                                sessionId = setSession.Substring(start, end - start);
-
-                                output.IncrementSessionCount();
-                                lock (_sessionNodes) _sessionNodes[sessionId] = output;
-                                lock (_sessionExpiry) _sessionExpiry.Add(new Tuple<string, DateTime>(sessionId, DateTime.UtcNow + SessionDuration));
-                            }
-                        }
                     });
             }
 
@@ -192,11 +197,12 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
             startTime = sessionOutput.TrafficAnalytics.BeginRequest();
             sessionOutput.IncrementConnectionCount();
 
-            return sessionOutput.Node.ProcessRequest(context, log).ContinueWith(t =>
-            {
-                sessionOutput.TrafficAnalytics.EndRequest(startTime);
-                sessionOutput.DecrementConnectionCount();
-            });
+            return sessionOutput.Node.ProcessRequest(context)
+                .ContinueWith(t =>
+                {
+                    sessionOutput.TrafficAnalytics.EndRequest(startTime);
+                    sessionOutput.DecrementConnectionCount();
+                });
         }
     }
 }

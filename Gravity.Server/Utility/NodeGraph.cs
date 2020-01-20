@@ -10,6 +10,7 @@ using Gravity.Server.ProcessingNodes.Routing;
 using Gravity.Server.ProcessingNodes.Server;
 using Gravity.Server.ProcessingNodes.SpecialPurpose;
 using Gravity.Server.ProcessingNodes.Transform;
+using Microsoft.Owin;
 using OwinFramework.Interfaces.Builder;
 using OwinFramework.Interfaces.Utility;
 
@@ -20,6 +21,7 @@ namespace Gravity.Server.Utility
         private readonly IExpressionParser _expressionParser;
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly IFactory _factory;
+        private readonly IBufferPool _bufferPool;
         private readonly IDisposable _configuration;
 
         private INodeGraph _current;
@@ -29,11 +31,13 @@ namespace Gravity.Server.Utility
             IConfiguration configuration,
             IExpressionParser expressionParser,
             IHostingEnvironment hostingEnvironment,
-            IFactory factory)
+            IFactory factory,
+            IBufferPool bufferPool)
         {
             _expressionParser = expressionParser;
             _hostingEnvironment = hostingEnvironment;
             _factory = factory;
+            _bufferPool = bufferPool;
 
             _configuration = configuration.Register(
                 "/gravity/nodeGraph", 
@@ -263,7 +267,7 @@ namespace Gravity.Server.Utility
             {
                 foreach (var serverNodeConfiguration in configuration.ServerNodes)
                 {
-                    var node = new ServerNode
+                    var node = new ServerNode(_bufferPool)
                     {
                         Name = serverNodeConfiguration.Name,
                         Disabled = serverNodeConfiguration.Disabled,
@@ -277,7 +281,7 @@ namespace Gravity.Server.Utility
                         RecalculateInterval = serverNodeConfiguration.RecalculateInterval,
                         HealthCheckPort = serverNodeConfiguration.HealthCheckPort,
                         HealthCheckHost = serverNodeConfiguration.HealthCheckHost,
-                        HealthCheckPath = serverNodeConfiguration.HealthCheckPath,
+                        HealthCheckPath = new PathString(serverNodeConfiguration.HealthCheckPath),
                         HealthCheckMethod = serverNodeConfiguration.HealthCheckMethod,
                         HealthCheckCodes = serverNodeConfiguration.HealthCheckCodes,
                         HealthCheckLog = serverNodeConfiguration.HealthCheckLog,
