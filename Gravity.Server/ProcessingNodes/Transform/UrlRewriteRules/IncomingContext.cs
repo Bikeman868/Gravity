@@ -166,8 +166,8 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
                 .Where(p => !string.IsNullOrEmpty(p))
                 .ToList();
 
-            var originalParameters = new Dictionary<string, IList<string>>();
-            var newParameters = new Dictionary<string, IList<string>>();
+            var originalParameters = new Dictionary<string, IList<string>>(StringComparer.OrdinalIgnoreCase);
+            var newParameters = new Dictionary<string, IList<string>>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var parameter in parameters)
             {
@@ -351,7 +351,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
                     .Split('&')
                     .Where(p => !string.IsNullOrEmpty(p))
                     .ToList();
-                _newParameters = new Dictionary<string, IList<string>>();
+                _newParameters = new Dictionary<string, IList<string>>(StringComparer.OrdinalIgnoreCase);
                 foreach (var parameter in parameters)
                 {
                     string key;
@@ -440,7 +440,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
 
             if (ReferenceEquals(_originalServerVraiables, null))
             {
-                _originalServerVraiables = new Dictionary<string, string>();
+                _originalServerVraiables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                 foreach (var serverVariable in Context.Environment.Keys.Where(k => k.StartsWith("server.")))
                 {
                     var environmentValue = Context.Environment[serverVariable];
@@ -456,7 +456,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
         {
             if (ReferenceEquals(_originalHeaders, null))
             {
-                _originalHeaders = new Dictionary<string, string[]>();
+                _originalHeaders = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
                 foreach (var header in Context.Incoming.Headers)
                     _originalHeaders[header.Key] = Context.Incoming.Headers[header.Key];
             }

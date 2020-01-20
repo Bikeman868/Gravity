@@ -72,7 +72,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             HealthCheckInterval = TimeSpan.FromMinutes(1);
             HealthCheckCodes = new[] { 200 };
 
-            _connectionPools = new Dictionary<string, ConnectionPool>();
+            _connectionPools = new Dictionary<string, ConnectionPool>(StringComparer.OrdinalIgnoreCase);
         }
 
         public void Initialize()
@@ -311,15 +311,15 @@ namespace Gravity.Server.ProcessingNodes.Server
 
             var healthy = false;
 
-            for (var i = 0; i < IpAddresses.Length; i++)
+            foreach (var ipAddress in IpAddresses)
             {
                 try
                 {
-                    log?.Log(LogType.Health, LogLevel.Important, () => $"Checking health of endpoint {IpAddresses[i].Address}");
+                    log?.Log(LogType.Health, LogLevel.Important, () => $"Checking health of endpoint {ipAddress.Address}");
 
                     var requestContext = (IRequestContext)new ServerRequestContext(
                         log,
-                        IpAddresses[i].Address, 
+                        ipAddress.Address, 
                         HealthCheckPort,
                         HealthCheckPort == 443 ? Scheme.Https : Scheme.Http,
                         HealthCheckHost ?? DomainName,
@@ -332,34 +332,34 @@ namespace Gravity.Server.ProcessingNodes.Server
                         {
                             if (sendTask.IsFaulted)
                             {
-                                log?.Log(LogType.Health, LogLevel.Important, () => $"Endpoint {IpAddresses[i].Address} failed health check, send exception {sendTask.Exception.Message}");
-                                IpAddresses[i].SetUnhealthy(sendTask.Exception.Message);
+                                log?.Log(LogType.Health, LogLevel.Important, () => $"Endpoint {ipAddress.Address} failed health check, send exception {sendTask.Exception?.Message}");
+                                ipAddress.SetUnhealthy(sendTask.Exception.Message);
                             }
                             else if (sendTask.IsCanceled)
                             {
-                                log?.Log(LogType.Health, LogLevel.Important, () => $"Endpoint {IpAddresses[i].Address} failed health check, send task timeout");
-                                IpAddresses[i].SetUnhealthy("Send task timeout");
+                                log?.Log(LogType.Health, LogLevel.Important, () => $"Endpoint {ipAddress.Address} failed health check, send task timeout");
+                                ipAddress.SetUnhealthy("Send task timeout");
                             }
                             else
                             {
                                 if (HealthCheckCodes.Contains(requestContext.Outgoing.StatusCode))
                                 {
-                                    log?.Log(LogType.Health, LogLevel.Important, () => $"Endpoint {IpAddresses[i].Address} passed its health check");
+                                    log?.Log(LogType.Health, LogLevel.Important, () => $"Endpoint {ipAddress.Address} passed its health check");
 
                                     healthy = true;
-                                    IpAddresses[i].SetHealthy();
+                                    ipAddress.SetHealthy();
                                 }
                                 else
                                 {
-                                    log?.Log(LogType.Health, LogLevel.Important, () => $"Endpoint {IpAddresses[i].Address} failed health check with status code {requestContext.Outgoing.StatusCode} {requestContext.Outgoing.ReasonPhrase}");
-                                    IpAddresses[i].SetUnhealthy(requestContext.Outgoing.StatusCode + " " + requestContext.Outgoing.ReasonPhrase);
+                                    log?.Log(LogType.Health, LogLevel.Important, () => $"Endpoint {ipAddress.Address} failed health check with status code {requestContext.Outgoing.StatusCode} {requestContext.Outgoing.ReasonPhrase}");
+                                    ipAddress.SetUnhealthy(requestContext.Outgoing.StatusCode + " " + requestContext.Outgoing.ReasonPhrase);
                                 }
                             }
                         });
                 }
                 catch (Exception ex)
                 {
-                    IpAddresses[i].SetUnhealthy(ex.Message);
+                    ipAddress.SetUnhealthy(ex.Message);
                 }
             }
 
@@ -376,6 +376,7 @@ namespace Gravity.Server.ProcessingNodes.Server
         {
             var endpoint = new IPEndPoint(context.Incoming.DestinationAddress, context.Incoming.DestinationPort);
             var key = context.Incoming.Scheme + "://" + context.Incoming.DomainName + ":" + context.Incoming.DestinationPort + " " + context.Incoming.DestinationAddress;
+            key = key.ToLower();
 
             ConnectionPool connectionPool;
             lock (_connectionPools)
@@ -393,7 +394,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
 
             return connectionPool.GetConnection(context.Log, ResponseTimeout, ReadTimeoutMs)
-                .ContinueWith(async connectionTask =>
+                .ContinueWith(connectionTask =>
                 {
                     if (connectionTask.IsFaulted)
                     {
@@ -411,7 +412,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                     try
                     {
-                        await connection.Send(context, ResponseTimeout, ReadTimeoutMs);
+                        connection.Send(context, ResponseTimeout, ReadTimeoutMs).Wait();
                     }
                     catch (Exception ex)
                     {

@@ -25,7 +25,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Operations
 
         public IRewriteMapOperation Initialize(XElement element)
         {
-            _map = new Dictionary<string, string>();
+            _map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             Name = string.Empty;
             _defaultValue = string.Empty;
 

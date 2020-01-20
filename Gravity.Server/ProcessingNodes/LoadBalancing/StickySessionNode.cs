@@ -23,7 +23,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
         {
             SessionDuration = TimeSpan.FromHours(1);
 
-            _sessionNodes = new Dictionary<string, NodeOutput>();
+            _sessionNodes = new Dictionary<string, NodeOutput>(StringComparer.OrdinalIgnoreCase);
             _sessionExpiry = new List<Tuple<string, DateTime>>();
 
             _cleanupThread = new Thread(() =>

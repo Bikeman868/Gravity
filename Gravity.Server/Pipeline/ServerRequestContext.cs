@@ -18,7 +18,7 @@ namespace Gravity.Server.Pipeline
         private readonly IOutgoingMessage _outgoing;
         IOutgoingMessage IRequestContext.Outgoing => _outgoing;
 
-        IDictionary<string, object> IRequestContext.Environment { get; } = new Dictionary<string, object>();
+        IDictionary<string, object> IRequestContext.Environment { get; } = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// This version is used to forward an incoming request to a server
@@ -70,7 +70,7 @@ namespace Gravity.Server.Pipeline
 
             _incoming = new IncomingMessage
             {
-                Headers = new Dictionary<string, string[]>
+                Headers = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
                 {
                     { "Host", new[]{ domainName + ":" + port } }
                 },
@@ -86,14 +86,18 @@ namespace Gravity.Server.Pipeline
                 DestinationPort = port
             };
 
-            _outgoing = new OutgoingMessage();
+            _outgoing = new OutgoingMessage
+            {
+                Headers = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase),
+                Content = new MemoryStream()
+            };
         }
 
         void IDisposable.Dispose()
         {
         }
 
-        internal class Message : IMessage
+        private class Message : IMessage
         {
             public IDictionary<string, string[]> Headers { get; set; }
             public IList<Action<IRequestContext>> OnSendHeaders { get; set; }

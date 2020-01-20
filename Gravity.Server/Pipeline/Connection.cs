@@ -58,7 +58,7 @@ namespace Gravity.Server.ProcessingNodes.Server
         public Task Connect(ILog log)
         {
             log?.Log(LogType.TcpIp, LogLevel.Standard, 
-                () => $"Opening a new Tcp connection to {_scheme}://{_domainName}:{_endpoint.Port} at {_endpoint.Address}");
+                () => $"Opening a new Tcp connection to {_scheme.ToString().ToLower()}://{_domainName}:{_endpoint.Port} at {_endpoint.Address}");
 
             _tcpClient = new TcpClient
             {
@@ -73,7 +73,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                 { 
                     if (connectTask.IsFaulted)
                     {
-                        log?.Log(LogType.Exception, LogLevel.Important, () => $"Failed to connect. {connectTask.Exception.Message}");
+                        log?.Log(LogType.Exception, LogLevel.Important, () => $"Failed to connect. {connectTask.Exception?.Message}");
                         throw new ConnectionException(this, "Exception in TcpClient", connectTask.Exception);
                     }
                     else if (connectTask.IsCanceled)
@@ -256,6 +256,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                         if (line.Length == 0)
                         {
+                            header = false;
                             ParseHeaders();
                             return i+1;
                         }
@@ -318,7 +319,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                         if (context.Outgoing.Headers.ContainsKey(name))
                         {
                             var originalHeaders = context.Outgoing.Headers[name];
-                            var newHeaders = new string[originalHeaders.Length];
+                            var newHeaders = new string[originalHeaders.Length + 1];
                             Array.Copy(originalHeaders, 0, newHeaders, 0, originalHeaders.Length);
                             newHeaders[originalHeaders.Length] = value;
                             context.Outgoing.Headers[name] = newHeaders;

@@ -86,7 +86,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
                     }
                     break;
                 case Scope.Parameter:
-                    var parameters = new Dictionary<string, IList<string>>();
+                    var parameters = new Dictionary<string, IList<string>>(StringComparer.OrdinalIgnoreCase);
                     foreach (var parameterName in _scopeIndex)
                     {
                         IList<string> parameterValue;

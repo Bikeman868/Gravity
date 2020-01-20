@@ -19,31 +19,31 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
         public CustomTypeRegistrar(IFactory factory)
         {
             _factory = factory;
-            _conditions = new Dictionary<string, Type>();
-            _operations = new Dictionary<string, Type>();
-            _actions = new Dictionary<string, Type>();
+            _conditions = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
+            _operations = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
+            _actions = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
         }
 
         public void RegisterOperation(Type type, string name)
         {
-            _operations[name.ToLower()] = type;
+            _operations[name] = type;
         }
 
         public void RegisterAction(Type type, string name)
         {
-            _actions[name.ToLower()] = type;
+            _actions[name] = type;
         }
 
         public void RegisterCondition(Type type, string name)
         {
-            _conditions[name.ToLower()] = type;
+            _conditions[name] = type;
         }
 
         public IOperation ConstructOperation(string name)
         {
             Type type;
 
-            if (_operations.TryGetValue(name.ToLower(), out type))
+            if (_operations.TryGetValue(name, out type))
                 return _factory.Create(type) as IOperation;
             return null;
         }
@@ -52,11 +52,10 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
         {
             Type type;
 
-            if (_actions.TryGetValue(name.ToLower(), out type))
+            if (_actions.TryGetValue(name, out type))
             {
                 var action = _factory.Create(type) as IAction;
-                if (action != null)
-                    action.Initialize(configuration);
+                action?.Initialize(configuration);
                 return action;
             }
             return null;
@@ -66,11 +65,10 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
         {
             Type type;
 
-            if (_conditions.TryGetValue(name.ToLower(), out type))
+            if (_conditions.TryGetValue(name, out type))
             {
                 var condition = _factory.Create(type) as ICondition;
-                if (condition!= null)
-                    condition.Initialize(configuration, valueGetter);
+                condition?.Initialize(configuration, valueGetter);
                 return condition;
             }
             return null;
