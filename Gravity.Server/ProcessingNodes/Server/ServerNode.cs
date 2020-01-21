@@ -310,6 +310,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             var host = HealthCheckHost ?? DomainName;
 
             var healthy = false;
+            var tasks = new List<Task>();
 
             foreach (var ipAddress in IpAddresses)
             {
@@ -327,41 +328,44 @@ namespace Gravity.Server.ProcessingNodes.Server
                         HealthCheckPath,
                         new QueryString());
 
-                    Send(requestContext)
-                        .ContinueWith(sendTask =>
-                        {
-                            if (sendTask.IsFaulted)
+                    tasks.Add(
+                        Send(requestContext)
+                            .ContinueWith(sendTask =>
                             {
-                                log?.Log(LogType.Health, LogLevel.Important, () => $"Endpoint {ipAddress.Address} failed health check, send exception {sendTask.Exception?.Message}");
-                                ipAddress.SetUnhealthy(sendTask.Exception.Message);
-                            }
-                            else if (sendTask.IsCanceled)
-                            {
-                                log?.Log(LogType.Health, LogLevel.Important, () => $"Endpoint {ipAddress.Address} failed health check, send task timeout");
-                                ipAddress.SetUnhealthy("Send task timeout");
-                            }
-                            else
-                            {
-                                if (HealthCheckCodes.Contains(requestContext.Outgoing.StatusCode))
+                                if (sendTask.IsFaulted)
                                 {
-                                    log?.Log(LogType.Health, LogLevel.Important, () => $"Endpoint {ipAddress.Address} passed its health check");
-
-                                    healthy = true;
-                                    ipAddress.SetHealthy();
+                                    log?.Log(LogType.Health, LogLevel.Important, () => $"Endpoint {ipAddress.Address} failed health check, send exception {sendTask.Exception?.Message}");
+                                    ipAddress.SetUnhealthy(sendTask.Exception.Message);
+                                }
+                                else if (sendTask.IsCanceled)
+                                {
+                                    log?.Log(LogType.Health, LogLevel.Important, () => $"Endpoint {ipAddress.Address} failed health check, send task timeout");
+                                    ipAddress.SetUnhealthy("Send task timeout");
                                 }
                                 else
                                 {
-                                    log?.Log(LogType.Health, LogLevel.Important, () => $"Endpoint {ipAddress.Address} failed health check with status code {requestContext.Outgoing.StatusCode} {requestContext.Outgoing.ReasonPhrase}");
-                                    ipAddress.SetUnhealthy(requestContext.Outgoing.StatusCode + " " + requestContext.Outgoing.ReasonPhrase);
+                                    if (HealthCheckCodes.Contains(requestContext.Outgoing.StatusCode))
+                                    {
+                                        log?.Log(LogType.Health, LogLevel.Important, () => $"Endpoint {ipAddress.Address} passed its health check");
+
+                                        healthy = true;
+                                        ipAddress.SetHealthy();
+                                    }
+                                    else
+                                    {
+                                        log?.Log(LogType.Health, LogLevel.Important, () => $"Endpoint {ipAddress.Address} failed health check with status code {requestContext.Outgoing.StatusCode} {requestContext.Outgoing.ReasonPhrase}");
+                                        ipAddress.SetUnhealthy(requestContext.Outgoing.StatusCode + " " + requestContext.Outgoing.ReasonPhrase);
+                                    }
                                 }
-                            }
-                        });
+                            }));
                 }
                 catch (Exception ex)
                 {
                     ipAddress.SetUnhealthy(ex.Message);
                 }
             }
+
+            Task.WaitAll(tasks.ToArray());
 
             if (healthy)
                 Healthy = true;

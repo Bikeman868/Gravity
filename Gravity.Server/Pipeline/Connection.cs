@@ -30,7 +30,8 @@ namespace Gravity.Server.ProcessingNodes.Server
         Busy,
         Old,
         Disconnected,
-        Pending
+        Pending,
+        Fault
     }
 
     internal class Connection: IDisposable
@@ -123,13 +124,12 @@ namespace Gravity.Server.ProcessingNodes.Server
                 switch (State)
                 {
                     case ConnectionState.New:
+                    case ConnectionState.Old:
                         return true;
                     case ConnectionState.Connected:
                         if (DateTime.UtcNow - _lastUsedUtc > _maximumIdleTime)
                             State = ConnectionState.Old;
                         return true;
-                    case ConnectionState.Disconnected:
-                        return false;
                     case ConnectionState.Pending:
                         if (_pendingTask != null && _pendingTask.IsCompleted)
                         {
@@ -205,7 +205,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"Writing {headBytes.Length} bytes of header to the connection stream");
             _stream.Write(headBytes, 0, headBytes.Length);
 
-            return Task.Factory.StartNew(() =>
+            return Task.Run(() =>
             {
                 if (incoming.Content != null && incoming.Content.CanRead)
                 {
@@ -392,33 +392,28 @@ namespace Gravity.Server.ProcessingNodes.Server
 
             int Read(byte[] buffer)
             {
-                var readTask = _stream.ReadAsync(buffer, 0, buffer.Length);
-                var timeoutTask = Task.Delay(_tcpClient.ReceiveTimeout);
-
                 context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => "Waiting for server response");
 
-                Task.WhenAny(readTask, timeoutTask).Wait();
-
-                if (readTask.IsFaulted)
+                int bytesRead;
+                try
                 {
-                    context.Log?.Log(LogType.TcpIp, LogLevel.Important, () => $"Tcp read task faulted '{readTask.Exception}'");
-                    throw new ConnectionException(this, "Tcp read task faulted", readTask.Exception?.Flatten());
+                    bytesRead = _stream.Read(buffer, 0, buffer.Length);
+                }
+                catch (IOException)
+                {
+                    if (header || contentLength.HasValue)
+                    {
+                        context.Log?.Log(LogType.TcpIp, LogLevel.Standard, () => $"Server did not respond within {_tcpClient.ReceiveTimeout}ms");
+
+                        context.Outgoing.StatusCode = 504;
+                        context.Outgoing.ReasonPhrase = "Server did not respond within " + _tcpClient.ReceiveTimeout + "ms";
+                        Dispose();
+                    }
+
+                    return 0;
                 }
 
-                if (readTask.IsCompleted) return readTask.Result;
-
-                context.Log?.Log(LogType.TcpIp, LogLevel.Standard, () => $"Tcp read task did not complete within {_tcpClient.ReceiveTimeout}ms");
-
-                _pendingTask = readTask;
-                State = ConnectionState.Pending;
-
-                if (contentLength.HasValue)
-                {
-                    context.Log?.Log(LogType.TcpIp, LogLevel.Important, () => "Tcp read task timed out on incomplete response");
-                    throw new ConnectionException(this, "Tcp read task timed out on incomplete response");
-                }
-
-                return 0;
+                return bytesRead;
             }
 
             void Write(byte[] buffer, int start, int count)
@@ -458,7 +453,9 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                         if (bytesRead == 0)
                         {
-                            if (State == ConnectionState.Busy) State = ConnectionState.Connected;
+                            if (State == ConnectionState.Busy)
+                                State = ConnectionState.Connected;
+
                             break;
                         }
 
