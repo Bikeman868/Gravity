@@ -24,6 +24,8 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
 
         Task INode.ProcessRequest(IRequestContext context)
         {
+            context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Internal node '{Name}' passing the request back to the Owin pipeline for other middleware to handle");
+
             // returning null here will make the listener middleware chain the
             // next middleware in the OWIN pipeline
             return null;

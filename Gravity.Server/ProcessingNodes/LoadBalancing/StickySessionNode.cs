@@ -15,7 +15,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
         public string SessionCookie { get; set; }
         public TimeSpan SessionDuration { get; set; }
 
-        private readonly Dictionary<string, NodeOutput> _sessionNodes;
+        private readonly IDictionary<string, NodeOutput> _sessionNodes;
         private readonly List<Tuple<string, DateTime>> _sessionExpiry;
         private readonly Thread _cleanupThread;
 
@@ -23,7 +23,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
         {
             SessionDuration = TimeSpan.FromHours(1);
 
-            _sessionNodes = new Dictionary<string, NodeOutput>(StringComparer.OrdinalIgnoreCase);
+            _sessionNodes = new DefaultDictionary<string, NodeOutput>(StringComparer.OrdinalIgnoreCase);
             _sessionExpiry = new List<Tuple<string, DateTime>>();
 
             _cleanupThread = new Thread(() =>
@@ -84,6 +84,8 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
         {
             if (Disabled)
             {
+                context.Log?.Log(LogType.Logic, LogLevel.Important, () => $"Sticky session load balancer '{Name}' is disabled by configuration");
+
                 return Task.Run(() =>
                 {
                     context.Outgoing.StatusCode = 503;
@@ -94,6 +96,8 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
 
             if (string.IsNullOrEmpty(SessionCookie))
             {
+                context.Log?.Log(LogType.Logic, LogLevel.Important, () => $"Sticky session load balancer '{Name}' has no cookie name configured");
+
                 return Task.Run(() =>
                 {
                     context.Outgoing.StatusCode = 503;
@@ -108,6 +112,8 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
 
             if (string.IsNullOrEmpty(sessionId))
             {
+                context.Log?.Log(LogType.Logic, LogLevel.Detailed, () => $"No session cookie in incoming request");
+
                 var output = OutputNodes
                     .Where(o => !o.Disabled && o.Node != null)
                     .OrderBy(o => o.ConnectionCount)
@@ -116,6 +122,8 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
 
                 if (output == null)
                 {
+                    context.Log?.Log(LogType.Logic, LogLevel.Important, () => $"Sticky session load balancer '{Name}' has no enabled outputs");
+
                     return Task.Run(() =>
                     {
                         context.Outgoing.StatusCode = 503;
@@ -129,11 +137,15 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
 
                 context.Outgoing.OnSendHeaders.Add(ctx =>
                 {
+                    context.Log?.Log(LogType.Logic, LogLevel.Detailed, () => $"Sticky session load balancer '{Name}' looking for a Set-Cookie header in the response");
+
                     if (ctx.Outgoing.Headers.TryGetValue("Set-Cookie", out var setCookieHeaders))
                     {
                         var setSession = setCookieHeaders.FirstOrDefault(c => c.StartsWith(SessionCookie + "="));
                         if (setSession != null)
                         {
+                            context.Log?.Log(LogType.Logic, LogLevel.Detailed, () => $"A session cookie was found, this caller will be sticky to output '{output.Name}'");
+
                             var start = SessionCookie.Length + 1;
                             var end = setSession.IndexOf(';', start);
                             if (end < 0) end = setSession.Length;
@@ -141,20 +153,26 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
 
                             output.IncrementSessionCount();
                             lock (_sessionNodes) _sessionNodes[sessionId] = output;
-                            lock (_sessionExpiry)
-                                _sessionExpiry.Add(new Tuple<string, DateTime>(sessionId,
-                                    DateTime.UtcNow + SessionDuration));
+                            lock (_sessionExpiry) _sessionExpiry.Add(new Tuple<string, DateTime>(sessionId, DateTime.UtcNow + SessionDuration));
                         }
                     }
                 });
 
-                return output.Node.ProcessRequest(context)
-                    .ContinueWith(nodeTask =>
-                    {
-                        output.TrafficAnalytics.EndRequest(startTime);
-                        output.DecrementConnectionCount();
+                context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Sticky session load balancer '{Name}' routing request to '{output.Name}'");
 
-                    });
+                var task = output.Node.ProcessRequest(context);
+
+                if (task == null)
+                {
+                    output.TrafficAnalytics.EndRequest(startTime);
+                    return null;
+                }
+
+                return task.ContinueWith(t =>
+                {
+                    output.TrafficAnalytics.EndRequest(startTime);
+                    output.DecrementConnectionCount();
+                });
             }
 
             NodeOutput sessionOutput;
@@ -163,6 +181,8 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
 
             if (!hasSession)
             {
+                context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"No session found for session id {sessionId}");
+
                 sessionOutput = OutputNodes
                     .Where(o => !o.Disabled && o.Node != null)
                     .OrderBy(o => o.ConnectionCount)
@@ -171,6 +191,8 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
 
                 if (sessionOutput == null)
                 {
+                    context.Log?.Log(LogType.Logic, LogLevel.Important, () => $"Sticky session load balancer '{Name}' has no enabled outputs");
+
                     return Task.Run(() =>
                     {
                         context.Outgoing.StatusCode = 503;
@@ -179,6 +201,8 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
                     });
                 }
 
+                context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Sticking this session to least connected output '{sessionOutput.Name}'");
+
                 sessionOutput.IncrementSessionCount();
                 lock (_sessionNodes) _sessionNodes[sessionId] = sessionOutput;
                 lock (_sessionExpiry) _sessionExpiry.Add(new Tuple<string, DateTime>(sessionId, DateTime.UtcNow + SessionDuration));
@@ -186,6 +210,8 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
 
             if (sessionOutput.Disabled)
             {
+                context.Log?.Log(LogType.Logic, LogLevel.Important, () => $"The sticky output '{sessionOutput.Name}' for load balancer '{Name}' for session id {sessionId} is disabled");
+
                 return Task.Run(() =>
                 {
                     context.Outgoing.StatusCode = 503;
@@ -194,15 +220,24 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
                 });
             }
 
+            context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Sticky session load balancer '{Name}' routing request to '{sessionOutput.Name}'");
+
             startTime = sessionOutput.TrafficAnalytics.BeginRequest();
             sessionOutput.IncrementConnectionCount();
 
-            return sessionOutput.Node.ProcessRequest(context)
-                .ContinueWith(t =>
-                {
-                    sessionOutput.TrafficAnalytics.EndRequest(startTime);
-                    sessionOutput.DecrementConnectionCount();
-                });
+            var sessionTask = sessionOutput.Node.ProcessRequest(context);
+
+            if (sessionTask == null)
+            {
+                sessionOutput.TrafficAnalytics.EndRequest(startTime);
+                return null;
+            }
+
+            return sessionTask.ContinueWith(t =>
+            {
+                sessionOutput.TrafficAnalytics.EndRequest(startTime);
+                sessionOutput.DecrementConnectionCount();
+            });
         }
     }
 }

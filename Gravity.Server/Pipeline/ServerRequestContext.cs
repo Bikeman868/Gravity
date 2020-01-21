@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using Gravity.Server.Interfaces;
+using Gravity.Server.Utility;
 using Microsoft.Owin;
 
 namespace Gravity.Server.Pipeline
@@ -27,7 +28,8 @@ namespace Gravity.Server.Pipeline
             IRequestContext requestContext,
             IPAddress serverIpAddress,
             ushort serverPort,
-            Scheme scheme)
+            Scheme scheme,
+            string domainName)
         {
             _log = requestContext.Log;
 
@@ -40,7 +42,7 @@ namespace Gravity.Server.Pipeline
 
                 Method = requestContext.Incoming.Method,
                 Scheme = scheme,
-                DomainName = requestContext.Incoming.DomainName,
+                DomainName = domainName,
                 Path = requestContext.Incoming.Path,
                 Query = requestContext.Incoming.Query,
                 SourceAddress = requestContext.Incoming.SourceAddress,
@@ -70,7 +72,7 @@ namespace Gravity.Server.Pipeline
 
             _incoming = new IncomingMessage
             {
-                Headers = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
+                Headers = new DefaultDictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
                 {
                     { "Host", new[]{ domainName + ":" + port } }
                 },
@@ -88,7 +90,7 @@ namespace Gravity.Server.Pipeline
 
             _outgoing = new OutgoingMessage
             {
-                Headers = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase),
+                Headers = new DefaultDictionary<string, string[]>(StringComparer.OrdinalIgnoreCase),
                 Content = new MemoryStream()
             };
         }

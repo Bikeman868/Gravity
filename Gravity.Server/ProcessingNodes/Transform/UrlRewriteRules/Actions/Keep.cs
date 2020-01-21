@@ -5,6 +5,7 @@ using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
 using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Actions;
 using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Conditions;
 using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Rules;
+using Gravity.Server.Utility;
 
 namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
 {
@@ -86,7 +87,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Actions
                     }
                     break;
                 case Scope.Parameter:
-                    var parameters = new Dictionary<string, IList<string>>(StringComparer.OrdinalIgnoreCase);
+                    var parameters = new DefaultDictionary<string, IList<string>>(StringComparer.OrdinalIgnoreCase);
                     foreach (var parameterName in _scopeIndex)
                     {
                         IList<string> parameterValue;

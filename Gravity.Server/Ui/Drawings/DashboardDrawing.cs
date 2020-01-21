@@ -10,6 +10,7 @@ using Gravity.Server.ProcessingNodes.Server;
 using Gravity.Server.ProcessingNodes.SpecialPurpose;
 using Gravity.Server.ProcessingNodes.Transform;
 using Gravity.Server.Ui.Nodes;
+using Gravity.Server.Utility;
 
 namespace Gravity.Server.Ui.Drawings
 {
@@ -27,7 +28,7 @@ namespace Gravity.Server.Ui.Drawings
             BottomMargin = 20;
 
             var listenerDrawings = new List<ListenerDrawing>();
-            var nodeDrawings = new Dictionary<string, NodeDrawing>(StringComparer.OrdinalIgnoreCase);
+            var nodeDrawings = new DefaultDictionary<string, NodeDrawing>(StringComparer.OrdinalIgnoreCase);
 
             var endpoints = requestListener.Endpoints;
             if (endpoints != null)

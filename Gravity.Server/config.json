@@ -42,7 +42,7 @@
               ]
             },
             {
-              "to": "C"
+              "to": "O"
             }
           ]
         }
@@ -71,7 +71,7 @@
           "reuseConnections": true,
           "healthCheckPort": 443,
           "healthCheckMethod": "HEAD",
-          "healthCheckLog": true,
+          "healthCheckLog": false,
           "healthCheckInterval": "00:00:30"
         },
         {

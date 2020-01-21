@@ -35,6 +35,8 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
 
         Task INode.ProcessRequest(IRequestContext context)
         {
+            context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Response node '{Name}' returning static {StatusCode} response");
+
             context.Outgoing.StatusCode = StatusCode;
             context.Outgoing.ReasonPhrase = ReasonPhrase;
 

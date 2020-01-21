@@ -6,6 +6,7 @@ using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
 using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Actions;
 using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Conditions;
 using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Operations;
+using Gravity.Server.Utility;
 
 namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
 {
@@ -19,9 +20,9 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
         public CustomTypeRegistrar(IFactory factory)
         {
             _factory = factory;
-            _conditions = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
-            _operations = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
-            _actions = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
+            _conditions = new DefaultDictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
+            _operations = new DefaultDictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
+            _actions = new DefaultDictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
         }
 
         public void RegisterOperation(Type type, string name)

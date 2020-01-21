@@ -15,6 +15,8 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
         {
             if (Disabled)
             {
+                context.Log?.Log(LogType.Logic, LogLevel.Important, () => $"Round-robbin load balancer '{Name}' is disabled by configuration");
+
                 return Task.Run(() =>
                 {
                     context.Outgoing.StatusCode = 503;
@@ -27,6 +29,8 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
 
             if (outputs == null || outputs.Length == 0)
             {
+                context.Log?.Log(LogType.Logic, LogLevel.Important, () => $"Round-robbin load balancer '{Name}' has no outputs defined");
+
                 return Task.Run(() =>
                 {
                     context.Outgoing.StatusCode = 503;
@@ -39,6 +43,8 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
 
             if (enabledOutputs.Count == 0)
             {
+                context.Log?.Log(LogType.Logic, LogLevel.Important, () => $"Round-robbin load balancer '{Name}' has no enabled outputs");
+
                 return Task.Run(() =>
                 {
                     context.Outgoing.StatusCode = 503;
@@ -50,12 +56,21 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
             var index = Interlocked.Increment(ref _next) % enabledOutputs.Count;
             var output = enabledOutputs[index];
 
+            context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Round-robbin load balancer '{Name}' routing request to '{output.Name}'");
+
             var startTime = output.TrafficAnalytics.BeginRequest();
-            return output.Node.ProcessRequest(context)
-                .ContinueWith(nodeTask =>
-                {
-                    output.TrafficAnalytics.EndRequest(startTime);
-                });
+            var task = output.Node.ProcessRequest(context);
+
+            if (task == null)
+            {
+                output.TrafficAnalytics.EndRequest(startTime);
+                return null;
+            }
+
+            return task.ContinueWith(t =>
+            {
+                output.TrafficAnalytics.EndRequest(startTime);
+            });
         }
     }
 }

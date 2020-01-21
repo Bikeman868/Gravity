@@ -4,6 +4,7 @@ using System.IO;
 using System.Xml.Linq;
 using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces;
 using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Operations;
+using Gravity.Server.Utility;
 
 namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Operations
 {
@@ -25,7 +26,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Operations
 
         public IRewriteMapOperation Initialize(XElement element)
         {
-            _map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            _map = new DefaultDictionary<string, string>(StringComparer.OrdinalIgnoreCase, StringComparer.OrdinalIgnoreCase, false);
             Name = string.Empty;
             _defaultValue = string.Empty;
 

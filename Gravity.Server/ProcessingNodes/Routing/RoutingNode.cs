@@ -155,24 +155,32 @@ namespace Gravity.Server.ProcessingNodes.Routing
                     var node = output.Node;
                     if (node != null)
                     {
+                        context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Router '{Name}' sending the request to node '{node.Name}'");
+
                         var startTime = output.TrafficAnalytics.BeginRequest();
                         var task = node.ProcessRequest(context);
+
                         if (task == null)
+                        {
+                            output.TrafficAnalytics.EndRequest(startTime);
                             return null;
+                        }
+
                         return task.ContinueWith(t =>
-                            {
-                                output.TrafficAnalytics.EndRequest(startTime);
-                            });
+                        {
+                            output.TrafficAnalytics.EndRequest(startTime);
+                        });
                     }
                 }
             }
 
+            context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Router '{Name}' has no rules that match the request, returning 404 response");
+
             return Task.Run(() =>
             {
                 context.Outgoing.StatusCode = 404;
-                context.Outgoing.ReasonPhrase = "No routes in " + Name + " matches the request";
+                context.Outgoing.ReasonPhrase = "No routes in '" + Name + "' match the request";
                 context.Outgoing.SendHeaders(context);
-
             });
         }
 

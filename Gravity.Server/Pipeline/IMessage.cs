@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Gravity.Server.Utility;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -46,7 +47,7 @@ namespace Gravity.Server.Pipeline
 
         public static IDictionary<string,string> GetCookies(this IMessage message)
         {
-            var cookies = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var cookies = new DefaultDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             var cookieHeaders = message.Headers["Cookie"];
             if (cookieHeaders == null) return cookies;

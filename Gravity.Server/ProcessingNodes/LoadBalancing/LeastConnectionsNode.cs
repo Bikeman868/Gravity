@@ -12,6 +12,8 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
         {
             if (Disabled)
             {
+                context.Log?.Log(LogType.Logic, LogLevel.Important, () => $"Least connected load balancer '{Name}' is disabled");
+
                 return Task.Run(() => 
                 {
                     context.Outgoing.StatusCode = 503;
@@ -27,6 +29,8 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
 
             if (output == null)
             {
+                context.Log?.Log(LogType.Logic, LogLevel.Important, () => $"Least connected load balancer '{Name}' has no enabled outputs");
+
                 return Task.Run(() =>
                 {
                     context.Outgoing.StatusCode = 503;
@@ -35,11 +39,20 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
                 });
             }
 
+            context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Least connected load balancer '{Name}' routing request to '{output.Name}'");
+
             output.IncrementConnectionCount();
             var startTime = output.TrafficAnalytics.BeginRequest();
 
-            return output.Node.ProcessRequest(context)
-                .ContinueWith(t =>
+            var task = output.Node.ProcessRequest(context);
+
+            if (task == null)
+            {
+                output.TrafficAnalytics.EndRequest(startTime);
+                return null;
+            }
+
+            return task.ContinueWith(t =>
                 {
                     output.TrafficAnalytics.EndRequest(startTime);
                     output.DecrementConnectionCount();

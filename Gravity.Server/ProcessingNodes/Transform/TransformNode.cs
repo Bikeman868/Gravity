@@ -132,11 +132,19 @@ namespace Gravity.Server.ProcessingNodes.Transform
             if (!Disabled)
             {
                 if (_requestTransform != null)
+                {
+                    context.Log?.Log(LogType.Logic, LogLevel.Detailed, () => $"Transform node '{Name}' inserting request transform into the incoming pipe");
                     _requestTransform.Transform(context);
+                }
 
                 if (_responseTransform != null)
+                {
+                    context.Log?.Log(LogType.Logic, LogLevel.Detailed, () => $"Transform node '{Name}' inserting response transform into the outgoing pipe");
                     _responseTransform.Transform(context);
+                }
             }
+
+            context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Transform node '{Name}' forwarding to '{_nextNode.Name}'");
 
             return _nextNode.ProcessRequest(context);
         }

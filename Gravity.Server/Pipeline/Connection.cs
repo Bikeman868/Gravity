@@ -162,25 +162,32 @@ namespace Gravity.Server.ProcessingNodes.Server
 
             head.Append(incoming.Method);
             head.Append(' ');
-            head.Append(incoming.Scheme == Scheme.Https ? "https" : " http");
-            head.Append("://");
-            head.Append(incoming.DomainName);
-            head.Append(':');
-            head.Append(incoming.DestinationPort);
+            //head.Append(incoming.Scheme == Scheme.Https ? "https" : " http");
+            //head.Append("://");
+            //head.Append(incoming.DomainName);
+            //head.Append(':');
+            //head.Append(incoming.DestinationPort);
             head.Append(incoming.Path);
             head.Append(incoming.Query);
             head.Append(' ');
             head.Append("HTTP/1.1");
+            head.Append("\r\n");
+            head.Append("Host: ");
+            head.Append(incoming.DomainName);
+            head.Append(":");
+            head.Append(incoming.DestinationPort);
             head.Append("\r\n");
 
             if (incoming.Headers != null)
             {
                 foreach (var header in incoming.Headers)
                 {
-                    if (string.Equals("Connection", header.Key, StringComparison.OrdinalIgnoreCase))
+                    if (string.IsNullOrEmpty(header.Key))
                         continue;
 
-                    if (string.Equals("Keep-Alive", header.Key, StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals("Connection", header.Key, StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals("Keep-Alive", header.Key, StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals("Host", header.Key, StringComparison.OrdinalIgnoreCase))
                         continue;
 
                     if (header.Value == null || header.Value.Length == 0)
@@ -195,6 +202,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                     }
                 }
             }
+
             head.Append("Connection: Keep-Alive\r\n");
             head.Append("Keep-Alive: timeout=");
             head.Append((int)(_maximumIdleTime.TotalSeconds + 5));
@@ -272,8 +280,11 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         private Task ReceiveHttp(IRequestContext context, int readTimeoutMs)
         {
-            var expectBody = string.Equals(context.Incoming.Method, "HEAD", StringComparison.OrdinalIgnoreCase);
-            int? contentLength = expectBody ? null : (int?)0;
+            var hasNoContent = 
+                string.Equals(context.Incoming.Method, "HEAD", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(context.Incoming.Method, "OPTIONS", StringComparison.OrdinalIgnoreCase);
+
+            int? contentLength = hasNoContent ? (int?)0 : null;
             var contentBytesReceived = 0;
 
             var line = new StringBuilder();
@@ -438,18 +449,18 @@ namespace Gravity.Server.ProcessingNodes.Server
                 }
             }
 
-            context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => "Starting http receive. Expecting " + (expectBody ? "possible body" : "no body"));
+            context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => "Starting http receive. Expecting " + (hasNoContent ? "no content" : "possible content"));
 
             return Task.Run(() =>
             {
                 var buffer = _bufferPool.Get();
                 try
                 {
-                    while (!contentLength.HasValue || contentBytesReceived < contentLength.Value)
+                    while (header || !contentLength.HasValue || contentBytesReceived < contentLength.Value)
                     {
                         var bytesRead = Read(buffer);
 
-                        context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"Read {bytesRead} bytes from connection stream");
+                        context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"Read {bytesRead} bytes from connection stream");
 
                         if (bytesRead == 0)
                         {

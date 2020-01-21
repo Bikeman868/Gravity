@@ -1,10 +1,10 @@
-﻿using System.Threading;
-using Gravity.Server.Interfaces;
+﻿using System;
+using System.Threading;
 using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.Utility
 {
-    internal class NodeOutput
+    internal class NodeOutput: IComparable
     {
         public string Name { get; set; }
         public INode Node { get; set; }
@@ -41,6 +41,21 @@ namespace Gravity.Server.Utility
         public void DecrementSessionCount()
         {
             Interlocked.Decrement(ref _sessionCount);
+        }
+
+        public new bool Equals(object x, object y)
+        {
+            var a = x as NodeOutput;
+            var b = y as NodeOutput;
+            if (ReferenceEquals(a, null)) return ReferenceEquals(b, null);
+            return string.Equals(a.Name, b?.Name, System.StringComparison.OrdinalIgnoreCase);
+        }
+
+        public int CompareTo(object obj)
+        {
+            var other = obj as NodeOutput;
+            if (ReferenceEquals(other, null)) return 1;
+            return Name.CompareTo(other.Name);
         }
     }
 }

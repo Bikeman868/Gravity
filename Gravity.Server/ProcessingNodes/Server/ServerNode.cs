@@ -51,7 +51,7 @@ namespace Gravity.Server.ProcessingNodes.Server
         public bool Offline { get; private set; }
 
         public ServerIpAddress[] IpAddresses;
-        private readonly Dictionary<string, ConnectionPool> _connectionPools;
+        private readonly IDictionary<string, ConnectionPool> _connectionPools;
         private readonly IBufferPool _bufferPool;
         private Thread _backgroundThread;
         private int _lastIpAddressIndex;
@@ -176,6 +176,8 @@ namespace Gravity.Server.ProcessingNodes.Server
 
             if (allIpAddresses == null || allIpAddresses.Length == 0)
             {
+                context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Server '{Name}' has no known IP addresses. Check DNS for '{DomainName}'. Returning 503");
+
                 return Task.Run(() =>
                 {
                     context.Outgoing.StatusCode = 503;
@@ -188,6 +190,8 @@ namespace Gravity.Server.ProcessingNodes.Server
 
             if (ipAddresses.Count == 0 || Healthy != true)
             {
+                context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Server '{Name}' has no health instances, returning 503");
+
                 return Task.Run(() =>
                 {
                     context.Outgoing.StatusCode = 503;
@@ -212,7 +216,9 @@ namespace Gravity.Server.ProcessingNodes.Server
                 port = 443;
             }
 
-            var serverRequestContext = (IRequestContext)new ServerRequestContext(context, ipAddress.Address, port, scheme);
+            context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Server '{Name}' sending request for {DomainName} to {ipAddress.Address} on port {port} using the {scheme} protocol");
+
+            var serverRequestContext = (IRequestContext)new ServerRequestContext(context, ipAddress.Address, port, scheme, DomainName);
 
             ipAddress.IncrementConnectionCount();
             var startTicks = ipAddress.TrafficAnalytics.BeginRequest();

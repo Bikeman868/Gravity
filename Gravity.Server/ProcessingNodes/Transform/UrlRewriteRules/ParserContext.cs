@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces.Operations;
+using Gravity.Server.Utility;
 
 namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
 {
@@ -10,7 +11,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
 
             public ParserContext()
             {
-                RewriteMaps = new Dictionary<string, IOperation>(StringComparer.OrdinalIgnoreCase);
+                RewriteMaps = new DefaultDictionary<string, IOperation>(StringComparer.OrdinalIgnoreCase);
             }
         }
 }
