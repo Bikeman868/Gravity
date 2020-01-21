@@ -16,12 +16,19 @@ namespace Gravity.Server.Ui.Nodes
         public RouterDrawing(
             DrawingElement drawing, 
             RoutingNode router,
-            double[] trafficIndicatorThresholds)
-            : base(drawing, "Router", "router", router.Offline, 2, router.Name)
+            DashboardConfiguration.NodeConfiguration nodeConfiguration,
+            TrafficIndicatorConfiguration trafficIndicatorConfiguration)
+            : base(
+                drawing,
+                nodeConfiguration?.Title ?? "Router", 
+                "router", 
+                router.Offline, 
+                2, 
+                router.Name)
         {
             _drawing = drawing;
             _router = router;
-            _trafficIndicatorThresholds = trafficIndicatorThresholds;
+            _trafficIndicatorThresholds = trafficIndicatorConfiguration.Thresholds;
 
             var details = new List<string>();
 

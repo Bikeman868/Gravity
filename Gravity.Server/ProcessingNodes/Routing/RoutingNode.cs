@@ -155,7 +155,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
                     var node = output.Node;
                     if (node != null)
                     {
-                        context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Router '{Name}' sending the request to node '{node.Name}'");
+                        context.Log?.Log(LogType.Step, LogLevel.Standard, () => $"Router '{Name}' sending the request to node '{node.Name}'");
 
                         var startTime = output.TrafficAnalytics.BeginRequest();
                         var task = node.ProcessRequest(context);

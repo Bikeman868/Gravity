@@ -158,7 +158,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
                     }
                 });
 
-                context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Sticky session load balancer '{Name}' routing request to '{output.Name}'");
+                context.Log?.Log(LogType.Step, LogLevel.Standard, () => $"Sticky session load balancer '{Name}' routing request to '{output.Name}'");
 
                 var task = output.Node.ProcessRequest(context);
 
@@ -220,7 +220,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
                 });
             }
 
-            context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Sticky session load balancer '{Name}' routing request to '{sessionOutput.Name}'");
+            context.Log?.Log(LogType.Step, LogLevel.Standard, () => $"Sticky session load balancer '{Name}' routing request to '{sessionOutput.Name}'");
 
             startTime = sessionOutput.TrafficAnalytics.BeginRequest();
             sessionOutput.IncrementConnectionCount();

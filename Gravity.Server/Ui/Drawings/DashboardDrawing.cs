@@ -41,7 +41,8 @@ namespace Gravity.Server.Ui.Drawings
                     var listenerDrawing = new ListenerDrawing(
                         this, 
                         endpoint, 
-                        dashboardConfiguration.TrafficIndicator.Thresholds)
+                        null,
+                        dashboardConfiguration.TrafficIndicator)
                     {
                         Left = x,
                         Top = y,
@@ -74,19 +75,19 @@ namespace Gravity.Server.Ui.Drawings
                     var leastConnections = node as LeastConnectionsNode;
                     var cors = node as CorsNode;
 
-                    if (internalRequest != null) nodeDrawing = new InternalRequestDrawing(this, internalRequest);
-                    else if (response != null) nodeDrawing = new ResponseDrawing(this, response);
-                    else if (roundRobin != null) nodeDrawing = new RoundRobinDrawing(this, roundRobin, dashboardConfiguration.TrafficIndicator.Thresholds);
-                    else if (router != null) nodeDrawing = new RouterDrawing(this, router, dashboardConfiguration.TrafficIndicator.Thresholds);
-                    else if (server != null) nodeDrawing = new ServerDrawing(this, server);
-                    else if (stickySession != null) nodeDrawing = new StickySessionDrawing(this, stickySession, dashboardConfiguration.TrafficIndicator.Thresholds);
-                    else if (transform != null) nodeDrawing = new TransformDrawing(this, transform);
-                    else if (leastConnections != null) nodeDrawing = new LeastConnectionsDrawing(this, leastConnections, dashboardConfiguration.TrafficIndicator.Thresholds);
-                    else if (cors != null) nodeDrawing = new CorsDrawing(this, cors);
-                    else nodeDrawing = new NodeDrawing(this, node.Name, "", true);
-
                     var nodeName = node.Name;
                     var nodeDrawingConfig = dashboardConfiguration.Nodes.FirstOrDefault(n => n.NodeName == nodeName);
+
+                    if (internalRequest != null) nodeDrawing = new InternalRequestDrawing(this, internalRequest, nodeDrawingConfig);
+                    else if (response != null) nodeDrawing = new ResponseDrawing(this, response, nodeDrawingConfig);
+                    else if (roundRobin != null) nodeDrawing = new RoundRobinDrawing(this, roundRobin, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
+                    else if (router != null) nodeDrawing = new RouterDrawing(this, router, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
+                    else if (server != null) nodeDrawing = new ServerDrawing(this, server, nodeDrawingConfig);
+                    else if (stickySession != null) nodeDrawing = new StickySessionDrawing(this, stickySession, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
+                    else if (transform != null) nodeDrawing = new TransformDrawing(this, transform, nodeDrawingConfig);
+                    else if (leastConnections != null) nodeDrawing = new LeastConnectionsDrawing(this, leastConnections, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
+                    else if (cors != null) nodeDrawing = new CorsDrawing(this, cors, nodeDrawingConfig);
+                    else nodeDrawing = new NodeDrawing(this, node.Name, "", true);
 
                     if (nodeDrawingConfig != null)
                     {

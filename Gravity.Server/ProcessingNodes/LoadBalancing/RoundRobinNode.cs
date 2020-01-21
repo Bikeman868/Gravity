@@ -56,7 +56,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
             var index = Interlocked.Increment(ref _next) % enabledOutputs.Count;
             var output = enabledOutputs[index];
 
-            context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Round-robbin load balancer '{Name}' routing request to '{output.Name}'");
+            context.Log?.Log(LogType.Step, LogLevel.Standard, () => $"Round-robbin load balancer '{Name}' routing request to '{output.Name}'");
 
             var startTime = output.TrafficAnalytics.BeginRequest();
             var task = output.Node.ProcessRequest(context);

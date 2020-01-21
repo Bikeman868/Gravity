@@ -1,5 +1,6 @@
 ﻿using Gravity.Server.Ui.Shapes;
 using System.Collections.Generic;
+using Gravity.Server.Configuration;
 using Gravity.Server.ProcessingNodes.LoadBalancing;
 using Gravity.Server.Utility;
 
@@ -15,7 +16,7 @@ namespace Gravity.Server.Ui.Nodes
         public LoadBalancerDrawing(
             DrawingElement drawing, 
             LoadBalancerNode loadBalancer,
-            double[] trafficIndicatorThresholds,
+            TrafficIndicatorConfiguration trafficIndicatorConfiguration,
             string title,
             string cssClass,
             List<string> details,
@@ -26,7 +27,7 @@ namespace Gravity.Server.Ui.Nodes
         {
             _drawing = drawing;
             _loadBalancer = loadBalancer;
-            _trafficIndicatorThresholds = trafficIndicatorThresholds;
+            _trafficIndicatorThresholds = trafficIndicatorConfiguration.Thresholds;
 
             if (details != null)
                 AddDetails(details, null, loadBalancer.Offline ? "disabled" : string.Empty);

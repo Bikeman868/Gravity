@@ -29,8 +29,8 @@ namespace Gravity.Server.Pipeline
         void UpdateStatus();
 
         /// <summary>
-        /// This method is called after all nodes are consturcted
-        /// and added to the node graph. This is an oportunity
+        /// This method is called after all nodes are constructed
+        /// and added to the node graph. This is an opportunity
         /// for nodes to get references to other nodes in the graph
         /// </summary>
         void Bind(INodeGraph nodeGraph);

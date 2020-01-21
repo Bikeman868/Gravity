@@ -1,4 +1,5 @@
-﻿using Gravity.Server.ProcessingNodes.SpecialPurpose;
+﻿using Gravity.Server.Configuration;
+using Gravity.Server.ProcessingNodes.SpecialPurpose;
 using Gravity.Server.Ui.Shapes;
 
 namespace Gravity.Server.Ui.Nodes
@@ -7,8 +8,15 @@ namespace Gravity.Server.Ui.Nodes
     {
         public InternalRequestDrawing(
             DrawingElement drawing, 
-            InternalNode internalRequest) 
-            : base(drawing, "Internal", "public", internalRequest.Offline, 2, internalRequest.Name)
+            InternalNode internalRequest,
+            DashboardConfiguration.NodeConfiguration nodeConfiguration) 
+            : base(
+                drawing, 
+                nodeConfiguration?.Title ?? "Internal", 
+                "public", 
+                internalRequest.Offline, 
+                2, 
+                internalRequest.Name)
         {
         }
     }

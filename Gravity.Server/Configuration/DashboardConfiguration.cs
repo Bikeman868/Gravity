@@ -31,6 +31,7 @@ namespace Gravity.Server.Configuration
                         new NodeConfiguration
                         {
                             NodeName = new string(new []{c}),
+                            Title = null,
                             X = x,
                             Y = x,
                             Width = width,
@@ -87,6 +88,9 @@ namespace Gravity.Server.Configuration
         {
             [JsonProperty("name")]
             public string NodeName { get; set; }
+
+            [JsonProperty("title")]
+            public string Title { get; set; }
 
             [JsonProperty("x")]
             public int X { get; set; }

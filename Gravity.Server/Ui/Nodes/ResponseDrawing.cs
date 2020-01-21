@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Gravity.Server.Configuration;
 using Gravity.Server.ProcessingNodes.SpecialPurpose;
 using Gravity.Server.Ui.Shapes;
 
@@ -8,8 +9,15 @@ namespace Gravity.Server.Ui.Nodes
     {
         public ResponseDrawing(
             DrawingElement drawing, 
-            ResponseNode response) 
-            : base(drawing, "Response", "responder", response.Offline, 2, response.Name)
+            ResponseNode response,
+            DashboardConfiguration.NodeConfiguration nodeConfiguration) 
+            : base(
+                drawing,
+                nodeConfiguration?.Title ?? "Response", 
+                "responder", 
+                response.Offline, 
+                2, 
+                response.Name)
         {
             var details = new List<string>();
 

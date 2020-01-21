@@ -117,18 +117,24 @@ namespace Gravity.Server.Pipeline
                     if (output.Disabled) continue;
 
                     var requestContext = (IRequestContext)new OwinRequestContext(owinContext, _logFactory);
-                    requestContext.Log?.Log(LogType.Request, LogLevel.Standard, () => $"Starting new request for {owinContext.Request.Uri}");
+                    requestContext.Log?.Log(LogType.Request, LogLevel.Standard, () => 
+                        $"Starting new request to {requestContext.Incoming.Method} {requestContext.Incoming.Scheme.ToString().ToLower()}://{requestContext.Incoming.DomainName}{requestContext.Incoming.Path}{requestContext.Incoming.Query}");
 
                     var startTime = output.TrafficAnalytics.BeginRequest();
 
                     var task = output.Node.ProcessRequest(requestContext);
 
-                    if (task == null) return next();
+                    if (task == null)
+                    {
+                        requestContext.Log?.Log(LogType.Request, LogLevel.Standard, () => $"Completed request with transfer to Owin pipeline");
+                        requestContext.Dispose();
+                        return next();
+                    }
 
                     return task.ContinueWith(t =>
                     {
                         output.TrafficAnalytics.EndRequest(startTime);
-                        requestContext.Log?.Log(LogType.Request, LogLevel.Standard, () => $"Completed request for {owinContext.Request.Uri}");
+                        requestContext.Log?.Log(LogType.Request, LogLevel.Standard, () => $"Completed request with {requestContext.Outgoing.StatusCode} response");
                         requestContext.Dispose();
                     });
                 }

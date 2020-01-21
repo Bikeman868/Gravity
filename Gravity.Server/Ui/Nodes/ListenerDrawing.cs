@@ -13,12 +13,17 @@ namespace Gravity.Server.Ui.Nodes
         public ListenerDrawing(
             DrawingElement drawing, 
             ListenerEndpointConfiguration listener,
-            double[] trafficIndicatorThresholds)
-            : base(drawing, "Listener " + listener.IpAddress + ":" + listener.PortNumber, "listener", listener.Disabled)
+            DashboardConfiguration.NodeConfiguration nodeConfiguration,
+            TrafficIndicatorConfiguration trafficIndicatorConfiguration)
+            : base(
+                drawing,
+                nodeConfiguration?.Title ?? "Listener ", 
+                "listener", 
+                listener.Disabled)
         {
             _drawing = drawing;
             _listener = listener;
-            _trafficIndicatorThresholds = trafficIndicatorThresholds;
+            _trafficIndicatorThresholds = trafficIndicatorConfiguration.Thresholds;
 
             var details = new List<string>();
 

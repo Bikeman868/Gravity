@@ -1,4 +1,5 @@
-﻿using Gravity.Server.ProcessingNodes.LoadBalancing;
+﻿using Gravity.Server.Configuration;
+using Gravity.Server.ProcessingNodes.LoadBalancing;
 using Gravity.Server.Ui.Shapes;
 
 namespace Gravity.Server.Ui.Nodes
@@ -8,12 +9,13 @@ namespace Gravity.Server.Ui.Nodes
         public LeastConnectionsDrawing(
             DrawingElement drawing, 
             LeastConnectionsNode leastConnections,
-            double[] trafficIndicatorThresholds)
+            DashboardConfiguration.NodeConfiguration nodeConfiguration,
+            TrafficIndicatorConfiguration trafficIndicatorConfiguration)
             : base(
             drawing, 
             leastConnections,
-            trafficIndicatorThresholds, 
-            "Least connections", 
+            trafficIndicatorConfiguration,
+            nodeConfiguration?.Title ?? "Least connections", 
             "least_connections", 
             null,
             true,

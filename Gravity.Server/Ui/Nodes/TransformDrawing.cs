@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Gravity.Server.Configuration;
 using Gravity.Server.ProcessingNodes.Transform;
 using Gravity.Server.Ui.Shapes;
 
@@ -13,8 +14,15 @@ namespace Gravity.Server.Ui.Nodes
 
         public TransformDrawing(
             DrawingElement drawing, 
-            TransformNode transform) 
-            : base(drawing, "Transform", "transform", transform.Offline, 2, transform.Name)
+            TransformNode transform,
+            DashboardConfiguration.NodeConfiguration nodeConfiguration) 
+            : base(
+                drawing,
+                nodeConfiguration?.Title ?? "Transform",
+                "transform", 
+                transform.Offline, 
+                2, 
+                transform.Name)
         {
             _drawing = drawing;
             _transform = transform;

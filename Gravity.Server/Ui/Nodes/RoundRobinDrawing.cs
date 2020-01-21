@@ -1,4 +1,5 @@
-﻿using Gravity.Server.Ui.Shapes;
+﻿using Gravity.Server.Configuration;
+using Gravity.Server.Ui.Shapes;
 using Gravity.Server.ProcessingNodes.LoadBalancing;
 
 namespace Gravity.Server.Ui.Nodes
@@ -8,12 +9,13 @@ namespace Gravity.Server.Ui.Nodes
         public RoundRobinDrawing(
             DrawingElement drawing, 
             RoundRobinNode roundRobin,
-            double[] trafficIndicatorThresholds)
+            DashboardConfiguration.NodeConfiguration nodeConfiguration,
+            TrafficIndicatorConfiguration trafficIndicatorConfiguration)
             : base(
             drawing, 
-            roundRobin, 
-            trafficIndicatorThresholds, 
-            "Round robin", 
+            roundRobin,
+            trafficIndicatorConfiguration,
+            nodeConfiguration?.Title ?? "Round robin", 
             "round_robin",
             null,
             false,

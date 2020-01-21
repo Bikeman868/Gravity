@@ -144,7 +144,7 @@ namespace Gravity.Server.ProcessingNodes.Transform
                 }
             }
 
-            context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Transform node '{Name}' forwarding to '{_nextNode.Name}'");
+            context.Log?.Log(LogType.Step, LogLevel.Standard, () => $"Transform node '{Name}' forwarding to '{_nextNode.Name}'");
 
             return _nextNode.ProcessRequest(context);
         }

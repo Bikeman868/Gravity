@@ -33,14 +33,10 @@ namespace Gravity.Server.Utility
                     }
                     else
                     {
-                        var levelMask = c.LogTypes.Length == 0 
+                        var logTypeMask = c.LogTypes.Length == 0 
                             ? -1
                             : c.LogTypes.Aggregate(0, (m, t) => m |= (int)t);
-                        _filter = (t, l) =>
-                        {
-                            if (l > c.MaxLogLevel) return false;
-                            return ((int)t & levelMask) != 0;
-                        };
+                        _filter = (t, l) => l <= c.MaxLogLevel && ((int)t & logTypeMask) != 0;
                     }
 
                     if (c.Method == LogMethod.File)
@@ -94,12 +90,14 @@ namespace Gravity.Server.Utility
             private readonly Func<LogType, LogLevel, bool> _filter;
             private readonly LogFileWriter _writer;
             private readonly List<string> _logEntries = new List<string>();
+            private readonly DateTime _start;
 
             public FileLog(long key, Func<LogType, LogLevel, bool> filter, LogFileWriter writer)
             {
                 _key = key;
                 _filter = filter;
                 _writer = writer;
+                _start = DateTime.UtcNow;
             }
 
             public void Dispose()
@@ -115,7 +113,10 @@ namespace Gravity.Server.Utility
             public void Log(LogType type, LogLevel level, Func<string> messageFunc)
             {
                 if (_filter(type, level))
-                    _logEntries.Add(messageFunc());
+                {
+                    var elapsed = (int)(DateTime.UtcNow - _start).TotalMilliseconds;
+                    _logEntries.Add($"{elapsed,5}ms {type,-10} {messageFunc()}");
+                }
             }
         }
 
@@ -183,14 +184,24 @@ namespace Gravity.Server.Utility
 
             public void WriteLog(long key, List<string> logEntries)
             {
-                lock (_lock)
+                if (logEntries == null || logEntries.Count == 0)
+                    return;
+
+                if (logEntries.Count == 1)
                 {
-                    Trace.WriteLine($"LOG {key,6}");
+                    Trace.WriteLine($"LOG {key,6} {logEntries[0]}");
+                }
+                else
+                {
+                    lock (_lock)
+                    {
+                        Trace.WriteLine($"LOG {key,6}");
 
-                    foreach (var entry in logEntries)
-                        Trace.WriteLine(entry);
+                        foreach (var entry in logEntries)
+                            Trace.WriteLine("  " + entry);
 
-                    Trace.WriteLine($"LOG {key,6}");
+                        Trace.WriteLine($"LOG {key,6}");
+                    }
                 }
             }
         }

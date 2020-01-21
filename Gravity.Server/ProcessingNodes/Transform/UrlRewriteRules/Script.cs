@@ -69,18 +69,31 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
         {
             if (_rules == null) return false;
 
-            var ruleContext = _incoming ? (IRuleExecutionContext)new IncomingContext(context) : new OutgoingContext(context);
-
-            var ruleResult = _rules.Evaluate(ruleContext);
-
-            if (ruleResult.EndRequest)
-                return true;
-
-            if (_incoming && ruleContext.UrlIsModified)
+            if (_incoming)
             {
-                context.Incoming.Path = new PathString(ruleContext.NewPathString);
-                context.Incoming.Query = new QueryString(ruleContext.NewParametersString);
-                context.Incoming.DomainName = ruleContext.NewHost;
+                var ruleContext = (IRuleExecutionContext) new IncomingContext(context);
+
+                var ruleResult = _rules.Evaluate(ruleContext);
+
+                if (ruleResult.EndRequest)
+                    return true;
+
+                if (ruleContext.UrlIsModified)
+                {
+                    context.Incoming.Path = new PathString(ruleContext.NewPathString);
+                    context.Incoming.Query = new QueryString(ruleContext.NewParametersString);
+                    context.Incoming.DomainName = ruleContext.NewHost;
+                }
+            }
+            else
+            {
+                var ruleContext = (IRuleExecutionContext) new OutgoingContext(context);
+
+                context.Outgoing.OnSendHeaders.Add(ctx =>
+                {
+                    _rules.Evaluate(ruleContext);
+
+                });
             }
 
             return false;

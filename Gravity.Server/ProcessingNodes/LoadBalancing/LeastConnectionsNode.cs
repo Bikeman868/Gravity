@@ -39,7 +39,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
                 });
             }
 
-            context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Least connected load balancer '{Name}' routing request to '{output.Name}'");
+            context.Log?.Log(LogType.Step, LogLevel.Standard, () => $"Least connected load balancer '{Name}' routing request to '{output.Name}'");
 
             output.IncrementConnectionCount();
             var startTime = output.TrafficAnalytics.BeginRequest();

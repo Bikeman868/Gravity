@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Gravity.Server.Configuration;
 using Gravity.Server.ProcessingNodes.SpecialPurpose;
 using Gravity.Server.Ui.Shapes;
 
@@ -11,8 +12,15 @@ namespace Gravity.Server.Ui.Nodes
 
         public CorsDrawing(
             DrawingElement drawing, 
-            CorsNode corsNode) 
-            : base(drawing, "CORS/CORB", "cors", corsNode.Offline, 2, corsNode.Name)
+            CorsNode corsNode,
+            DashboardConfiguration.NodeConfiguration nodeConfiguration) 
+            : base(
+                drawing,
+                nodeConfiguration?.Title ?? "CORS/CORB", 
+                "cors", 
+                corsNode.Offline, 
+                2, 
+                corsNode.Name)
         {
             _drawing = drawing;
             _corsNode = corsNode;

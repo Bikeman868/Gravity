@@ -236,17 +236,21 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                             if (readTask.IsFaulted)
                             {
-                                context.Log?.Log(LogType.Exception, LogLevel.Important, () => $"Connection failed to read from the incomming stream. {readTask.Exception.Message}");
-                                throw new ConnectionException(this, "incomming read task faulted", readTask.Exception);
+                                context.Log?.Log(LogType.Exception, LogLevel.Important, () => $"Connection failed to read from the incoming stream. {readTask.Exception.Message}");
+                                throw new ConnectionException(this, "incoming read task faulted", readTask.Exception);
                             }
 
                             if (readTask.IsCanceled)
                             {
-                                context.Log?.Log(LogType.TcpIp, LogLevel.Important, () => $"Timeout reading from the incomming stream");
+                                context.Log?.Log(LogType.TcpIp, LogLevel.Important, () => $"Timeout reading from the incoming stream");
                                 throw new ConnectionException(this, "read task timed out");
                             }
 
-                            return readTask.Result;
+                            var bytesRead = readTask.Result;
+
+                            context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"Read {bytesRead} bytes from the incoming stream");
+
+                            return bytesRead;
                         }
 
                         void Write(int count)

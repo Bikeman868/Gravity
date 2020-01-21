@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Gravity.Server.Configuration;
 using Gravity.Server.ProcessingNodes.Server;
 using Gravity.Server.Ui.Shapes;
 using Gravity.Server.Utility;
@@ -11,8 +12,15 @@ namespace Gravity.Server.Ui.Nodes
 
         public ServerDrawing(
             DrawingElement drawing, 
-            ServerNode server) 
-            : base(drawing, "Server", server.Healthy == false ? "server_unhealthy" : "server_healthy", server.Disabled, 2, server.Name)
+            ServerNode server,
+            DashboardConfiguration.NodeConfiguration nodeConfiguration) 
+            : base(
+                drawing,
+                nodeConfiguration?.Title ?? "Server", 
+                server.Healthy == false ? "server_unhealthy" : "server_healthy", 
+                server.Disabled, 
+                2, 
+                server.Name)
         {
             var ipAddresses = server.IpAddresses;
 

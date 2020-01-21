@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Gravity.Server.Configuration;
 using Gravity.Server.ProcessingNodes.LoadBalancing;
 using Gravity.Server.Ui.Shapes;
 
@@ -9,12 +10,13 @@ namespace Gravity.Server.Ui.Nodes
         public StickySessionDrawing(
             DrawingElement drawing, 
             StickySessionNode stickySession,
-            double[] trafficIndicatorThresholds)
+            DashboardConfiguration.NodeConfiguration nodeConfiguration,
+            TrafficIndicatorConfiguration trafficIndicatorConfiguration)
             : base(
             drawing, 
-            stickySession, 
-            trafficIndicatorThresholds, 
-            "Sticky session", 
+            stickySession,
+            trafficIndicatorConfiguration,
+            nodeConfiguration?.Title ?? "Sticky session", 
             "sticky_session",
             new List<string>
             {
