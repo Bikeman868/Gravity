@@ -51,22 +51,36 @@ namespace Gravity.Server.ProcessingNodes.Server
                         log?.Log(LogType.Pooling, LogLevel.Detailed, () => $"Connection pool contains {_pool.Count} connections");
 
                         var connection = _pool.Dequeue();
-                        if (connection.IsConnected)
-                        {
-                            if (!connection.IsStale)
-                            {
-                                log?.Log(LogType.Pooling, LogLevel.Detailed, () => "Reusing the connection dequeued from the pool");
-                                return Task.FromResult(connection);
-                            }
 
-                            log?.Log(LogType.Pooling, LogLevel.Important, () => "The connection dequeued from the pool has been idle too long and will be disposed");
-                            connection.Dispose();
-                        }
-                        else
+                        log?.Log(LogType.Pooling, LogLevel.Detailed, () => $"Dequeued connection is in the {connection.State} state");
+
+                        if (connection.IsAvailable)
                         {
-                            log?.Log(LogType.Pooling, LogLevel.Important, () => "The connection dequeued from the pool was not connected and will be disposed");
-                            connection.Dispose();
+                            switch (connection.State)
+                            {
+                                case ConnectionState.Old:
+                                    log?.Log(LogType.Pooling, LogLevel.Important, () => "The connection dequeued from the pool has been idle too long");
+                                    connection.Dispose();
+                                    break;
+                                case ConnectionState.New:
+                                    log?.Log(LogType.Pooling, LogLevel.Important, () => "The connection dequeued from the pool was never connected");
+                                    connection.Dispose();
+                                    break;
+                                default:
+                                    log?.Log(LogType.Pooling, LogLevel.Detailed, () => "Reusing the connection dequeued from the pool");
+                                    return Task.FromResult(connection);
+                            }
                         }
+
+                        if (connection.State == ConnectionState.Pending)
+                        {
+                            log?.Log(LogType.Pooling, LogLevel.Important, () => "The connection dequeued from the pool is waiting for a task to complete");
+                            _pool.Enqueue(connection);
+                            break;
+                        }
+
+                        log?.Log(LogType.Pooling, LogLevel.Important, () => "The connection dequeued from the pool was not available and will be disposed");
+                        connection.Dispose();
                     }
                     else
                     {
@@ -75,7 +89,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                 }
             }
 
-            log?.Log(LogType.Pooling, LogLevel.Detailed, () => "The connection pool is empty, creating a new connection");
+            log?.Log(LogType.Pooling, LogLevel.Detailed, () => "The connection pool has no available connection, creating a new connection");
             var newConnection = new Connection(_bufferPool, _endpoint, _domainName, _scheme, _connectionTimeout);
             return newConnection.Connect(log)
                 .ContinueWith(connectTask => 
@@ -98,9 +112,9 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         public void ReuseConnection(ILog log, Connection connection)
         {
-            if (connection.IsConnected)
+            if (connection.State == ConnectionState.Connected || connection.State == ConnectionState.Pending)
             {
-                log?.Log(LogType.Pooling, LogLevel.Detailed, () => "The connection is still connected and can be reused");
+                log?.Log(LogType.Pooling, LogLevel.Detailed, () => "The connection is connected and can be reused");
 
                 lock (_pool)
                 {

@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Gravity.Server.Interfaces;
 using Gravity.Server.Pipeline;
@@ -22,6 +23,16 @@ namespace Gravity.Server.ProcessingNodes.Server
         }
     }
 
+    internal enum ConnectionState
+    {
+        New,
+        Connected,
+        Busy,
+        Old,
+        Disconnected,
+        Pending
+    }
+
     internal class Connection: IDisposable
     {
         private readonly TimeSpan _maximumIdleTime = TimeSpan.FromMinutes(5);
@@ -34,6 +45,7 @@ namespace Gravity.Server.ProcessingNodes.Server
         private TcpClient _tcpClient;
         private Stream _stream;
         private DateTime _lastUsedUtc;
+        private Task _pendingTask;
 
         public Connection(
             IBufferPool bufferPool,
@@ -47,12 +59,14 @@ namespace Gravity.Server.ProcessingNodes.Server
             _domainName = domainName;
             _scheme = scheme;
             _connectionTimeout = connectionTimeout;
+            State = ConnectionState.New;
         }
 
         public void Dispose()
         {
             _stream?.Close();
             _tcpClient?.Close();
+            State = ConnectionState.Disconnected;
         }
 
         public Task Connect(ILog log)
@@ -63,9 +77,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             _tcpClient = new TcpClient
             {
                 ReceiveTimeout = 0,
-                SendTimeout = 0,
-                //LingerState = new LingerOption(true, 10),
-                //NoDelay = true
+                SendTimeout = 0
             };
 
             return _tcpClient.ConnectAsync(_endpoint.Address, _endpoint.Port)
@@ -76,11 +88,14 @@ namespace Gravity.Server.ProcessingNodes.Server
                         log?.Log(LogType.Exception, LogLevel.Important, () => $"Failed to connect. {connectTask.Exception?.Message}");
                         throw new ConnectionException(this, "Exception in TcpClient", connectTask.Exception);
                     }
-                    else if (connectTask.IsCanceled)
+
+                    if (connectTask.IsCanceled)
                     {
                         log?.Log(LogType.Exception, LogLevel.Important, () => $"Failed to connect within {_connectionTimeout}");
                         throw new ConnectionException(this, "TcpClient connection was cancelled");
                     }
+
+                    State = ConnectionState.Connected;
 
                     _stream = _tcpClient.GetStream();
 
@@ -99,14 +114,39 @@ namespace Gravity.Server.ProcessingNodes.Server
                 });
         }
 
-        public bool IsConnected => _tcpClient.Connected;
+        public ConnectionState State { get; private set; }
 
-        public bool IsStale => (DateTime.UtcNow - _lastUsedUtc) > _maximumIdleTime;
-
-        public Scheme Scheme { get; }
+        public bool IsAvailable
+        {
+            get
+            {
+                switch (State)
+                {
+                    case ConnectionState.New:
+                        return true;
+                    case ConnectionState.Connected:
+                        if (DateTime.UtcNow - _lastUsedUtc > _maximumIdleTime)
+                            State = ConnectionState.Old;
+                        return true;
+                    case ConnectionState.Disconnected:
+                        return false;
+                    case ConnectionState.Pending:
+                        if (_pendingTask != null && _pendingTask.IsCompleted)
+                        {
+                            State = ConnectionState.Connected;
+                            _pendingTask = null;
+                            return true;
+                        }
+                        return false;
+                    default:
+                        return false;
+                }
+            }
+        }
 
         public Task Send(IRequestContext context, TimeSpan responseTimeout, int readTimeoutMs)
         {
+            State = ConnectionState.Busy;
             _tcpClient.ReceiveTimeout = (int)responseTimeout.TotalMilliseconds;
 
             return Task.WhenAll(SendHttp(context), ReceiveHttp(context, readTimeoutMs))
@@ -234,6 +274,7 @@ namespace Gravity.Server.ProcessingNodes.Server
         {
             var expectBody = string.Equals(context.Incoming.Method, "HEAD", StringComparison.OrdinalIgnoreCase);
             int? contentLength = expectBody ? null : (int?)0;
+            var contentBytesReceived = 0;
 
             var line = new StringBuilder();
             var headerLines = new List<string>();
@@ -345,30 +386,47 @@ namespace Gravity.Server.ProcessingNodes.Server
                     }
                 }
 
+                context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"Sending {headerLines.Count} headers in outgoing message");
                 context.Outgoing.SendHeaders(context);
             }
 
             int Read(byte[] buffer)
             {
                 var readTask = _stream.ReadAsync(buffer, 0, buffer.Length);
+                var timeoutTask = Task.Delay(_tcpClient.ReceiveTimeout);
+
+                context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => "Waiting for server response");
+
+                Task.WhenAny(readTask, timeoutTask).Wait();
 
                 if (readTask.IsFaulted)
                 {
                     context.Log?.Log(LogType.TcpIp, LogLevel.Important, () => $"Tcp read task faulted '{readTask.Exception}'");
-                    throw new ConnectionException(this, "Tcp read task faulted", readTask.Exception);
+                    throw new ConnectionException(this, "Tcp read task faulted", readTask.Exception?.Flatten());
                 }
 
-                if (readTask.IsCanceled)
+                if (readTask.IsCompleted) return readTask.Result;
+
+                context.Log?.Log(LogType.TcpIp, LogLevel.Standard, () => $"Tcp read task did not complete within {_tcpClient.ReceiveTimeout}ms");
+
+                _pendingTask = readTask;
+                State = ConnectionState.Pending;
+
+                if (contentLength.HasValue)
                 {
-                    context.Log?.Log(LogType.TcpIp, LogLevel.Important, () => $"Tcp read task timed out");
-                    throw new ConnectionException(this, "Tcp read task timed out");
+                    context.Log?.Log(LogType.TcpIp, LogLevel.Important, () => "Tcp read task timed out on incomplete response");
+                    throw new ConnectionException(this, "Tcp read task timed out on incomplete response");
                 }
 
-                return readTask.Result;
+                return 0;
             }
 
             void Write(byte[] buffer, int start, int count)
             {
+                context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"Writing {count} bytes to the outgoing message");
+
+                contentBytesReceived += count;
+
                 var writeTask = context.Outgoing.Content.WriteAsync(buffer, start, count);
                 writeTask.Wait();
 
@@ -392,19 +450,31 @@ namespace Gravity.Server.ProcessingNodes.Server
                 var buffer = _bufferPool.Get();
                 try
                 {
-                    while (true)
+                    while (!contentLength.HasValue || contentBytesReceived < contentLength.Value)
                     {
                         var bytesRead = Read(buffer);
-                        if (bytesRead == 0) break;
+
+                        context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"Read {bytesRead} bytes from connection stream");
+
+                        if (bytesRead == 0)
+                        {
+                            if (State == ConnectionState.Busy) State = ConnectionState.Connected;
+                            break;
+                        }
 
                         if (header)
                         {
                             var contentStart = AppendHeader(buffer, bytesRead);
                             if (!header)
                             {
-                                _tcpClient.ReceiveTimeout = readTimeoutMs;
                                 if (contentStart < bytesRead)
                                     Write(buffer, contentStart, bytesRead - contentStart);
+
+                                if (!contentLength.HasValue)
+                                {
+                                    context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"Setting receive timeout to {readTimeoutMs}ms");
+                                    _tcpClient.ReceiveTimeout = readTimeoutMs;
+                                }
                             }
                         }
                         else

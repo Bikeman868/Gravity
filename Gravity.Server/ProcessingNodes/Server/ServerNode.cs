@@ -413,6 +413,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                     try
                     {
                         connection.Send(context, ResponseTimeout, ReadTimeoutMs).Wait();
+                        connectionPool.ReuseConnection(context.Log, connection);
                     }
                     catch (Exception ex)
                     {
