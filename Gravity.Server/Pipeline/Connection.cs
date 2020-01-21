@@ -5,7 +5,7 @@ using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
+using System.Linq;
 using System.Threading.Tasks;
 using Gravity.Server.Interfaces;
 using Gravity.Server.Pipeline;
@@ -167,8 +167,9 @@ namespace Gravity.Server.ProcessingNodes.Server
             //head.Append(incoming.DomainName);
             //head.Append(':');
             //head.Append(incoming.DestinationPort);
-            head.Append(incoming.Path);
-            head.Append(incoming.Query);
+            head.Append(incoming.Path.HasValue ? incoming.Path.Value : "/");
+            if (incoming.Query.HasValue)
+                head.Append(incoming.Query);
             head.Append(' ');
             head.Append("HTTP/1.1");
             head.Append("\r\n");
@@ -211,6 +212,14 @@ namespace Gravity.Server.ProcessingNodes.Server
             var headBytes = Encoding.ASCII.GetBytes(head.ToString());
 
             context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"Writing {headBytes.Length} bytes of header to the connection stream");
+
+            if (context.Log != null && context.Log.WillLog(LogType.TcpIp, LogLevel.VeryDetailed))
+            {
+                var headLines = head.ToString().Replace("\r", "").Split('\n');
+                foreach (var headLine in headLines.Where(h => !string.IsNullOrEmpty(h)))
+                    context.Log.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"> {headLine}");
+            }
+
             _stream.Write(headBytes, 0, headBytes.Length);
 
             return Task.Run(() =>

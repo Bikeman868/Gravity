@@ -37,6 +37,7 @@ namespace Gravity.Server.Interfaces
 
     internal interface ILog: IDisposable
     {
+        bool WillLog(LogType type, LogLevel level);
         void Log(LogType type, LogLevel level, Func<string> messageFunc);
     }
 

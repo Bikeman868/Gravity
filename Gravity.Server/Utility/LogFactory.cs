@@ -107,6 +107,11 @@ namespace Gravity.Server.Utility
                 _writer.WriteLog(_key, _logEntries);
             }
 
+            public bool WillLog(LogType type, LogLevel level)
+            {
+                return _filter(type, level);
+            }
+
             public void Log(LogType type, LogLevel level, Func<string> messageFunc)
             {
                 if (_filter(type, level))
@@ -129,6 +134,11 @@ namespace Gravity.Server.Utility
 
             public void Dispose()
             {
+            }
+
+            public bool WillLog(LogType type, LogLevel level)
+            {
+                return _filter(type, level);
             }
 
             public void Log(LogType type, LogLevel level, Func<string> messageFunc)

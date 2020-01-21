@@ -216,9 +216,9 @@ namespace Gravity.Server.ProcessingNodes.Server
                 port = 443;
             }
 
-            context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Server '{Name}' sending request for {DomainName} to {ipAddress.Address} on port {port} using the {scheme} protocol");
+            context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Server '{Name}' sending request to {ipAddress.Address} on port {port} using the {scheme} protocol");
 
-            var serverRequestContext = (IRequestContext)new ServerRequestContext(context, ipAddress.Address, port, scheme, DomainName);
+            var serverRequestContext = (IRequestContext)new ServerRequestContext(context, ipAddress.Address, port, scheme);
 
             ipAddress.IncrementConnectionCount();
             var startTicks = ipAddress.TrafficAnalytics.BeginRequest();
@@ -449,6 +449,11 @@ namespace Gravity.Server.ProcessingNodes.Server
 
             public void Dispose()
             {
+            }
+
+            public bool WillLog(LogType type, LogLevel level)
+            {
+                return true;
             }
 
             public void Log(LogType type, LogLevel level, Func<string> messageFunc)

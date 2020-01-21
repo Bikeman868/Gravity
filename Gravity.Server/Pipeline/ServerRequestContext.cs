@@ -28,8 +28,7 @@ namespace Gravity.Server.Pipeline
             IRequestContext requestContext,
             IPAddress serverIpAddress,
             ushort serverPort,
-            Scheme scheme,
-            string domainName)
+            Scheme scheme)
         {
             _log = requestContext.Log;
 
@@ -42,7 +41,7 @@ namespace Gravity.Server.Pipeline
 
                 Method = requestContext.Incoming.Method,
                 Scheme = scheme,
-                DomainName = domainName,
+                DomainName = requestContext.Incoming.DomainName,
                 Path = requestContext.Incoming.Path,
                 Query = requestContext.Incoming.Query,
                 SourceAddress = requestContext.Incoming.SourceAddress,
