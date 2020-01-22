@@ -187,6 +187,7 @@
     <Compile Include="Ui\ApiService.cs" />
     <Compile Include="Ui\Nodes\NodeStats.cs" />
     <Compile Include="Ui\Nodes\RouterStats.cs" />
+    <Compile Include="Ui\Shapes\TotalHandling.cs" />
     <Compile Include="Ui\Shapes\PieChartDrawing.cs" />
     <Compile Include="Ui\Shapes\LegendDrawing.cs" />
     <Compile Include="Ui\Shapes\PieDrawing.cs" />

@@ -15,6 +15,7 @@ namespace Gravity.Server.Ui.Shapes
             string title,
             string units,
             Tuple<string, float>[] data,
+            TotalHandling totalHandling,
             string numberFormat = "n1")
         {
             CssClass = "piechart";
@@ -32,12 +33,27 @@ namespace Gravity.Server.Ui.Shapes
 
             var pie = new PieDrawing(width, data);
 
-            var sum = data.Aggregate(0f, (s, v) => s + v.Item2);
+            var total = 0f;
+            switch (totalHandling)
+            {
+                case TotalHandling.Sum:
+                    total = data.Aggregate(0f, (s, v) => s + v.Item2);
+                    break;
+                case TotalHandling.Average:
+                    total = data.Aggregate(0f, (s, v) => s + v.Item2) / data.Length;
+                    break;
+                case TotalHandling.Minimum:
+                    total = data.Min(v => v.Item2);
+                    break;
+                case TotalHandling.Maximum:
+                    total = data.Max(v => v.Item2);
+                    break;
+            }
 
             pie.AddChild(new TextDrawing
             {
                 TextSize = 2f,
-                Text = new[] { sum.ToString(numberFormat), units }
+                Text = new[] { total.ToString(numberFormat), units }
             });
 
             AddChild(pie);

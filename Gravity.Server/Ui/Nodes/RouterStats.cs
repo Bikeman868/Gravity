@@ -25,20 +25,37 @@ namespace Gravity.Server.Ui.Nodes
             _trafficIndicatorThresholds = trafficIndicatorConfiguration.Thresholds;
 
             var nodeConfiguration = FindNodeConfiguration(dashboardConfiguration, router.Name);
-            AddSection(new RouterTile(drawing, router, nodeConfiguration, trafficIndicatorConfiguration));
 
-            var pieData = new Tuple<string, float>[router.OutputNodes.Length];
+            var topSection = AddSection();
+            var bottomSection = AddSection();
+
+            topSection.AddChild(new RouterTile(drawing, router, nodeConfiguration, trafficIndicatorConfiguration));
+
+            var requestRateData = new Tuple<string, float>[router.OutputNodes.Length];
             for (var i = 0; i < router.OutputNodes.Length; i++)
             {
                 var nodeName = router.OutputNodes[i].Name;
                 var nodeTitle = FindNodeTitle(dashboardConfiguration, nodeName);
 
-                pieData[i] = new Tuple<string, float>(
+                requestRateData[i] = new Tuple<string, float>(
                     nodeTitle,
                     (float)router.OutputNodes[i].TrafficAnalytics.RequestsPerMinute);
             }
 
-            AddPieChart("Request Rate", "/min", pieData);
+            bottomSection.AddChild(CreatePieChart("Request Rate", "/min", requestRateData, TotalHandling.Sum));
+
+            var requestTimeData = new Tuple<string, float>[router.OutputNodes.Length];
+            for (var i = 0; i < router.OutputNodes.Length; i++)
+            {
+                var nodeName = router.OutputNodes[i].Name;
+                var nodeTitle = FindNodeTitle(dashboardConfiguration, nodeName);
+
+                requestTimeData[i] = new Tuple<string, float>(
+                    nodeTitle,
+                    (float)router.OutputNodes[i].TrafficAnalytics.RequestTime.TotalMilliseconds);
+            }
+
+            bottomSection.AddChild(CreatePieChart("Request Time", "ms", requestRateData, TotalHandling.Maximum));
         }
     }
 }

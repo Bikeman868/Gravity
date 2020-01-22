@@ -15,18 +15,20 @@ namespace Gravity.Server.Ui.Nodes
             ChildSpacing = 30f;
         }
 
-        protected void AddSection(DrawingElement section)
+        protected DrawingElement AddSection()
         {
+            var section = new SectionDrawing();
             AddChild(section);
+            return section;
         }
 
-        protected void AddPieChart(
+        protected DrawingElement CreatePieChart(
             string title,
             string units,
-            Tuple<string, float>[] pieChartData)
+            Tuple<string, float>[] pieChartData,
+            TotalHandling totalHandling)
         {
-            var pieChart = new PieChartDrawing(150, title, units, pieChartData);
-            AddChild(pieChart);
+            return new PieChartDrawing(150, title, units, pieChartData, totalHandling);
         }
 
         protected override void ArrangeChildren()
@@ -45,6 +47,14 @@ namespace Gravity.Server.Ui.Nodes
         {
             var nodeConfig = FindNodeConfiguration(config, nodeName);
             return nodeConfig == null ? nodeName + " Node" : nodeName + " - " + nodeConfig.Title;
+        }
+
+        private class SectionDrawing: DrawingElement
+        {
+            protected override void ArrangeChildren()
+            {
+                ArrangeChildrenHorizontally(30f);
+            }
         }
     }
 }
