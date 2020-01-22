@@ -6,11 +6,11 @@ using Gravity.Server.Utility;
 
 namespace Gravity.Server.Ui.Nodes
 {
-    internal class ServerDrawing: NodeDrawing
+    internal class ServerTile: NodeTile
     {
         private readonly IpAddressDrawing[] _ipAddressDrawings;
 
-        public ServerDrawing(
+        public ServerTile(
             DrawingElement drawing, 
             ServerNode server,
             DashboardConfiguration.NodeConfiguration nodeConfiguration) 
@@ -90,7 +90,7 @@ namespace Gravity.Server.Ui.Nodes
                 details.Add(unhealthyReason);
         }
 
-        private class IpAddressDrawing : NodeDrawing
+        private class IpAddressDrawing : NodeTile
         {
             public IpAddressDrawing(
                 DrawingElement drawing,

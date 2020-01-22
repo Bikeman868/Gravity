@@ -9,10 +9,11 @@ using Gravity.Server.ProcessingNodes.Server;
 using Gravity.Server.ProcessingNodes.SpecialPurpose;
 using Gravity.Server.ProcessingNodes.Transform;
 using Gravity.Server.Ui.Nodes;
+using Gravity.Server.Ui.Shapes;
 
 namespace Gravity.Server.Ui.Drawings
 {
-    internal class DashboardNodeDrawing : NodeDrawing
+    internal class DashboardNodeDrawing : NodeTile
     {
         public DashboardNodeDrawing(
             DashboardConfiguration dashboardConfiguration,
@@ -25,7 +26,7 @@ namespace Gravity.Server.Ui.Drawings
             TopMargin = 20;
             BottomMargin = 20;
 
-            NodeDrawing nodeDrawing;
+            DrawingElement nodeDrawing;
 
             var internalRequest = node as InternalNode;
             var response = node as ResponseNode;
@@ -37,16 +38,16 @@ namespace Gravity.Server.Ui.Drawings
             var leastConnections = node as LeastConnectionsNode;
             var cors = node as CorsNode;
 
-            if (internalRequest != null) nodeDrawing = new InternalRequestDrawing(this, internalRequest, nodeDrawingConfig);
-            else if (response != null) nodeDrawing = new ResponseDrawing(this, response, nodeDrawingConfig);
-            else if (roundRobin != null) nodeDrawing = new RoundRobinDrawing(this, roundRobin, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
-            else if (router != null) nodeDrawing = new RouterDrawing(this, router, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
-            else if (server != null) nodeDrawing = new ServerDrawing(this, server, nodeDrawingConfig);
-            else if (stickySession != null) nodeDrawing = new StickySessionDrawing(this, stickySession, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
-            else if (transform != null) nodeDrawing = new TransformDrawing(this, transform, nodeDrawingConfig);
-            else if (leastConnections != null) nodeDrawing = new LeastConnectionsDrawing(this, leastConnections, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
+            if (internalRequest != null) nodeDrawing = new InternalRequestTile(this, internalRequest, nodeDrawingConfig);
+            else if (response != null) nodeDrawing = new ResponseTile(this, response, nodeDrawingConfig);
+            else if (roundRobin != null) nodeDrawing = new RoundRobinTile(this, roundRobin, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
+            else if (router != null) nodeDrawing = new RouterStats(this, router, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
+            else if (server != null) nodeDrawing = new ServerTile(this, server, nodeDrawingConfig);
+            else if (stickySession != null) nodeDrawing = new StickySessionTile(this, stickySession, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
+            else if (transform != null) nodeDrawing = new TransformTile(this, transform, nodeDrawingConfig);
+            else if (leastConnections != null) nodeDrawing = new LeastConnectionsTile(this, leastConnections, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
             else if (cors != null) nodeDrawing = new CorsDrawing(this, cors, nodeDrawingConfig);
-            else nodeDrawing = new NodeDrawing(this, node.Name, "", true);
+            else nodeDrawing = new NodeTile(this, node.Name, "", true);
 
             nodeDrawing.Left = 10;
             nodeDrawing.Top = 30;

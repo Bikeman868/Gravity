@@ -6,14 +6,14 @@ using Gravity.Server.Ui.Shapes;
 
 namespace Gravity.Server.Ui.Nodes
 {
-    internal class RouterDrawing: NodeDrawing
+    internal class RouterTile: NodeTile
     {
         private readonly DrawingElement _drawing;
         private readonly RoutingNode _router;
         private readonly RouterOutputDrawing[] _outputDrawings;
         private readonly double[] _trafficIndicatorThresholds;
 
-        public RouterDrawing(
+        public RouterTile(
             DrawingElement drawing, 
             RoutingNode router,
             DashboardConfiguration.NodeConfiguration nodeConfiguration,
@@ -45,7 +45,7 @@ namespace Gravity.Server.Ui.Nodes
             AddDetails(details, null, router.Offline ? "disabled" : string.Empty);
         }
 
-        public override void AddLines(IDictionary<string, NodeDrawing> nodeDrawings)
+        public override void AddLines(IDictionary<string, NodeTile> nodeDrawings)
         {
             if (_router.Outputs == null) return;
 
@@ -55,7 +55,7 @@ namespace Gravity.Server.Ui.Nodes
                 var outputNode = _router.OutputNodes[i];
                 var outputDrawing = _outputDrawings[i];
 
-                NodeDrawing nodeDrawing;
+                NodeTile nodeDrawing;
                 if (nodeDrawings.TryGetValue(outputConfiguration.RouteTo, out nodeDrawing))
                 {
                     var css = "connection_none";
@@ -77,7 +77,7 @@ namespace Gravity.Server.Ui.Nodes
             }
         }
 
-        private class RouterOutputDrawing : NodeDrawing
+        private class RouterOutputDrawing : NodeTile
         {
             public RouterOutputDrawing(
                 DrawingElement drawing,

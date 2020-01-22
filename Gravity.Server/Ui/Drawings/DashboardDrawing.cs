@@ -14,7 +14,7 @@ using Gravity.Server.Utility;
 
 namespace Gravity.Server.Ui.Drawings
 {
-    internal class DashboardDrawing : NodeDrawing
+    internal class DashboardDrawing : NodeTile
     {
         public DashboardDrawing(
             DashboardConfiguration dashboardConfiguration,
@@ -27,8 +27,8 @@ namespace Gravity.Server.Ui.Drawings
             TopMargin = 20;
             BottomMargin = 20;
 
-            var listenerDrawings = new List<ListenerDrawing>();
-            var nodeDrawings = new DefaultDictionary<string, NodeDrawing>(StringComparer.OrdinalIgnoreCase);
+            var listenerDrawings = new List<ListenerTile>();
+            var nodeDrawings = new DefaultDictionary<string, NodeTile>(StringComparer.OrdinalIgnoreCase);
 
             var endpoints = requestListener.Endpoints;
             if (endpoints != null)
@@ -38,7 +38,7 @@ namespace Gravity.Server.Ui.Drawings
 
                 foreach (var endpoint in endpoints)
                 {
-                    var listenerDrawing = new ListenerDrawing(
+                    var listenerDrawing = new ListenerTile(
                         this, 
                         endpoint, 
                         null,
@@ -63,7 +63,7 @@ namespace Gravity.Server.Ui.Drawings
             {
                 foreach (var node in nodes)
                 {
-                    NodeDrawing nodeDrawing;
+                    NodeTile nodeDrawing;
 
                     var internalRequest = node as InternalNode;
                     var response = node as ResponseNode;
@@ -78,16 +78,16 @@ namespace Gravity.Server.Ui.Drawings
                     var nodeName = node.Name;
                     var nodeDrawingConfig = dashboardConfiguration.Nodes.FirstOrDefault(n => n.NodeName == nodeName);
 
-                    if (internalRequest != null) nodeDrawing = new InternalRequestDrawing(this, internalRequest, nodeDrawingConfig);
-                    else if (response != null) nodeDrawing = new ResponseDrawing(this, response, nodeDrawingConfig);
-                    else if (roundRobin != null) nodeDrawing = new RoundRobinDrawing(this, roundRobin, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
-                    else if (router != null) nodeDrawing = new RouterDrawing(this, router, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
-                    else if (server != null) nodeDrawing = new ServerDrawing(this, server, nodeDrawingConfig);
-                    else if (stickySession != null) nodeDrawing = new StickySessionDrawing(this, stickySession, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
-                    else if (transform != null) nodeDrawing = new TransformDrawing(this, transform, nodeDrawingConfig);
-                    else if (leastConnections != null) nodeDrawing = new LeastConnectionsDrawing(this, leastConnections, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
+                    if (internalRequest != null) nodeDrawing = new InternalRequestTile(this, internalRequest, nodeDrawingConfig);
+                    else if (response != null) nodeDrawing = new ResponseTile(this, response, nodeDrawingConfig);
+                    else if (roundRobin != null) nodeDrawing = new RoundRobinTile(this, roundRobin, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
+                    else if (router != null) nodeDrawing = new RouterTile(this, router, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
+                    else if (server != null) nodeDrawing = new ServerTile(this, server, nodeDrawingConfig);
+                    else if (stickySession != null) nodeDrawing = new StickySessionTile(this, stickySession, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
+                    else if (transform != null) nodeDrawing = new TransformTile(this, transform, nodeDrawingConfig);
+                    else if (leastConnections != null) nodeDrawing = new LeastConnectionsTile(this, leastConnections, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
                     else if (cors != null) nodeDrawing = new CorsDrawing(this, cors, nodeDrawingConfig);
-                    else nodeDrawing = new NodeDrawing(this, node.Name, "", true);
+                    else nodeDrawing = new NodeTile(this, node.Name, "", true);
 
                     if (nodeDrawingConfig != null)
                     {

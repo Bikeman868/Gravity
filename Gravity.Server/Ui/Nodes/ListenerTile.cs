@@ -4,13 +4,13 @@ using Gravity.Server.Ui.Shapes;
 
 namespace Gravity.Server.Ui.Nodes
 {
-    internal class ListenerDrawing: NodeDrawing
+    internal class ListenerTile: NodeTile
     {
         private readonly DrawingElement _drawing;
         private readonly ListenerEndpointConfiguration _listener;
         private readonly double[] _trafficIndicatorThresholds;
 
-        public ListenerDrawing(
+        public ListenerTile(
             DrawingElement drawing, 
             ListenerEndpointConfiguration listener,
             DashboardConfiguration.NodeConfiguration nodeConfiguration,
@@ -39,9 +39,9 @@ namespace Gravity.Server.Ui.Nodes
             AddDetails(details, null, listener.Disabled ? "disabled" : string.Empty);
         }
 
-        public override void AddLines(IDictionary<string, NodeDrawing> nodeDrawings)
+        public override void AddLines(IDictionary<string, NodeTile> nodeDrawings)
         {
-            NodeDrawing nodeDrawing;
+            NodeTile nodeDrawing;
             if (nodeDrawings.TryGetValue(_listener.NodeName, out nodeDrawing))
             {
                 var css = "connection_unknown";

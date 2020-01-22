@@ -5,7 +5,7 @@ using Gravity.Server.Ui.Shapes;
 
 namespace Gravity.Server.Ui.Nodes
 {
-    internal class CorsDrawing: NodeDrawing
+    internal class CorsDrawing: NodeTile
     {
         private readonly DrawingElement _drawing;
         private readonly CorsNode _corsNode;
@@ -45,12 +45,12 @@ namespace Gravity.Server.Ui.Nodes
             AddDetails(details, null, _corsNode.Offline ? "disabled" : string.Empty);
         }
 
-        public override void AddLines(IDictionary<string, NodeDrawing> nodeDrawings)
+        public override void AddLines(IDictionary<string, NodeTile> nodeDrawings)
         {
             if (string.IsNullOrEmpty(_corsNode.OutputNode))
                 return;
 
-            NodeDrawing nodeDrawing;
+            NodeTile nodeDrawing;
             if (nodeDrawings.TryGetValue(_corsNode.OutputNode, out nodeDrawing))
             {
                 _drawing.AddChild(new ConnectedLineDrawing(TopRightSideConnection, nodeDrawing.TopLeftSideConnection)

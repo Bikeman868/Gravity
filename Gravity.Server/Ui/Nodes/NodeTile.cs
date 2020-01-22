@@ -5,7 +5,7 @@ using Svg;
 
 namespace Gravity.Server.Ui.Nodes
 {
-    internal class NodeDrawing : RectangleDrawing
+    internal class NodeTile : RectangleDrawing
     {
         public ConnectionPoint TopLeftSideConnection;
         public ConnectionPoint TopRightSideConnection;
@@ -17,7 +17,7 @@ namespace Gravity.Server.Ui.Nodes
         protected readonly TextDrawing LabelText;
         protected SvgUnit ChildSpacing;
 
-        public NodeDrawing(
+        public NodeTile(
             DrawingElement drawing, 
             string title, 
             string cssClass,
@@ -144,7 +144,7 @@ namespace Gravity.Server.Ui.Nodes
             }
         }
 
-        public virtual void AddLines(IDictionary<string, NodeDrawing> nodeDrawings)
+        public virtual void AddLines(IDictionary<string, NodeTile> nodeDrawings)
         {
         }
 

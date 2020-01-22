@@ -4,9 +4,9 @@ using Gravity.Server.Ui.Shapes;
 
 namespace Gravity.Server.Ui.Nodes
 {
-    internal class LeastConnectionsDrawing: LoadBalancerDrawing
+    internal class LeastConnectionsTile: LoadBalancerTile
     {
-        public LeastConnectionsDrawing(
+        public LeastConnectionsTile(
             DrawingElement drawing, 
             LeastConnectionsNode leastConnections,
             DashboardConfiguration.NodeConfiguration nodeConfiguration,

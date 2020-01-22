@@ -4,9 +4,9 @@ using Gravity.Server.ProcessingNodes.LoadBalancing;
 
 namespace Gravity.Server.Ui.Nodes
 {
-    internal class RoundRobinDrawing: LoadBalancerDrawing
+    internal class RoundRobinTile: LoadBalancerTile
     {
-        public RoundRobinDrawing(
+        public RoundRobinTile(
             DrawingElement drawing, 
             RoundRobinNode roundRobin,
             DashboardConfiguration.NodeConfiguration nodeConfiguration,

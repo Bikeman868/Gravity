@@ -62,7 +62,7 @@
       "servers": [
         {
           "name": "I",
-          "disabled": false,
+          "disabled": true,
           "port": 443,
           "host": "stockhouse.com",
           "connectionTimeout": "00:00:30",

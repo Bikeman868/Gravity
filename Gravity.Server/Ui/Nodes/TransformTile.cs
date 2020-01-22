@@ -7,12 +7,12 @@ using Gravity.Server.Ui.Shapes;
 
 namespace Gravity.Server.Ui.Nodes
 {
-    internal class TransformDrawing: NodeDrawing
+    internal class TransformTile: NodeTile
     {
         private readonly DrawingElement _drawing;
         private readonly TransformNode _transform;
 
-        public TransformDrawing(
+        public TransformTile(
             DrawingElement drawing, 
             TransformNode transform,
             DashboardConfiguration.NodeConfiguration nodeConfiguration) 
@@ -34,12 +34,12 @@ namespace Gravity.Server.Ui.Nodes
             }
         }
 
-        public override void AddLines(IDictionary<string, NodeDrawing> nodeDrawings)
+        public override void AddLines(IDictionary<string, NodeTile> nodeDrawings)
         {
             if (string.IsNullOrEmpty(_transform.OutputNode))
                 return;
 
-            NodeDrawing nodeDrawing;
+            NodeTile nodeDrawing;
             if (nodeDrawings.TryGetValue(_transform.OutputNode, out nodeDrawing))
             {
                 _drawing.AddChild(new ConnectedLineDrawing(TopRightSideConnection, nodeDrawing.TopLeftSideConnection)

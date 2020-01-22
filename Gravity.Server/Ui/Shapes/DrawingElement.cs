@@ -99,7 +99,6 @@ namespace Gravity.Server.Ui.Shapes
         /// <summary>
         /// Arranges children into a vertical column with a gap between each child
         /// </summary>
-        /// <param name="gap"></param>
         protected void ArrangeChildrenVertically(SvgUnit gap)
         {
             var x = LeftMargin;
@@ -117,6 +116,56 @@ namespace Gravity.Server.Ui.Shapes
 
                 if (!child.FixedPosition)
                     y += child.Height + gap;
+            }
+        }
+
+        /// <summary>
+        /// Arranges children into a vertical column with a gap between each child
+        /// and centered horizontally
+        /// </summary>
+        protected void ArrangeChildrenVerticallyCentered(SvgUnit gap)
+        {
+            ArrangeMargins();
+
+            var x = (Width - LeftMargin - RightMargin) / 2f + LeftMargin;
+            var y = TopMargin;
+
+            foreach (var child in Children)
+            {
+                if (!child.FixedPosition)
+                {
+                    child.ArrangeMargins();
+                    child.Left = x - child.Width / 2f;
+                    child.Top = y;
+                }
+
+                child.Arrange();
+
+                if (!child.FixedPosition)
+                    y += child.Height + gap;
+            }
+        }
+
+        /// <summary>
+        /// Stacks the children centered horizontally and vertically
+        /// </summary>
+        protected void ArrangeChildrenCentered()
+        {
+            ArrangeMargins();
+
+            var x = (Width - LeftMargin - RightMargin) / 2f + LeftMargin;
+            var y = (Height - TopMargin - BottomMargin) / 2f + TopMargin;
+
+            foreach (var child in Children)
+            {
+                if (!child.FixedPosition)
+                {
+                    child.ArrangeMargins();
+                    child.Left = x - child.Width / 2f;
+                    child.Top = y - child.Height / 2f;
+                }
+
+                child.Arrange();
             }
         }
 

@@ -5,9 +5,9 @@ using Gravity.Server.Ui.Shapes;
 
 namespace Gravity.Server.Ui.Nodes
 {
-    internal class StickySessionDrawing: LoadBalancerDrawing
+    internal class StickySessionTile: LoadBalancerTile
     {
-        public StickySessionDrawing(
+        public StickySessionTile(
             DrawingElement drawing, 
             StickySessionNode stickySession,
             DashboardConfiguration.NodeConfiguration nodeConfiguration,

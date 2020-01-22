@@ -5,9 +5,9 @@ using Gravity.Server.Ui.Shapes;
 
 namespace Gravity.Server.Ui.Nodes
 {
-    internal class ResponseDrawing: NodeDrawing
+    internal class ResponseTile: NodeTile
     {
-        public ResponseDrawing(
+        public ResponseTile(
             DrawingElement drawing, 
             ResponseNode response,
             DashboardConfiguration.NodeConfiguration nodeConfiguration) 

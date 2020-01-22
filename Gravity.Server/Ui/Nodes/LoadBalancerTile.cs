@@ -6,14 +6,14 @@ using Gravity.Server.Utility;
 
 namespace Gravity.Server.Ui.Nodes
 {
-    internal class LoadBalancerDrawing: NodeDrawing
+    internal class LoadBalancerTile: NodeTile
     {
         private readonly DrawingElement _drawing;
         private readonly LoadBalancerNode _loadBalancer;
         private readonly OutputDrawing[] _outputDrawings;
         private readonly double[] _trafficIndicatorThresholds;
 
-        public LoadBalancerDrawing(
+        public LoadBalancerTile(
             DrawingElement drawing, 
             LoadBalancerNode loadBalancer,
             TrafficIndicatorConfiguration trafficIndicatorConfiguration,
@@ -59,7 +59,7 @@ namespace Gravity.Server.Ui.Nodes
             }
         }
 
-        public override void AddLines(IDictionary<string, NodeDrawing> nodeDrawings)
+        public override void AddLines(IDictionary<string, NodeTile> nodeDrawings)
         {
             if (_loadBalancer.Outputs == null) return;
 
@@ -69,7 +69,7 @@ namespace Gravity.Server.Ui.Nodes
                 var outputNode = _loadBalancer.OutputNodes[i];
                 var outputDrawing = _outputDrawings[i];
 
-                NodeDrawing nodeDrawing;
+                NodeTile nodeDrawing;
                 if (nodeDrawings.TryGetValue(outputNodeName, out nodeDrawing))
                 {
                     var css = "connection_none";
@@ -91,7 +91,7 @@ namespace Gravity.Server.Ui.Nodes
             }
         }
 
-        private class OutputDrawing : NodeDrawing
+        private class OutputDrawing : NodeTile
         {
             public OutputDrawing(
                 DrawingElement drawing,
