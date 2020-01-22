@@ -180,7 +180,7 @@
     <Compile Include="Ui\Components\NodeDiagramComponent.cs" />
     <Compile Include="Ui\Drawings\DashboardNodeDrawing.cs" />
     <Compile Include="Ui\Drawings\DashboardDrawing.cs" />
-    <Compile Include="Ui\Drawings\DrawingGenerator.cs" />
+    <Compile Include="Ui\Drawings\DiagramGenerator.cs" />
     <Compile Include="Interfaces\IDrawingGenerator.cs" />
     <Compile Include="Ui\Drawings\SvgSerializer.cs" />
     <Compile Include="Ui\Nodes\LoadBalancerTile.cs" />
@@ -188,6 +188,7 @@
     <Compile Include="Ui\Nodes\NodeStats.cs" />
     <Compile Include="Ui\Nodes\RouterStats.cs" />
     <Compile Include="Ui\Shapes\PieChartDrawing.cs" />
+    <Compile Include="Ui\Shapes\LegendDrawing.cs" />
     <Compile Include="Ui\Shapes\PieDrawing.cs" />
     <Compile Include="Utility\BufferPool.cs" />
     <Compile Include="Utility\DefaultDictionary.cs" />

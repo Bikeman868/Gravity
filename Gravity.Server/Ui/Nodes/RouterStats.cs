@@ -16,7 +16,7 @@ namespace Gravity.Server.Ui.Nodes
         public RouterStats(
             DrawingElement drawing, 
             RoutingNode router,
-            DashboardConfiguration.NodeConfiguration nodeConfiguration,
+            DashboardConfiguration dashboardConfiguration,
             TrafficIndicatorConfiguration trafficIndicatorConfiguration)
             : base(drawing)
         {
@@ -24,13 +24,17 @@ namespace Gravity.Server.Ui.Nodes
             _router = router;
             _trafficIndicatorThresholds = trafficIndicatorConfiguration.Thresholds;
 
+            var nodeConfiguration = FindNodeConfiguration(dashboardConfiguration, router.Name);
             AddSection(new RouterTile(drawing, router, nodeConfiguration, trafficIndicatorConfiguration));
 
             var pieData = new Tuple<string, float>[router.OutputNodes.Length];
             for (var i = 0; i < router.OutputNodes.Length; i++)
             {
+                var nodeName = router.OutputNodes[i].Name;
+                var nodeTitle = FindNodeTitle(dashboardConfiguration, nodeName);
+
                 pieData[i] = new Tuple<string, float>(
-                    router.OutputNodes[i].Name,
+                    nodeTitle,
                     (float)router.OutputNodes[i].TrafficAnalytics.RequestsPerMinute);
             }
 

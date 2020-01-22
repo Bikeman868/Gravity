@@ -8,7 +8,7 @@ using System.Web;
 
 namespace Gravity.Server.Ui.Shapes
 {
-    internal class PieChartDrawing : DrawingElement
+    internal class PieChartDrawing : RectangleDrawing
     {
         public PieChartDrawing(
             float width,
@@ -19,7 +19,10 @@ namespace Gravity.Server.Ui.Shapes
         {
             CssClass = "piechart";
 
-            AddChild(new SpacerDrawing(0, 30));
+            LeftMargin = width / 10f;
+            RightMargin = width / 10f;
+            TopMargin = width / 20f;
+            BottomMargin = width / 20f;
 
             AddChild(new TextDrawing
             {
@@ -38,11 +41,13 @@ namespace Gravity.Server.Ui.Shapes
             });
 
             AddChild(pie);
+
+            AddChild(new LegendDrawing(units, numberFormat, data));
         }
 
         protected override void ArrangeChildren()
         {
-            ArrangeChildrenVerticallyCentered(3f);
+            ArrangeChildrenVerticallyCentered(15f);
         }
     }
 }

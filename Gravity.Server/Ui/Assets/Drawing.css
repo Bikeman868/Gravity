@@ -84,15 +84,29 @@ line.connection_heavy { stroke-width: 2.8; stroke: #009900; }
 g.disabled > rect { stroke:#808080; fill:#fefefe; opacity: 0.6; }
 g.disabled > text { stroke:#d0d0d0; fill:#d0d0d0; }
 
-g.pie > circle.piechart_inner { fill:#ffffff }
-g.pie > circle.piechart_outer_1 { fill:transparent; stroke: #009900; stroke-width: 3;}
-g.pie > circle.piechart_outer_2 { fill:transparent; stroke: #990000; stroke-width: 3;}
-g.pie > circle.piechart_outer_3 { fill:transparent; stroke: #000099; stroke-width: 3;}
-g.pie > circle.piechart_outer_4 { fill:transparent; stroke: #999900; stroke-width: 3;}
-g.pie > circle.piechart_outer_5 { fill:transparent; stroke: #009999; stroke-width: 3;}
-g.pie > circle.piechart_outer_6 { fill:transparent; stroke: #990099; stroke-width: 3;}
-g.pie > circle.piechart_outer_7 { fill:transparent; stroke: #660066; stroke-width: 3;}
-g.pie > circle.piechart_outer_8 { fill:transparent; stroke: #006600; stroke-width: 3;}
-g.pie > circle.piechart_outer_9 { fill:transparent; stroke: #660000; stroke-width: 3;}
+g.piechart > rect { stroke: #a0a0a0; fill: #f0f0f0; }
+
+g.pie circle.center { fill:#ffffff }
+g.pie circle.segment_1 { fill:transparent; stroke: #009900; stroke-width: 25;}
+g.pie circle.segment_2 { fill:transparent; stroke: #990000; stroke-width: 25;}
+g.pie circle.segment_3 { fill:transparent; stroke: #000099; stroke-width: 25;}
+g.pie circle.segment_4 { fill:transparent; stroke: #999900; stroke-width: 25;}
+g.pie circle.segment_5 { fill:transparent; stroke: #009999; stroke-width: 25;}
+g.pie circle.segment_6 { fill:transparent; stroke: #990099; stroke-width: 25;}
+g.pie circle.segment_7 { fill:transparent; stroke: #660066; stroke-width: 25;}
+g.pie circle.segment_8 { fill:transparent; stroke: #006600; stroke-width: 25;}
+g.pie circle.segment_9 { fill:transparent; stroke: #660000; stroke-width: 25;}
 
 g.pie text { font-size: 20px; padding: 0; margin: 0; }
+
+g.legend circle.segment_1 { fill:#ffffff; stroke: #009900; stroke-width: 3;}
+g.legend circle.segment_2 { fill:#ffffff; stroke: #990000; stroke-width: 3;}
+g.legend circle.segment_3 { fill:#ffffff; stroke: #000099; stroke-width: 3;}
+g.legend circle.segment_4 { fill:#ffffff; stroke: #999900; stroke-width: 3;}
+g.legend circle.segment_5 { fill:#ffffff; stroke: #009999; stroke-width: 3;}
+g.legend circle.segment_6 { fill:#ffffff; stroke: #990099; stroke-width: 3;}
+g.legend circle.segment_7 { fill:#ffffff; stroke: #660066; stroke-width: 3;}
+g.legend circle.segment_8 { fill:#ffffff; stroke: #006600; stroke-width: 3;}
+g.legend circle.segment_9 { fill:#ffffff; stroke: #660000; stroke-width: 3;}
+
+g.legend text { font-size: 8px; padding: 0; margin: 0; }

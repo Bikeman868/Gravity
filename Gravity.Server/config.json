@@ -236,46 +236,55 @@
         "nodes": [
           {
             "name": "A",
+            "title": "Incoming transform",
             "x": 200,
             "y": 50
           },
           {
             "name": "B",
+            "title": "Gravity UI",
             "x": 700,
             "y": 80
           },
           {
             "name": "C",
+            "title": "Round robbin",
             "x": 700,
             "y": 230
           },
           {
             "name": "D",
+            "title":  "Server D",
             "x": 950,
             "y": 220
           },
           {
             "name": "E",
+            "title": "Server E",
             "x": 950,
             "y": 300
           },
           {
             "name": "F",
+            "title": "Server F",
             "x": 950,
             "y": 380
           },
           {
             "name": "G",
+            "title": "Not found response",
             "x": 700,
             "y": 150
           },
           {
             "name": "H",
+            "title": "Sticky sessions",
             "x": 550,
             "y": 800
           },
           {
             "name": "I",
+            "title": "stockhouse.com",
             "x": 1100,
             "y": 650
           },
@@ -286,16 +295,19 @@
           },
           {
             "name": "K",
+            "title": "Least connected",
             "x": 550,
             "y": 550
           },
           {
             "name": "L",
+            "title": "CORS",
             "x": 300,
             "y": 550
           },
           {
             "name": "M",
+            "title": "localhost",
             "x": 800,
             "y": 830
           },
@@ -306,6 +318,7 @@
           },
           {
             "name": "O",
+            "title": "Stockhouse transform",
             "x": 850,
             "y": 500
           }

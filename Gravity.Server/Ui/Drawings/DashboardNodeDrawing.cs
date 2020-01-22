@@ -41,7 +41,7 @@ namespace Gravity.Server.Ui.Drawings
             if (internalRequest != null) nodeDrawing = new InternalRequestTile(this, internalRequest, nodeDrawingConfig);
             else if (response != null) nodeDrawing = new ResponseTile(this, response, nodeDrawingConfig);
             else if (roundRobin != null) nodeDrawing = new RoundRobinTile(this, roundRobin, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
-            else if (router != null) nodeDrawing = new RouterStats(this, router, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
+            else if (router != null) nodeDrawing = new RouterStats(this, router, dashboardConfiguration, dashboardConfiguration.TrafficIndicator);
             else if (server != null) nodeDrawing = new ServerTile(this, server, nodeDrawingConfig);
             else if (stickySession != null) nodeDrawing = new StickySessionTile(this, stickySession, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
             else if (transform != null) nodeDrawing = new TransformTile(this, transform, nodeDrawingConfig);

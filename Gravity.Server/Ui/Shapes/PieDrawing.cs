@@ -22,23 +22,32 @@ namespace Gravity.Server.Ui.Shapes
         public override SvgElement Draw()
         {
             var container = GetContainer();
+
             var sum = _data.Aggregate(0f, (s, v) => s + v.Item2);
-
-            for (var i = 0; i < _data.Length; i++)
+            if (sum > 0f)
             {
-                if (_data[i].Item2 > sum / 1000f)
-                {
-                    var outerRing = new SvgCircle
-                    {
-                        CenterX = Width / 2f,
-                        CenterY = Height / 2f,
-                        Radius = Width * 0.45f
-                    };
-                    outerRing.CustomAttributes.Add("class", "piechart_outer_" + (i+1).ToString());
-                    outerRing.CustomAttributes.Add("stroke-dasharray", "30 70");
-                    outerRing.CustomAttributes.Add("stroke-dashoffset", (65 * i).ToString());
+                var circumference = (float)(Math.PI * Width);
+                var dashOffset = circumference * 1.25f;
 
-                    container.Children.Add(outerRing);
+                for (var i = 0; i < _data.Length; i++)
+                {
+                    if (_data[i].Item2 > sum / 1000f)
+                    {
+                        var arc = _data[i].Item2 * circumference / sum;
+                        var outerRing = new SvgCircle
+                        {
+                            CenterX = Width / 2f,
+                            CenterY = Height / 2f,
+                            Radius = Width * 0.45f
+                        };
+                        outerRing.CustomAttributes.Add("class", "segment_" + (i + 1).ToString());
+                        outerRing.CustomAttributes.Add("stroke-dasharray", arc.ToString() + " " + (circumference-arc).ToString());
+                        outerRing.CustomAttributes.Add("stroke-dashoffset", dashOffset.ToString());
+
+                        container.Children.Add(outerRing);
+
+                        dashOffset -= arc;
+                    }
                 }
             }
 
@@ -46,9 +55,9 @@ namespace Gravity.Server.Ui.Shapes
             {
                 CenterX = Width / 2f,
                 CenterY = Height / 2f,
-                Radius = Width * 0.3f
+                Radius = Width * 0.35f
             };
-            centerCircle.CustomAttributes.Add("class", "piechart_inner");
+            centerCircle.CustomAttributes.Add("class", "center");
             container.Children.Add(centerCircle);
 
             DrawChildren(container.Children);
