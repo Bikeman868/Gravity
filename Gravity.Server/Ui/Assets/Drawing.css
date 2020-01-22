@@ -84,7 +84,7 @@ line.connection_heavy { stroke-width: 2.8; stroke: #009900; }
 g.disabled > rect { stroke:#808080; fill:#fefefe; opacity: 0.6; }
 g.disabled > text { stroke:#d0d0d0; fill:#d0d0d0; }
 
-g.piechart > rect { stroke: #a0a0a0; fill: #f0f0f0; }
+g.piechart > rect { stroke: #a0a0a0; fill: #fdfdfd; }
 
 g.pie circle.center { fill:#ffffff }
 g.pie circle.segment_1 { fill:transparent; stroke: #009900; stroke-width: 25;}

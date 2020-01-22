@@ -43,7 +43,8 @@ namespace Gravity.Server.Ui.Nodes
         protected string FindNodeTitle(
             DashboardConfiguration config, string nodeName)
         {
-            return FindNodeConfiguration(config, nodeName)?.Title ?? nodeName + " Node";
+            var nodeConfig = FindNodeConfiguration(config, nodeName);
+            return nodeConfig == null ? nodeName + " Node" : nodeName + " - " + nodeConfig.Title;
         }
     }
 }
