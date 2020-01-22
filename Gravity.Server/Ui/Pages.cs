@@ -26,6 +26,17 @@ namespace Gravity.Server.Ui
     internal class DashboardPage { }
 
     /*
+     * Node page
+     */
+
+    [IsPage("node")]
+    [Route("/ui/node", Method.Get)]
+    [PageTitle("Gravity node")]
+    [UsesLayout("page")]
+    [ZoneComponent("main", "node_diagram")]
+    internal class NodePage { }
+
+    /*
      * Common elements
      */
 

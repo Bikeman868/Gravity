@@ -4,6 +4,7 @@ using OwinFramework.Pages.Core.Attributes;
 using OwinFramework.Pages.Core.Enums;
 using OwinFramework.Pages.Core.Interfaces.Builder;
 using OwinFramework.Pages.Restful.Interfaces;
+using OwinFramework.Pages.Restful.Parameters;
 
 namespace Gravity.Server.Ui
 {
@@ -25,6 +26,16 @@ namespace Gravity.Server.Ui
         private void DashboardDrawing(IEndpointRequest request)
         {
             var diagram = _diagramGenerator.GenerateDashboardDrawing();
+            var svg = _diagramGenerator.ProduceSvg(diagram);
+            request.Success(svg);
+        }
+
+        [Endpoint(UrlPath = "diagram/node/{nodename}", ResponseSerializer = typeof(SvgSerializer))]
+        [EndpointParameter("nodename", typeof(RequiredString), EndpointParameterType.PathSegment, Description = "The name of the node to return a diagram of")]
+        private void NodeDrawing(IEndpointRequest request)
+        {
+            var nodeName = request.Parameter<string>("nodename");
+            var diagram = _diagramGenerator.GenerateNodeDrawing(nodeName);
             var svg = _diagramGenerator.ProduceSvg(diagram);
             request.Success(svg);
         }

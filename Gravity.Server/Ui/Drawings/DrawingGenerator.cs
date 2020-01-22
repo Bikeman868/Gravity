@@ -46,8 +46,30 @@ namespace Gravity.Server.Ui.Drawings
                 _nodeGraph.GetNodes(n => n));
         }
 
+        public DrawingElement GenerateNodeDrawing(string nodeName)
+        {
+            var nodes = _nodeGraph.GetNodes(n => n, n => string.Equals(n.Name, nodeName, StringComparison.OrdinalIgnoreCase));
+            if (nodes.Length == 0) return null;
+
+            var nodeDrawingConfig = _dashboardConfiguration.Nodes.FirstOrDefault(n => string.Equals(n.NodeName, nodeName, StringComparison.OrdinalIgnoreCase));
+
+            return new DashboardNodeDrawing(
+                _dashboardConfiguration,
+                nodeDrawingConfig,
+                nodes[0]);
+        }
+
         public SvgDocument ProduceSvg(DrawingElement rootElement)
         {
+            if (rootElement == null)
+            {
+                return new SvgDocument
+                {
+                    FontFamily = "Arial",
+                    FontSize = SvgTextHeight
+                };
+            }
+
             rootElement.SortDescendentsByZOrder();
             rootElement.Arrange();
             rootElement.UpdateConnectedElements();

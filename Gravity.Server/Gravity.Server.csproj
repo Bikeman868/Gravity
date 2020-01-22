@@ -177,6 +177,8 @@
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Script.cs" />
     <Compile Include="ProcessingNodes\Transform\IScriptParser.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Parser.cs" />
+    <Compile Include="Ui\Components\NodeDiagramComponent.cs" />
+    <Compile Include="Ui\Drawings\DashboardNodeDrawing.cs" />
     <Compile Include="Ui\Drawings\DashboardDrawing.cs" />
     <Compile Include="Ui\Drawings\DrawingGenerator.cs" />
     <Compile Include="Interfaces\IDrawingGenerator.cs" />
