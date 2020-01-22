@@ -2,49 +2,48 @@
 using System.Collections.Generic;
 using System.Linq;
 using Gravity.Server.Configuration;
-using Gravity.Server.ProcessingNodes.Routing;
+using Gravity.Server.ProcessingNodes.LoadBalancing;
 using Gravity.Server.Ui.Shapes;
 
 namespace Gravity.Server.Ui.Nodes
 {
-    internal class RouterStats: NodeStats
+    internal class LoadBalancerStats: NodeStats
     {
-        public RouterStats(
+        public LoadBalancerStats(
             DrawingElement drawing, 
-            RoutingNode router,
+            LoadBalancerNode loadBalancer,
             DashboardConfiguration dashboardConfiguration,
-            TrafficIndicatorConfiguration trafficIndicatorConfiguration)
+            DrawingElement[] topSectionElements)
             : base(drawing)
         {
-            var nodeConfiguration = FindNodeConfiguration(dashboardConfiguration, router.Name);
-
             var topSection = AddSection();
             var bottomSection = AddSection();
 
-            topSection.AddChild(new RouterTile(drawing, router, nodeConfiguration, trafficIndicatorConfiguration));
+            foreach(var element in topSectionElements)
+                topSection.AddChild(element);
 
-            var requestRateData = new Tuple<string, float>[router.OutputNodes.Length];
-            for (var i = 0; i < router.OutputNodes.Length; i++)
+            var requestRateData = new Tuple<string, float>[loadBalancer.OutputNodes.Length];
+            for (var i = 0; i < loadBalancer.OutputNodes.Length; i++)
             {
-                var nodeName = router.OutputNodes[i].Name;
+                var nodeName = loadBalancer.OutputNodes[i].Name;
                 var nodeTitle = FindNodeTitle(dashboardConfiguration, nodeName);
 
                 requestRateData[i] = new Tuple<string, float>(
                     nodeTitle,
-                    (float)router.OutputNodes[i].TrafficAnalytics.RequestsPerMinute);
+                    (float)loadBalancer.OutputNodes[i].TrafficAnalytics.RequestsPerMinute);
             }
 
             bottomSection.AddChild(CreatePieChart("Request Rate", "/min", requestRateData, TotalHandling.Sum));
 
-            var requestTimeData = new Tuple<string, float>[router.OutputNodes.Length];
-            for (var i = 0; i < router.OutputNodes.Length; i++)
+            var requestTimeData = new Tuple<string, float>[loadBalancer.OutputNodes.Length];
+            for (var i = 0; i < loadBalancer.OutputNodes.Length; i++)
             {
-                var nodeName = router.OutputNodes[i].Name;
+                var nodeName = loadBalancer.OutputNodes[i].Name;
                 var nodeTitle = FindNodeTitle(dashboardConfiguration, nodeName);
 
                 requestTimeData[i] = new Tuple<string, float>(
                     nodeTitle,
-                    (float)router.OutputNodes[i].TrafficAnalytics.RequestTime.TotalMilliseconds);
+                    (float)loadBalancer.OutputNodes[i].TrafficAnalytics.RequestTime.TotalMilliseconds);
             }
 
             bottomSection.AddChild(CreatePieChart("Request Time", "ms", requestRateData, TotalHandling.Maximum));

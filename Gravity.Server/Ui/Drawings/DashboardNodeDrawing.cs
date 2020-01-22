@@ -40,12 +40,12 @@ namespace Gravity.Server.Ui.Drawings
 
             if (internalRequest != null) nodeDrawing = new InternalRequestTile(this, internalRequest, nodeDrawingConfig);
             else if (response != null) nodeDrawing = new ResponseTile(this, response, nodeDrawingConfig);
-            else if (roundRobin != null) nodeDrawing = new RoundRobinTile(this, roundRobin, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
+            else if (roundRobin != null) nodeDrawing = new RoundRobinStats(this, roundRobin, dashboardConfiguration, nodeDrawingConfig);
             else if (router != null) nodeDrawing = new RouterStats(this, router, dashboardConfiguration, dashboardConfiguration.TrafficIndicator);
             else if (server != null) nodeDrawing = new ServerTile(this, server, nodeDrawingConfig);
-            else if (stickySession != null) nodeDrawing = new StickySessionTile(this, stickySession, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
+            else if (stickySession != null) nodeDrawing = new StickySessionStats(this, stickySession, dashboardConfiguration, nodeDrawingConfig);
             else if (transform != null) nodeDrawing = new TransformTile(this, transform, nodeDrawingConfig);
-            else if (leastConnections != null) nodeDrawing = new LeastConnectionsTile(this, leastConnections, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
+            else if (leastConnections != null) nodeDrawing = new LeastConnectionsStats(this, leastConnections, dashboardConfiguration, nodeDrawingConfig);
             else if (cors != null) nodeDrawing = new CorsDrawing(this, cors, nodeDrawingConfig);
             else nodeDrawing = new NodeTile(this, node.Name, "", true);
 

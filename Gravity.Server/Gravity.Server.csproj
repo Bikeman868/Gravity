@@ -183,9 +183,13 @@
     <Compile Include="Ui\Drawings\DiagramGenerator.cs" />
     <Compile Include="Interfaces\IDrawingGenerator.cs" />
     <Compile Include="Ui\Drawings\SvgSerializer.cs" />
+    <Compile Include="Ui\Nodes\StickySessionStats.cs" />
     <Compile Include="Ui\Nodes\LoadBalancerTile.cs" />
     <Compile Include="Ui\ApiService.cs" />
     <Compile Include="Ui\Nodes\NodeStats.cs" />
+    <Compile Include="Ui\Nodes\LoadBalancerStats.cs" />
+    <Compile Include="Ui\Nodes\LeastConnectionsStats.cs" />
+    <Compile Include="Ui\Nodes\RoundRobinStats.cs" />
     <Compile Include="Ui\Nodes\RouterStats.cs" />
     <Compile Include="Ui\Shapes\TotalHandling.cs" />
     <Compile Include="Ui\Shapes\PieChartDrawing.cs" />
