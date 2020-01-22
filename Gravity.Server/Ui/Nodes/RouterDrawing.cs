@@ -35,7 +35,7 @@ namespace Gravity.Server.Ui.Nodes
             if (router.Outputs != null)
             {
                 _outputDrawings = router.Outputs
-                    .Select(o => new RouterOutputDrawing(drawing, o, o.RouteTo, router.Offline))
+                    .Select(o => new RouterOutputDrawing(drawing, o, o.RouteTo, null, router.Offline))
                     .ToArray();
 
                 foreach (var outputDrawing in _outputDrawings)
@@ -83,8 +83,15 @@ namespace Gravity.Server.Ui.Nodes
                 DrawingElement drawing,
                 RouterOutputConfiguration routerOutput,
                 string label,
+                string title,
                 bool disabled)
-                : base(drawing, "Output", "router_output", disabled, 3, label)
+                : base(
+                    drawing, 
+                    title ?? "Output", 
+                    "router_output", 
+                    disabled, 
+                    3, 
+                    label)
             {
                 var details = new List<string>();
 

@@ -45,7 +45,8 @@ namespace Gravity.Server.Ui.Nodes
                     var output = loadBalancer.OutputNodes[i];
                     _outputDrawings[i] = new OutputDrawing(
                         drawing, 
-                        outputNodeName, 
+                        outputNodeName,
+                        "Server",
                         output, 
                         cssClass + "_output",
                         showConnections,
@@ -95,12 +96,13 @@ namespace Gravity.Server.Ui.Nodes
             public OutputDrawing(
                 DrawingElement drawing,
                 string label,
+                string title,
                 NodeOutput output,
                 string cssClass,
                 bool showConnections,
                 bool showSessions,
                 bool showTraffic)
-                : base(drawing, "Output", cssClass, output == null || output.Disabled, 3, label)
+                : base(drawing, title ?? "Output", cssClass, output == null || output.Disabled, 3, label)
             {
                 if (output != null)
                 {
@@ -109,8 +111,8 @@ namespace Gravity.Server.Ui.Nodes
                     if (showTraffic)
                     {
                         details.Add(output.TrafficAnalytics.LifetimeRequestCount + " requests");
-                        details.Add(output.TrafficAnalytics.RequestTime.TotalMilliseconds.ToString("n2") + " ms");
-                        details.Add(output.TrafficAnalytics.RequestsPerMinute.ToString("n2") + " /min");
+                        details.Add(output.TrafficAnalytics.RequestTime.TotalMilliseconds.ToString("n2") + "ms");
+                        details.Add(output.TrafficAnalytics.RequestsPerMinute.ToString("n2") + "/min");
                     }
 
                     if (showConnections)

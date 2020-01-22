@@ -150,7 +150,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
                 if (ReferenceEquals(_originalParametersString, null))
                 {
                     _originalParametersString = Context.Incoming.Query.HasValue 
-                        ? Context.Incoming.Query.ToString()
+                        ? Context.Incoming.Query.Value
                         : string.Empty;
                 }
                 return _originalParametersString;

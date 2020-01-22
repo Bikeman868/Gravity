@@ -22,6 +22,7 @@ namespace Gravity.Server.Utility
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly IFactory _factory;
         private readonly IBufferPool _bufferPool;
+        private readonly ILogFactory _logFactory;
         private readonly IDisposable _configuration;
 
         private INodeGraph _current;
@@ -32,12 +33,14 @@ namespace Gravity.Server.Utility
             IExpressionParser expressionParser,
             IHostingEnvironment hostingEnvironment,
             IFactory factory,
-            IBufferPool bufferPool)
+            IBufferPool bufferPool,
+            ILogFactory logFactory)
         {
             _expressionParser = expressionParser;
             _hostingEnvironment = hostingEnvironment;
             _factory = factory;
             _bufferPool = bufferPool;
+            _logFactory = logFactory;
 
             _configuration = configuration.Register(
                 "/gravity/nodeGraph", 
@@ -267,7 +270,7 @@ namespace Gravity.Server.Utility
             {
                 foreach (var serverNodeConfiguration in configuration.ServerNodes)
                 {
-                    var node = new ServerNode(_bufferPool)
+                    var node = new ServerNode(_bufferPool, _logFactory)
                     {
                         Name = serverNodeConfiguration.Name,
                         Disabled = serverNodeConfiguration.Disabled,

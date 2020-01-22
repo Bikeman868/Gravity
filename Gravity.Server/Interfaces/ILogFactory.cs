@@ -9,6 +9,7 @@ namespace Gravity.Server.Interfaces
         /// Creates a new logger
         /// </summary>
         ILog Create(IRequestContext context);
+        bool WillLog(LogType type, LogLevel level);
     }
 
     public enum LogLevel

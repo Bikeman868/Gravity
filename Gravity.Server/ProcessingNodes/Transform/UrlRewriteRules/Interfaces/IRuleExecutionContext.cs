@@ -12,7 +12,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces
         IList<Action<IRuleExecutionContext>> DeferredActions { get; }
         bool UrlIsModified { get; }
 
-        // Information parsed from the incomming request
+        // Information parsed from the incoming request
         string OriginalHost { get; }
         string OriginalPathAndQueryString { get; }
         string OriginalPathString { get; }
@@ -20,7 +20,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules.Interfaces
         string OriginalParametersString { get; }
         IDictionary<string, IList<string>> OriginalParameters { get; }
 
-        // Control over the rewriten/redirected URL
+        // Control over the rewritten/redirected URL
         string NewHost { get; set; }
         string NewUrlString { get; set; }
         string NewPathString { get; set; }

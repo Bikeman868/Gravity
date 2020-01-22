@@ -55,10 +55,14 @@ namespace Gravity.Server.ProcessingNodes.Server
         private readonly IBufferPool _bufferPool;
         private Thread _backgroundThread;
         private int _lastIpAddressIndex;
+        private readonly ILogFactory _logFactory;
 
-        public ServerNode(IBufferPool bufferPool)
+        public ServerNode(
+            IBufferPool bufferPool,
+            ILogFactory logFactory)
         {
             _bufferPool = bufferPool;
+            _logFactory = logFactory;
 
             ConnectionTimeout = TimeSpan.FromSeconds(20);
             ResponseTimeout = TimeSpan.FromSeconds(10);
@@ -105,7 +109,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                         if (timeNow > nextDnsLookup)
                         {
-                            using (var log = HealthCheckLog ? new HealthCheckLogger() : null)
+                            using (var log = HealthCheckLog ? new HealthCheckLogger(_logFactory) : null)
                             {
                                 nextDnsLookup = timeNow + LookupDomainName(log);
                             }
@@ -115,7 +119,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                         {
                             nextHealthCheck = timeNow + HealthCheckInterval;
 
-                            using (var log = HealthCheckLog ? new HealthCheckLogger() : null)
+                            using (var log = HealthCheckLog ? new HealthCheckLogger(_logFactory) : null)
                             {
                                 CheckHealth(log);
                             }
@@ -367,6 +371,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                 }
                 catch (Exception ex)
                 {
+                    log?.Log(LogType.Exception, LogLevel.Important, () => $"Endpoint {ipAddress.Address} failed health check with exception {ex.Message}");
                     ipAddress.SetUnhealthy(ex.Message);
                 }
             }
@@ -427,7 +432,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                     }
                     catch (Exception ex)
                     {
-                        context.Log?.Log(LogType.TcpIp, LogLevel.Important, () => "Returning 503 response because " + ex.Message);
+                        context.Log?.Log(LogType.Exception, LogLevel.Important, () => "Returning 503 response because " + ex.Message);
 
                         context.Outgoing.StatusCode = 503;
                         context.Outgoing.ReasonPhrase = "Exception forwarding request to real server";
@@ -438,12 +443,15 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         private class HealthCheckLogger : ILog
         {
+            private readonly ILogFactory _logFactory;
             private static volatile int _nextId;
             private readonly int _id;
             private readonly DateTime _startTime = DateTime.UtcNow;
 
-            public HealthCheckLogger()
+            public HealthCheckLogger(
+                ILogFactory logFactory)
             {
+                _logFactory = logFactory;
                 _id = ++_nextId;
             }
 
@@ -458,8 +466,11 @@ namespace Gravity.Server.ProcessingNodes.Server
 
             public void Log(LogType type, LogLevel level, Func<string> messageFunc)
             {
-                var elapsed = (int)(DateTime.UtcNow - _startTime).TotalMilliseconds;
-                Trace.WriteLine($"[HEALTH-CHECK] {_id,6} {elapsed,6}ms {type,-10} {messageFunc()}");
+                if (_logFactory.WillLog(type, level))
+                {
+                    var elapsed = (int) (DateTime.UtcNow - _startTime).TotalMilliseconds;
+                    Trace.WriteLine($"[HEALTH-CHECK] {_id,6} {elapsed,6}ms {type,-10} {messageFunc()}");
+                }
             }
         }
     }

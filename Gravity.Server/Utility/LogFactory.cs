@@ -15,9 +15,9 @@ namespace Gravity.Server.Utility
     {
         private IDisposable _configRegistration;
         private Configuration _configuration;
-        private Func<LogType, LogLevel, bool> _filter;
         private long _nextKey;
         private LogFileWriter _logFileWriter;
+        private Func<LogType, LogLevel, bool> _filter;
 
         public LogFactory(
             IConfigurationStore configurationStore)
@@ -82,6 +82,11 @@ namespace Gravity.Server.Utility
             }
 
             return log;
+        }
+
+        public bool WillLog(LogType type, LogLevel level)
+        {
+            return _filter(type, level);
         }
 
         private class FileLog: ILog

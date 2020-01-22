@@ -42,13 +42,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
 
         private string _originalUrlString;
 
-        public string OriginalPathAndQueryString
-        {
-            get
-            {
-                return _originalUrlString ?? (_originalUrlString = Context.Incoming.Path + Context.Incoming.Query);
-            }
-        }
+        public string OriginalPathAndQueryString => _originalUrlString ?? (_originalUrlString = Context.Incoming.Path + (Context.Incoming.Query.HasValue ? Context.Incoming.Query.Value : string.Empty));
 
         private int? _originalQueryPos;
 
@@ -143,7 +137,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
                 if (ReferenceEquals(_originalParametersString, null))
                 {
                     _originalParametersString = Context.Incoming.Query.HasValue 
-                        ? Context.Incoming.Query.ToString()
+                        ? Context.Incoming.Query.Value
                         : string.Empty;
                 }
                 return _originalParametersString;
