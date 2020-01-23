@@ -18,8 +18,9 @@ namespace Gravity.Server.Ui
      * Dashboard page
      */
 
-    [IsPage("dashboard")]
+    [IsPage("dashboard", "/ui/dashboard")]
     [Route("/ui/dashboard", Method.Get)]
+    [Route("/", Method.Get)]
     [PageTitle("Gravity dashboard")]
     [UsesLayout("page")]
     [ZoneComponent("main", "dashboard_diagram")]

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Gravity.Server.Interfaces;
 using Gravity.Server.Pipeline;
 using Microsoft.Owin;
+using Newtonsoft.Json;
 using Urchin.Client.Interfaces;
 
 namespace Gravity.Server.Utility
@@ -28,7 +29,7 @@ namespace Gravity.Server.Utility
                 "/gravity/log", 
                 c =>
                 {
-                    if ((int)c.MaxLogLevel < 1)
+                    if ((int)c.MaximumLogLevel < 1)
                     {
                         _filter = (t, l) => false;
                         c.Enabled = false;
@@ -38,7 +39,7 @@ namespace Gravity.Server.Utility
                         var logTypeMask = c.LogTypes.Length == 0 
                             ? -1
                             : c.LogTypes.Aggregate(0, (m, t) => m |= (int)t);
-                        _filter = (t, l) => l <= c.MaxLogLevel && ((int)t & logTypeMask) != 0;
+                        _filter = (t, l) => l <= c.MaximumLogLevel && ((int)t & logTypeMask) != 0;
                     }
 
                     if (c.Method == LogMethod.File)
@@ -166,19 +167,32 @@ namespace Gravity.Server.Utility
 
         private class Configuration
         {
+            [JsonProperty("enabled")]
             public bool Enabled { get; set; }
+
+            [JsonProperty("method")]
             public LogMethod Method { get; set; }
-            public LogLevel MaxLogLevel { get; set; }
+
+            [JsonProperty("maxLogLevel")]
+            public LogLevel MaximumLogLevel { get; set; }
+
+            [JsonProperty("logTypes")]
             public LogType[] LogTypes { get; set; }
+
+            [JsonProperty("directory")]
             public string Directory { get; set; }
+
+            [JsonProperty("maxLogFileAge")]
             public TimeSpan MaximumLogFileAge { get; set; }
+
+            [JsonProperty("maxLogFileSize")]
             public long MaximumLogFileSize { get; set; }
 
             public Configuration()
             {
                 Enabled = false;
                 Method = LogMethod.Trace;
-                MaxLogLevel = LogLevel.Standard;
+                MaximumLogLevel = LogLevel.Standard;
                 LogTypes = new LogType[0];
                 Directory = "C:\\Logs";
                 MaximumLogFileAge = TimeSpan.FromDays(7);
@@ -191,8 +205,8 @@ namespace Gravity.Server.Utility
             private readonly object _lock = new object();
 
             private readonly DirectoryInfo _directory;
-            private TimeSpan _maximumLogFileAge;
-            private long _maximumLogFileSize;
+            private readonly TimeSpan _maximumLogFileAge;
+            private readonly long _maximumLogFileSize;
 
             private FileInfo _fileInfo;
             private TextWriter _fileWriter;
@@ -286,7 +300,8 @@ namespace Gravity.Server.Utility
 
                 try
                 {
-                    if (!_directory.Exists) _directory.Create();
+                    if (!_directory.Exists)
+                        Directory.CreateDirectory(_directory.FullName);
 
                     _fileInfo = new FileInfo(_directory.FullName + "\\log_" + DateTime.UtcNow.Ticks.ToString("d020") + ".txt");
                     _fileWriter = new StreamWriter(_fileInfo.Create(), Encoding.UTF8);
