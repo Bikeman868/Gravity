@@ -16,7 +16,7 @@ namespace Gravity.Server.Ui.Nodes
             TrafficIndicatorConfiguration trafficIndicatorConfiguration)
             : base(
                 drawing,
-                listener?.Title ?? "Listener ", 
+                listener?.Title ?? listener?.Name + " Listener", 
                 "listener", 
                 listener.Disabled)
         {

@@ -22,7 +22,7 @@ namespace Gravity.Server.Ui.Drawings
 
         private readonly IDisposable _dashboardConfig;
 
-        private DashboardConfiguration _dashboardConfiguration;
+        private DashboardConfiguration[] _dashboardConfigurations;
 
         public DiagramGenerator(
             IConfiguration configuration,
@@ -33,15 +33,24 @@ namespace Gravity.Server.Ui.Drawings
             _nodeGraph = nodeGraph;
 
             _dashboardConfig = configuration.Register(
-                "/gravity/ui/dashboard",
-                c => _dashboardConfiguration = c.Sanitize(),
-                new DashboardConfiguration());
+                "/gravity/ui/dashboards",
+                c =>
+                {
+                    foreach (var dashboardConfiguration in c)
+                        dashboardConfiguration.Sanitize();
+                    _dashboardConfigurations = c;
+                },
+                new [] { new DashboardConfiguration() });
         }
 
-        public DrawingElement GenerateDashboardDrawing()
+        public DrawingElement GenerateDashboardDrawing(string dasboardName)
         {
+            var dashboardConfiguration = _dashboardConfigurations.FirstOrDefault(
+                c => string.Equals(dasboardName, c.Name, StringComparison.OrdinalIgnoreCase)) 
+                ?? _dashboardConfigurations[0];
+
             return new DashboardDrawing(
-                _dashboardConfiguration,
+                dashboardConfiguration,
                 _requestListener,
                 _nodeGraph.GetNodes(n => n));
         }
@@ -51,10 +60,11 @@ namespace Gravity.Server.Ui.Drawings
             var nodes = _nodeGraph.GetNodes(n => n, n => string.Equals(n.Name, nodeName, StringComparison.OrdinalIgnoreCase));
             if (nodes.Length == 0) return null;
 
-            var nodeDrawingConfig = _dashboardConfiguration.Nodes.FirstOrDefault(n => string.Equals(n.NodeName, nodeName, StringComparison.OrdinalIgnoreCase));
+            var dashboardConfiguration = _dashboardConfigurations[0];
+            var nodeDrawingConfig = dashboardConfiguration.Nodes.FirstOrDefault(n => string.Equals(n.NodeName, nodeName, StringComparison.OrdinalIgnoreCase));
 
             return new DashboardNodeDrawing(
-                _dashboardConfiguration,
+                dashboardConfiguration,
                 nodeDrawingConfig,
                 nodes[0]);
         }

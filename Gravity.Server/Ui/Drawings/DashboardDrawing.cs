@@ -20,7 +20,7 @@ namespace Gravity.Server.Ui.Drawings
             DashboardConfiguration dashboardConfiguration,
             IRequestListener requestListener,
             INode[] nodes)
-            : base(null, "Dashboard", "drawing", false, 1)
+            : base(null, dashboardConfiguration.Name + " Dashboard", "drawing", false, 1)
         {
             LeftMargin = 20;
             RightMargin = 20;
@@ -30,31 +30,30 @@ namespace Gravity.Server.Ui.Drawings
             var listenerDrawings = new List<ListenerTile>();
             var nodeDrawings = new DefaultDictionary<string, NodeTile>(StringComparer.OrdinalIgnoreCase);
 
-            var endpoints = requestListener.Endpoints;
-            if (endpoints != null)
+            var listeners = requestListener.Endpoints;
+            if (listeners != null)
             {
-                var x = dashboardConfiguration.Listeners.X;
-                var y = dashboardConfiguration.Listeners.Y;
-
-                foreach (var endpoint in endpoints)
+                foreach (var listener in listeners)
                 {
+                    var listenerName = listener.Name;
+
+                    var listenerDrawingConfig = dashboardConfiguration.Listeners.FirstOrDefault(n => n.NodeName == listenerName);
+                    if (listenerDrawingConfig == null) continue;
+
                     var listenerDrawing = new ListenerTile(
-                        this, 
-                        endpoint, 
+                        this,
+                        listener,
                         dashboardConfiguration.TrafficIndicator)
                     {
-                        Left = x,
-                        Top = y,
-                        Width = 200,
-                        Height = 80
+                        Left = listenerDrawingConfig.X,
+                        Top = listenerDrawingConfig.Y,
+                        Width = listenerDrawingConfig.Width,
+                        Height = listenerDrawingConfig.Height
                     };
 
                     AddChild(listenerDrawing);
 
                     listenerDrawings.Add(listenerDrawing);
-
-                    x += dashboardConfiguration.Listeners.XSpacing;
-                    y += dashboardConfiguration.Listeners.YSpacing;
                 }
             }
 
@@ -62,6 +61,11 @@ namespace Gravity.Server.Ui.Drawings
             {
                 foreach (var node in nodes)
                 {
+                    var nodeName = node.Name;
+
+                    var nodeDrawingConfig = dashboardConfiguration.Nodes.FirstOrDefault(n => n.NodeName == nodeName);
+                    if (nodeDrawingConfig == null) continue;
+
                     NodeTile nodeDrawing;
 
                     var internalRequest = node as InternalNode;
@@ -74,9 +78,6 @@ namespace Gravity.Server.Ui.Drawings
                     var leastConnections = node as LeastConnectionsNode;
                     var cors = node as CorsNode;
 
-                    var nodeName = node.Name;
-                    var nodeDrawingConfig = dashboardConfiguration.Nodes.FirstOrDefault(n => n.NodeName == nodeName);
-
                     if (internalRequest != null) nodeDrawing = new InternalRequestTile(this, internalRequest, nodeDrawingConfig);
                     else if (response != null) nodeDrawing = new ResponseTile(this, response, nodeDrawingConfig);
                     else if (roundRobin != null) nodeDrawing = new RoundRobinTile(this, roundRobin, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
@@ -88,13 +89,10 @@ namespace Gravity.Server.Ui.Drawings
                     else if (cors != null) nodeDrawing = new CorsDrawing(this, cors, nodeDrawingConfig);
                     else nodeDrawing = new NodeTile(this, node.Name, "", true);
 
-                    if (nodeDrawingConfig != null)
-                    {
-                        nodeDrawing.Left = nodeDrawingConfig.X;
-                        nodeDrawing.Top = nodeDrawingConfig.Y;
-                        nodeDrawing.Width = nodeDrawingConfig.Width;
-                        nodeDrawing.Height = nodeDrawingConfig.Height;
-                    }
+                    nodeDrawing.Left = nodeDrawingConfig.X;
+                    nodeDrawing.Top = nodeDrawingConfig.Y;
+                    nodeDrawing.Width = nodeDrawingConfig.Width;
+                    nodeDrawing.Height = nodeDrawingConfig.Height;
 
                     AddChild(nodeDrawing);
                     nodeDrawings[node.Name] = nodeDrawing;

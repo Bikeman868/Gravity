@@ -21,6 +21,7 @@ namespace Gravity.Server.Configuration
                         // Default configuration is to send all traffic to node "A"
                         new ListenerEndpointConfiguration
                         {
+                            Name = "Input",
                             IpAddress = "*",
                             PortNumber = 0,
                             NodeName = "A"

@@ -5,7 +5,7 @@ namespace Gravity.Server.Interfaces
 {
     internal interface IDrawingGenerator
     {
-        DrawingElement GenerateDashboardDrawing();
+        DrawingElement GenerateDashboardDrawing(string dasboardName);
         DrawingElement GenerateNodeDrawing(string nodeName);
         SvgDocument ProduceSvg(DrawingElement rootElement);
     }

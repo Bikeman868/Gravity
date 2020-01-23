@@ -5,8 +5,11 @@ namespace Gravity.Server.Configuration
 {
     internal class DashboardConfiguration
     {
+        [JsonProperty("name")]
+        public string Name { get; set; }
+
         [JsonProperty("listeners")]
-        public ListenersConfiguration Listeners { get; set; }
+        public NodeConfiguration[] Listeners { get; set; }
 
         [JsonProperty("nodes")]
         public NodeConfiguration[] Nodes { get; set; }
@@ -43,6 +46,10 @@ namespace Gravity.Server.Configuration
 
                 Nodes = nodes.ToArray();
             }
+            else
+            {
+                foreach (var node in Nodes) node.Sanitize();
+            }
 
             if (TrafficIndicator == null)
                 TrafficIndicator = new TrafficIndicatorConfiguration();
@@ -50,38 +57,37 @@ namespace Gravity.Server.Configuration
 
             if (Listeners == null)
             {
-                Listeners = new ListenersConfiguration
+                var listeners = new List<NodeConfiguration>();
+
+                var x = 0;
+                var y = 50;
+                var width = 300;
+                var height = 50;
+
+                for (var c = 'A'; c < 'Z'; c++)
                 {
-                    X = 0,
-                    Y = 50,
-                    XSpacing = 0,
-                    YSpacing = 150
+                    listeners.Add(
+                        new NodeConfiguration
+                        {
+                            NodeName = new string(new[] { c }),
+                            Title = null,
+                            X = x,
+                            Y = x,
+                            Width = width,
+                            Height = height
+                        });
+
+                    y += 80;
                 };
+
+                Listeners = listeners.ToArray();
             }
             else
             {
-                if (Listeners.X < 0) Listeners.X = 0;
-                if (Listeners.X > 10000) Listeners.X = 10000;
-                if (Listeners.Y < 0) Listeners.Y = 0;
-                if (Listeners.Y > 10000) Listeners.Y = 10000;
+                foreach (var listener in Listeners) listener.Sanitize();
             }
 
             return this;
-        }
-
-        internal class ListenersConfiguration
-        {
-            [JsonProperty("x")]
-            public int X { get; set; }
-
-            [JsonProperty("y")]
-            public int Y { get; set; }
-
-            [JsonProperty("xSpacing")]
-            public int XSpacing { get; set; }
-
-            [JsonProperty("ySpacing")]
-            public int YSpacing { get; set; }
         }
 
         internal class NodeConfiguration
@@ -103,6 +109,21 @@ namespace Gravity.Server.Configuration
 
             [JsonProperty("height")]
             public int Height { get; set; }
+
+            public void Sanitize()
+            {
+                if (X < 0) X = 0;
+                if (X > 10000) X = 10000;
+
+                if (Y < 0) Y = 0;
+                if (Y > 10000) Y = 10000;
+
+                if (Width < 50) Width = 50;
+                if (Width > 1000) Width = 1000;
+
+                if (Height < 50) Height = 50;
+                if (Height > 1000) Height = 1000;
+            }
         }
     }
 }

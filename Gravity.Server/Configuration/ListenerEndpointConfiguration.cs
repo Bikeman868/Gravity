@@ -7,6 +7,9 @@ namespace Gravity.Server.Configuration
 {
     internal class ListenerEndpointConfiguration
     {
+        [JsonProperty("name")]
+        public string Name { get; set; }
+
         [JsonProperty("disabled")]
         public bool Disabled { get; set; }
 

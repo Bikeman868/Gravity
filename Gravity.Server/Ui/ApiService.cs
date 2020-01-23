@@ -23,15 +23,25 @@ namespace Gravity.Server.Ui
         }
 
         [Endpoint(UrlPath = "diagram/dashboard", ResponseSerializer = typeof(SvgSerializer))]
+        [EndpointParameter(
+            "name", 
+            typeof(OptionalString), 
+            EndpointParameterType.QueryString, 
+            Description = "The name of the dashboard to return a diagram of or null for the default dashboard")]
         private void DashboardDrawing(IEndpointRequest request)
         {
-            var diagram = _diagramGenerator.GenerateDashboardDrawing();
+            var dasboardName = request.Parameter<string>("name");
+            var diagram = _diagramGenerator.GenerateDashboardDrawing(dasboardName);
             var svg = _diagramGenerator.ProduceSvg(diagram);
             request.Success(svg);
         }
 
         [Endpoint(UrlPath = "diagram/node/{nodename}", ResponseSerializer = typeof(SvgSerializer))]
-        [EndpointParameter("nodename", typeof(RequiredString), EndpointParameterType.PathSegment, Description = "The name of the node to return a diagram of")]
+        [EndpointParameter(
+            "nodename", 
+            typeof(RequiredString), 
+            EndpointParameterType.PathSegment, 
+            Description = "The name of the node to return a diagram of")]
         private void NodeDrawing(IEndpointRequest request)
         {
             var nodeName = request.Parameter<string>("nodename");
