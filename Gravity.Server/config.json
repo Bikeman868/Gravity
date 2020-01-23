@@ -3,18 +3,21 @@
     "listener": {
       "endpoints": [
         {
+          "name": "3" ,
           "title": "Everything else",
           "ipAddress": "*",
           "port": 0,
           "node": "A"
         },
         {
+          "name": "1",
           "title": "Http",
           "ipAddress": "192.168.3.1",
           "port": 80,
           "node": "L"
         },
         {
+          "name": "2",
           "title": "Https",
           "ipAddress": "192.168.3.1",
           "port": 443,
@@ -225,108 +228,173 @@
       ]
     },
     "ui": {
-      "dashboard": {
-        "listeners": {
-          "x": 0,
-          "y": 50,
-          "xSpacing": 0,
-          "ySpacing": 150
+      "dashboards": [
+        {
+          "name": "Default",
+          "listeners": [
+            {
+              "name": "1",
+              "x": 0,
+              "y": 50,
+              "width": 200,
+              "height": 100
+            },
+            {
+              "name": "2",
+              "x": 0,
+              "y": 250,
+              "width": 200,
+              "height": 100
+            },
+            {
+              "name": "3",
+              "x": 0,
+              "y": 450,
+              "width": 200,
+              "height": 100
+            }
+          ],
+          "trafficIndicator": {
+            "comment": "Traffic thresholds are in requests/min and are exclusive upper bounds",
+            "thresholds": [ 1, 20, 200, 5000 ]
+          },
+          "nodes": [
+            {
+              "name": "A",
+              "title": "Incoming transform",
+              "x": 200,
+              "y": 50
+            },
+            {
+              "name": "B",
+              "title": "Gravity UI",
+              "x": 700,
+              "y": 80
+            },
+            {
+              "name": "C",
+              "title": "Round robbin",
+              "x": 700,
+              "y": 230
+            },
+            {
+              "name": "D",
+              "title": "Server D",
+              "x": 950,
+              "y": 220
+            },
+            {
+              "name": "E",
+              "title": "Server E",
+              "x": 950,
+              "y": 300
+            },
+            {
+              "name": "F",
+              "title": "Server F",
+              "x": 950,
+              "y": 380
+            },
+            {
+              "name": "G",
+              "title": "Not found response",
+              "x": 700,
+              "y": 150
+            },
+            {
+              "name": "H",
+              "title": "Sticky sessions",
+              "x": 550,
+              "y": 800
+            },
+            {
+              "name": "I",
+              "title": "stockhouse.com",
+              "x": 1100,
+              "y": 650
+            },
+            {
+              "name": "J",
+              "x": 300,
+              "y": 800
+            },
+            {
+              "name": "K",
+              "title": "Least connected",
+              "x": 550,
+              "y": 550
+            },
+            {
+              "name": "L",
+              "title": "CORS",
+              "x": 300,
+              "y": 550
+            },
+            {
+              "name": "M",
+              "title": "localhost",
+              "x": 800,
+              "y": 830
+            },
+            {
+              "name": "N",
+              "x": 450,
+              "y": 50
+            },
+            {
+              "name": "O",
+              "title": "Stockhouse transform",
+              "x": 850,
+              "y": 500
+            }
+          ]
         },
-        "trafficIndicator": {
-          "comment": "Traffic thresholds are in requests/min and are exclusive upper bounds",
-          "thresholds": [ 1, 20, 200, 5000 ]
-        },
-        "nodes": [
-          {
-            "name": "A",
-            "title": "Incoming transform",
-            "x": 200,
-            "y": 50
+        {
+          "name": "Output",
+          "trafficIndicator": {
+            "comment": "Traffic thresholds are in requests/min and are exclusive upper bounds",
+            "thresholds": [ 1, 20, 200, 5000 ]
           },
-          {
-            "name": "B",
-            "title": "Gravity UI",
-            "x": 700,
-            "y": 80
-          },
-          {
-            "name": "C",
-            "title": "Round robbin",
-            "x": 700,
-            "y": 230
-          },
-          {
-            "name": "D",
-            "title":  "Server D",
-            "x": 950,
-            "y": 220
-          },
-          {
-            "name": "E",
-            "title": "Server E",
-            "x": 950,
-            "y": 300
-          },
-          {
-            "name": "F",
-            "title": "Server F",
-            "x": 950,
-            "y": 380
-          },
-          {
-            "name": "G",
-            "title": "Not found response",
-            "x": 700,
-            "y": 150
-          },
-          {
-            "name": "H",
-            "title": "Sticky sessions",
-            "x": 550,
-            "y": 800
-          },
-          {
-            "name": "I",
-            "title": "stockhouse.com",
-            "x": 1100,
-            "y": 650
-          },
-          {
-            "name": "J",
-            "x": 300,
-            "y": 800
-          },
-          {
-            "name": "K",
-            "title": "Least connected",
-            "x": 550,
-            "y": 550
-          },
-          {
-            "name": "L",
-            "title": "CORS",
-            "x": 300,
-            "y": 550
-          },
-          {
-            "name": "M",
-            "title": "localhost",
-            "x": 800,
-            "y": 830
-          },
-          {
-            "name": "N",
-            "x": 450,
-            "y": 50
-          },
-          {
-            "name": "O",
-            "title": "Stockhouse transform",
-            "x": 850,
-            "y": 500
-          }
-        ]
-      }
+          "nodes": [
+            {
+              "name": "C",
+              "title": "Round robbin",
+              "x": 100,
+              "y": 230
+            },
+            {
+              "name": "D",
+              "title": "Server D",
+              "x": 350,
+              "y": 220
+            },
+            {
+              "name": "E",
+              "title": "Server E",
+              "x": 350,
+              "y": 300
+            },
+            {
+              "name": "F",
+              "title": "Server F",
+              "x": 350,
+              "y": 380
+            },
+            {
+              "name": "I",
+              "title": "stockhouse.com",
+              "x": 500,
+              "y": 500
+            },
+            {
+              "name": "O",
+              "title": "Stockhouse transform",
+              "x": 250,
+              "y": 500
+            }
+          ]
+        }
+      ]
     },
     "middleware": {
       "listener": {
@@ -338,7 +406,7 @@
     },
     "log": {
       "enabled": true,
-      "method": "File",
+      "method": "Trace",
       "maxLogLevel": "Detailed",
       "directory": "c:\\Logs",
       "maximumLogFileAge": "00:05:00",

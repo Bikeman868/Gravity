@@ -1,4 +1,5 @@
-﻿using OwinFramework.Pages.Core.Attributes;
+﻿using System;
+using OwinFramework.Pages.Core.Attributes;
 using OwinFramework.Pages.Core.Enums;
 using OwinFramework.Pages.Core.Interfaces.Builder;
 using OwinFramework.Pages.Core.Interfaces.Runtime;
@@ -11,7 +12,7 @@ namespace Gravity.Server.Ui.Components
         "void",
         "reloadDashboardDiagram",
         "e",
-        @"setTimeout(function() { e.src = e.src.replace(/\?r=.+/, '?r=' + Math.random()); }, 2000);")]
+        @"setTimeout(function() { e.src = e.src.replace(/r=.+/, 'r=' + Math.random()); }, 2000);")]
     internal class DashboardDiagramComponent: Component
     {
         public DashboardDiagramComponent(
@@ -24,11 +25,20 @@ namespace Gravity.Server.Ui.Components
         {
             if (pageArea == PageArea.Body)
             {
+                var url = "/ui/api/diagram/dashboard";
+
+                var dashboardName = context.OwinContext.Request.Query["name"];
+                if (string.IsNullOrEmpty(dashboardName))
+                    url += "?r=0";
+                else
+                    url += "?name=" + Uri.EscapeDataString(dashboardName) + "&r=0";
+
+
                 context.Html.WriteUnclosedElement(
                     "img", 
                     "id", "dashboard_diagram",
                     "class", "diagram", 
-                    "src", "/ui/api/diagram/dashboard?r=0",
+                    "src", url,
                     "onload", "reloadDashboardDiagram(this);");
             }
 
