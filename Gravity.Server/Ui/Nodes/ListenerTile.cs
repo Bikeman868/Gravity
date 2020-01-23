@@ -13,11 +13,10 @@ namespace Gravity.Server.Ui.Nodes
         public ListenerTile(
             DrawingElement drawing, 
             ListenerEndpointConfiguration listener,
-            DashboardConfiguration.NodeConfiguration nodeConfiguration,
             TrafficIndicatorConfiguration trafficIndicatorConfiguration)
             : base(
                 drawing,
-                nodeConfiguration?.Title ?? "Listener ", 
+                listener?.Title ?? "Listener ", 
                 "listener", 
                 listener.Disabled)
         {
@@ -26,6 +25,16 @@ namespace Gravity.Server.Ui.Nodes
             _trafficIndicatorThresholds = trafficIndicatorConfiguration.Thresholds;
 
             var details = new List<string>();
+
+            if (listener.IpAddress == "*")
+                details.Add("Listen on all IP addresses");
+            else if (!string.IsNullOrEmpty(listener.IpAddress))
+                details.Add("Listen on " + listener.IpAddress);
+
+            if (listener.PortNumber == 0)
+                details.Add("Bind to all ports");
+            else
+                details.Add("Bind to port " + listener.PortNumber);
 
             details.Add("Send to node " + listener.NodeName);
 

@@ -3,16 +3,19 @@
     "listener": {
       "endpoints": [
         {
+          "title": "Everything else",
           "ipAddress": "*",
           "port": 0,
           "node": "A"
         },
         {
+          "title": "Http",
           "ipAddress": "192.168.3.1",
           "port": 80,
           "node": "L"
         },
         {
+          "title": "Https",
           "ipAddress": "192.168.3.1",
           "port": 443,
           "node": "J"

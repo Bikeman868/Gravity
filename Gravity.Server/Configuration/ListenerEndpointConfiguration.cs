@@ -10,6 +10,9 @@ namespace Gravity.Server.Configuration
         [JsonProperty("disabled")]
         public bool Disabled { get; set; }
 
+        [JsonProperty("title")]
+        public string Title { get; set; }
+
         [JsonProperty("ipAddress")]
         public string IpAddress { get; set; }
 
@@ -28,8 +31,7 @@ namespace Gravity.Server.Configuration
 
             if (IpAddress != "*")
             {
-                IPAddress ipAddress;
-                if (!IPAddress.TryParse(IpAddress, out ipAddress))
+                if (!IPAddress.TryParse(IpAddress, out var ipAddress))
                     throw new ArgumentOutOfRangeException("IpAddress", IpAddress, "invalid IP address format");
             }
 

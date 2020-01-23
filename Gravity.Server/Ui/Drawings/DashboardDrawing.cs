@@ -41,7 +41,6 @@ namespace Gravity.Server.Ui.Drawings
                     var listenerDrawing = new ListenerTile(
                         this, 
                         endpoint, 
-                        null,
                         dashboardConfiguration.TrafficIndicator)
                     {
                         Left = x,
