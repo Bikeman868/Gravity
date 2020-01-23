@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Gravity.Server.Interfaces;
 using Gravity.Server.Pipeline;
 using Microsoft.Owin;
@@ -48,7 +50,7 @@ namespace Gravity.Server.Utility
                         else
                         {
                             var oldWriter = _logFileWriter;
-                            _logFileWriter = new LogFileWriter(new DirectoryInfo(c.Directory));
+                            _logFileWriter = new LogFileWriter(new DirectoryInfo(c.Directory), c.MaximumLogFileAge, c.MaximumLogFileSize);
                             oldWriter?.Dispose();
                         }
                     }
@@ -62,6 +64,9 @@ namespace Gravity.Server.Utility
         {
             _configRegistration?.Dispose();
             _configRegistration = null;
+
+            _logFileWriter?.Dispose();
+            _logFileWriter = null;
         }
 
         public ILog Create(IRequestContext context)
@@ -107,7 +112,7 @@ namespace Gravity.Server.Utility
 
             public void Dispose()
             {
-                _writer.WriteLog(_key, _logEntries);
+                Task.Run(() => _writer.WriteLog(_key, _logEntries));
             }
 
             public bool WillLog(LogType type, LogLevel level)
@@ -166,6 +171,8 @@ namespace Gravity.Server.Utility
             public LogLevel MaxLogLevel { get; set; }
             public LogType[] LogTypes { get; set; }
             public string Directory { get; set; }
+            public TimeSpan MaximumLogFileAge { get; set; }
+            public long MaximumLogFileSize { get; set; }
 
             public Configuration()
             {
@@ -174,6 +181,8 @@ namespace Gravity.Server.Utility
                 MaxLogLevel = LogLevel.Standard;
                 LogTypes = new LogType[0];
                 Directory = "C:\\Logs";
+                MaximumLogFileAge = TimeSpan.FromDays(7);
+                MaximumLogFileSize = 1 * 1024 * 1024;
             }
         }
 
@@ -181,31 +190,145 @@ namespace Gravity.Server.Utility
         {
             private readonly object _lock = new object();
 
-            public LogFileWriter(DirectoryInfo directory)
-            {}
+            private readonly DirectoryInfo _directory;
+            private TimeSpan _maximumLogFileAge;
+            private long _maximumLogFileSize;
+
+            private FileInfo _fileInfo;
+            private TextWriter _fileWriter;
+
+            private bool CanWrite
+            {
+                get
+                {
+                    if (_fileInfo == null || !_fileInfo.Exists) return false;
+                    _fileInfo.Refresh();
+                    return _fileInfo.Length < _maximumLogFileSize;
+                }
+            }
+
+            public LogFileWriter(
+                DirectoryInfo directory,
+                TimeSpan maximumLogFileAge,
+                long maximumLogFileSize)
+            {
+                _directory = directory;
+                _maximumLogFileAge = maximumLogFileAge;
+                _maximumLogFileSize = maximumLogFileSize;
+
+                CreateFile();
+            }
 
             public void Dispose()
-            { }
+            {
+                CloseFile();
+            }
 
             public void WriteLog(long key, List<string> logEntries)
             {
                 if (logEntries == null || logEntries.Count == 0)
                     return;
 
-                if (logEntries.Count == 1)
+                lock (_lock)
                 {
-                    Trace.WriteLine($"LOG {key,6} {logEntries[0]}");
-                }
-                else
-                {
-                    lock (_lock)
+                    if (_fileWriter == null)
                     {
-                        Trace.WriteLine($"LOG {key,6}");
+                        if (logEntries.Count == 1)
+                        {
+                            Trace.WriteLine($"LOG {key,6} {logEntries[0]}");
+                        }
+                        else
+                        {
+                            Trace.WriteLine($"LOG {key,6}");
 
-                        foreach (var entry in logEntries)
-                            Trace.WriteLine("  " + entry);
+                            foreach (var entry in logEntries)
+                                Trace.WriteLine("  " + entry);
 
-                        Trace.WriteLine($"LOG {key,6}");
+                            Trace.WriteLine($"LOG {key,6}");
+                        }
+                        CreateFile();
+                    }
+                    else
+                    {
+                        if (logEntries.Count == 1)
+                        {
+                            _fileWriter.WriteLine($"{key,06} {logEntries[0]}");
+                        }
+                        else
+                        {
+                            _fileWriter.WriteLine(key.ToString("d08"));
+
+                            foreach (var entry in logEntries)
+                                _fileWriter.WriteLine("  " + entry);
+
+                            _fileWriter.WriteLine(key.ToString("d08"));
+                        }
+                        _fileWriter.Flush();
+
+                        if (!CanWrite)
+                        {
+                            try
+                            {
+                                CloseFile();
+                            }
+                            finally
+                            {
+                                CreateFile();
+                            }
+                        }
+                    }
+                }
+            }
+
+            private void CreateFile()
+            {
+                if (_directory == null) return;
+
+                try
+                {
+                    if (!_directory.Exists) _directory.Create();
+
+                    _fileInfo = new FileInfo(_directory.FullName + "\\log_" + DateTime.UtcNow.Ticks.ToString("d020") + ".txt");
+                    _fileWriter = new StreamWriter(_fileInfo.Create(), Encoding.UTF8);
+                }
+                catch (Exception ex)
+                {
+                    _fileInfo = null;
+                    Trace.WriteLine("FILE LOGGER EXCEPTION " + ex.Message);
+                }
+            }
+
+            private void CloseFile()
+            {
+                _fileInfo = null;
+                if (_fileWriter != null)
+                {
+                    try
+                    {
+                        _fileWriter.Close();
+                        DeleteExpired();
+                    }
+                    finally
+                    {
+                        _fileWriter = null;
+                    }
+                }
+            }
+
+            private void DeleteExpired()
+            {
+                var oldest = DateTime.UtcNow - _maximumLogFileAge;
+
+                foreach (var file in _directory.GetFiles("log_*.txt"))
+                {
+                    try
+                    {
+                        if (file.LastWriteTimeUtc < oldest)
+                            file.Delete();
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.WriteLine($"ERROR DELETING LOG FILE '{file.FullName}' {ex.Message}");
                     }
                 }
             }

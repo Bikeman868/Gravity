@@ -338,8 +338,11 @@
     },
     "log": {
       "enabled": true,
-      "method": "Trace",
-      "maxLogLevel": "Detailed"
+      "method": "File",
+      "maxLogLevel": "Detailed",
+      "directory": "c:\\Logs",
+      "maximumLogFileAge": "00:05:00",
+      "maximumLogFileSize": 20000
     }
   },
   "owinFramework": {
