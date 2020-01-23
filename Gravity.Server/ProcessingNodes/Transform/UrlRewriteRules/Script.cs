@@ -71,6 +71,8 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
 
             if (_incoming)
             {
+                context.Log?.Log(LogType.Logic, LogLevel.Standard, () => "Executing URL rewrite script on incoming request");
+
                 var ruleContext = (IRuleExecutionContext) new IncomingContext(context);
 
                 var ruleResult = _rules.Evaluate(ruleContext);
@@ -91,6 +93,7 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
 
                 context.Outgoing.OnSendHeaders.Add(ctx =>
                 {
+                    context.Log?.Log(LogType.Logic, LogLevel.Standard, () => "Executing URL rewrite script on outgoing response");
                     _rules.Evaluate(ruleContext);
 
                 });
