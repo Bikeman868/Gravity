@@ -4,25 +4,14 @@ using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.ProcessingNodes.SpecialPurpose
 {
-    internal class InternalNode: INode
+    internal class InternalNode: ProcessingNode
     {
-        public string Name { get; set; }
-        public bool Disabled { get; set; }
-        public bool Offline { get { return Disabled; } }
-
-        public void Dispose()
+        public override void UpdateStatus()
         {
+            Offline = Disabled;
         }
 
-        void INode.Bind(INodeGraph nodeGraph)
-        {
-        }
-
-        void INode.UpdateStatus()
-        {
-        }
-
-        Task INode.ProcessRequest(IRequestContext context)
+        public override Task ProcessRequest(IRequestContext context)
         {
             context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Internal node '{Name}' passing the request back to the Owin pipeline for other middleware to handle");
 

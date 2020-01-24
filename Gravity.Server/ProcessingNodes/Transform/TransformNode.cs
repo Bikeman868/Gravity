@@ -8,13 +8,11 @@ using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.ProcessingNodes.Transform
 {
-    internal class TransformNode: INode
+    internal class TransformNode: ProcessingNode
     {
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly IFactory _factory;
 
-        public string Name { get; set; }
-        public bool Disabled { get; set; }
         public string OutputNode { get; set; }
         public ScriptLanguage ScriptLanguage { get; set; }
         public string RequestScript { get; set; }
@@ -22,7 +20,6 @@ namespace Gravity.Server.ProcessingNodes.Transform
         public string RequestScriptFile { get; set; }
         public string ResponseScriptFile { get; set; }
         public string Description { get; set; }
-        public bool Offline { get; private set; }
 
         private INode _nextNode;
         private IRequestTransform _requestTransform;
@@ -36,11 +33,7 @@ namespace Gravity.Server.ProcessingNodes.Transform
             _factory = factory;
         }
 
-        public void Dispose()
-        {
-        }
-
-        void INode.Bind(INodeGraph nodeGraph)
+        public override void Bind(INodeGraph nodeGraph)
         {
             _nextNode = nodeGraph.NodeByName(OutputNode);
 
@@ -109,7 +102,7 @@ namespace Gravity.Server.ProcessingNodes.Transform
             }
         }
 
-        void INode.UpdateStatus()
+        public override void UpdateStatus()
         {
             if (Disabled || _nextNode == null)
                 Offline = true;
@@ -117,7 +110,7 @@ namespace Gravity.Server.ProcessingNodes.Transform
                 Offline = _nextNode.Offline;
         }
 
-        Task INode.ProcessRequest(IRequestContext context)
+        public override Task ProcessRequest(IRequestContext context)
         {
             if (_nextNode == null)
             {

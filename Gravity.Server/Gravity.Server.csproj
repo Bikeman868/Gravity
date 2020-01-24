@@ -103,6 +103,7 @@
     <Compile Include="Pipeline\ServerRequestContext.cs" />
     <Compile Include="ProcessingNodes\LoadBalancing\LoadBalancerNode.cs" />
     <Compile Include="Pipeline\RequestListener.cs" />
+    <Compile Include="ProcessingNodes\ProcessingNode.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Actions\AbortRequest.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Actions\Action.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Actions\ActionList.cs" />

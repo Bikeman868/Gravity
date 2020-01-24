@@ -23,10 +23,8 @@ namespace Gravity.Server.ProcessingNodes.Server
         }
     }
 
-    internal class ServerNode: INode
+    internal class ServerNode: ProcessingNode
     {
-        public string Name { get; set; }
-        public bool Disabled { get; set; }
         public string DomainName { get; set; }
         public ushort? Port { get; set; }
 
@@ -48,7 +46,6 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         public bool? Healthy { get; private set; }
         public string UnhealthyReason { get; private set; }
-        public bool Offline { get; private set; }
 
         public ServerIpAddress[] IpAddresses;
         private readonly IDictionary<string, ConnectionPool> _connectionPools;
@@ -144,7 +141,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             };
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             _backgroundThread?.Abort();
             _backgroundThread?.Join(TimeSpan.FromSeconds(60));
@@ -158,12 +155,12 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
         }
 
-        void INode.Bind(INodeGraph nodeGraph)
+        public override void Bind(INodeGraph nodeGraph)
         {
             _backgroundThread.Start();
         }
 
-        void INode.UpdateStatus()
+        public override void UpdateStatus()
         {
             if (Disabled || IpAddresses == null)
             {
@@ -174,7 +171,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             Offline = Healthy == false;
         }
 
-        Task INode.ProcessRequest(IRequestContext context)
+        public override Task ProcessRequest(IRequestContext context)
         {
             var allIpAddresses = IpAddresses;
 

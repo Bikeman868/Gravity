@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Gravity.Server.Configuration;
@@ -16,7 +17,8 @@ namespace Gravity.Server.Pipeline
         private readonly INodeGraph _nodeGraph;
         private readonly ILogFactory _logFactory;
 
-        private ListenerConfiguration _configuration;
+        private ListenerConfiguration _currentConfiguration;
+        private ListenerConfiguration _newConfiguration;
         private readonly IDisposable _configurationRegistration;
 
         private Thread _trafficUpdateThread;
@@ -31,7 +33,18 @@ namespace Gravity.Server.Pipeline
 
             _configurationRegistration = configuration.Register(
                 "/gravity/listener",
-                c => _configuration = c.Sanitize(),
+                c =>
+                {
+                    Trace.WriteLine("[CONFIG] New listener configuration");
+
+                    _newConfiguration = c.Sanitize();
+
+                    if (ReferenceEquals(_currentConfiguration, null))
+                    {
+                        Trace.WriteLine("[CONFIG] There is no current listener configuration, the new configuration will be adopted immediately");
+                        _currentConfiguration = _newConfiguration;
+                    }
+                },
                 new ListenerConfiguration());
 
             _trafficUpdateThread = new Thread(() =>
@@ -41,13 +54,49 @@ namespace Gravity.Server.Pipeline
                     try
                     {
                         Thread.Sleep(3000);
-                        var endpoints = _configuration.Endpoints;
+
+                        var endpoints = _currentConfiguration.Endpoints;
                         if (endpoints != null)
                         {
                             foreach (var endpoint in endpoints)
+                                endpoint.ProcessingNode?.TrafficAnalytics.Recalculate();
+                        }
+
+                        if (!ReferenceEquals(_currentConfiguration, _newConfiguration))
+                        {
+                            endpoints = _newConfiguration.Endpoints;
+                            if (endpoints != null)
                             {
-                                if (endpoint.ProcessingNode != null)
-                                    endpoint.ProcessingNode.TrafficAnalytics.Recalculate();
+                                var offline = false;
+                                foreach (var endpoint in endpoints)
+                                {
+                                    endpoint.ProcessingNode = new NodeOutput
+                                    {
+                                        Name = endpoint.NodeName,
+                                        Node = _nodeGraph.NodeByName(endpoint.NodeName),
+                                    };
+
+
+                                    if (endpoint.ProcessingNode.Node == null)
+                                    {
+                                        Trace.WriteLine($"[CONFIG] Listener endpoint {endpoint.Name ?? endpoint.IpAddress} has no node attached in the new configuration");
+                                        offline = true;
+                                    }
+                                    else
+                                    {
+                                        if (endpoint.ProcessingNode.Node.Offline)
+                                        {
+                                            Trace.WriteLine($"[CONFIG] Listener endpoint {endpoint.Name ?? endpoint.IpAddress} processing node is not ready to accept traffic yet");
+                                            offline = true;
+                                        }
+                                    }
+                                }
+
+                                if (!offline)
+                                {
+                                    Trace.WriteLine("[CONFIG] Bringing new listener configuration online");
+                                    _currentConfiguration = _newConfiguration;
+                                }
                             }
                         }
                     }
@@ -68,17 +117,17 @@ namespace Gravity.Server.Pipeline
             _trafficUpdateThread.Start();
         }
 
-        ListenerEndpointConfiguration[] IRequestListener.Endpoints { get { return _configuration.Endpoints; } }
+        ListenerEndpointConfiguration[] IRequestListener.Endpoints { get { return _currentConfiguration.Endpoints; } }
 
         Task IRequestListener.ProcessRequest(IOwinContext owinContext, Func<Task> next)
         {
-            var configuration = _configuration;
+            var configuration = _currentConfiguration;
             if (configuration.Disabled) return next();
 
             var localIp = owinContext.Request.LocalIpAddress;
             var localPort = owinContext.Request.LocalPort;
 
-            var endpoints = _configuration.Endpoints;
+            var endpoints = _currentConfiguration.Endpoints;
             for (var i = 0; i < endpoints.Length; i++)
             {
                 var endpoint = endpoints[i];

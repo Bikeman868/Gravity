@@ -5,23 +5,16 @@ using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.ProcessingNodes.SpecialPurpose
 {
-    internal class ResponseNode: INode
+    internal class ResponseNode: ProcessingNode
     {
-        public string Name { get; set; }
-        public bool Disabled { get; set; }
         public ushort StatusCode { get; set; }
         public string ReasonPhrase { get; set; }
         public string Content { get; set; }
         public string ContentFile { get; set; }
         public string[] HeaderNames { get; set; }
         public string[] HeaderValues { get; set; }
-        public bool Offline { get { return Disabled; } }
 
-        public void Dispose()
-        {
-        }
-
-        void INode.Bind(INodeGraph nodeGraph)
+        void Bind(INodeGraph nodeGraph)
         {
             if (!string.IsNullOrWhiteSpace(ContentFile))
             {
@@ -29,11 +22,12 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
             }
         }
 
-        void INode.UpdateStatus()
+        public override void UpdateStatus()
         {
+            Offline = Disabled;
         }
 
-        Task INode.ProcessRequest(IRequestContext context)
+        public override Task ProcessRequest(IRequestContext context)
         {
             context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Response node '{Name}' returning static {StatusCode} response");
 

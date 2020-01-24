@@ -7,10 +7,8 @@ using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.ProcessingNodes.SpecialPurpose
 {
-    internal class CorsNode: INode
+    internal class CorsNode: ProcessingNode
     {
-        public string Name { get; set; }
-        public bool Disabled { get; set; }
         public string OutputNode { get; set; }
         public string WebsiteOrigin { get; set; }
         public string AllowedOrigins { get; set; }
@@ -19,22 +17,18 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
         public bool AllowCredentials { get; set; }
         public TimeSpan MaxAge { get; set; }
         public string ExposedHeaders { get; set; }
-        public bool Offline { get; private set; }
 
         private INode _nextNode;
         private Regex _allowedOriginsRegex;
 
-        public void Dispose()
-        {
-        }
-
-        void INode.Bind(INodeGraph nodeGraph)
+        public override void Bind(INodeGraph nodeGraph)
         {
             _nextNode = nodeGraph.NodeByName(OutputNode);
             _allowedOriginsRegex = new Regex(AllowedOrigins, RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            Offline = true;
         }
 
-        void INode.UpdateStatus()
+        public override void UpdateStatus()
         {
             if (Disabled || _nextNode == null)
                 Offline = true;
@@ -42,7 +36,7 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
                 Offline = _nextNode.Offline;
         }
 
-        Task INode.ProcessRequest(IRequestContext context)
+        public override Task ProcessRequest(IRequestContext context)
         {
             if (_nextNode == null)
             {

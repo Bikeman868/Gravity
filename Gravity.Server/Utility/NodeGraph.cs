@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Gravity.Server.Configuration;
@@ -24,8 +25,10 @@ namespace Gravity.Server.Utility
         private readonly IBufferPool _bufferPool;
         private readonly ILogFactory _logFactory;
         private readonly IDisposable _configuration;
+        private readonly Queue<DisposeQueueItem> _disposeQueue;
 
-        private INodeGraph _current;
+        private INodeGraph _currentInstance;
+        private INodeGraph _newInstance;
         private Thread _thread;
 
         public NodeGraph(
@@ -41,6 +44,7 @@ namespace Gravity.Server.Utility
             _factory = factory;
             _bufferPool = bufferPool;
             _logFactory = logFactory;
+            _disposeQueue = new Queue<DisposeQueueItem>();
 
             _configuration = configuration.Register(
                 "/gravity/nodeGraph", 
@@ -54,18 +58,67 @@ namespace Gravity.Server.Utility
                     try
                     {
                         Thread.Sleep(100);
-                        var graph = _current;
-                        if (graph != null)
+
+                        bool UpdateGraph(INodeGraph graph)
                         {
+                            if (graph == null) return false;
+
+                            var offline = false;
                             var nodes = graph.GetNodes(n => n);
                             foreach (var node in nodes)
                             {
                                 try
                                 {
                                     node.UpdateStatus();
+                                    if (node.Offline) offline = true;
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
+                                    Trace.WriteLine($"[EXCEPTION] Failed to update {node.Name} node status. {ex.Message}");
+                                }
+                            }
+
+                            return !offline;
+                        }
+
+                        UpdateGraph(_currentInstance);
+
+                        if (!ReferenceEquals(_currentInstance, _newInstance))
+                        {
+                            if (UpdateGraph(_newInstance))
+                            {
+                                Trace.WriteLine($"[CONFIG] Bringing new node graph online");
+
+                                var prior = _currentInstance as NodeGraphInstance;
+                                _currentInstance = _newInstance;
+
+                                if (prior != null)
+                                {
+                                    // Make sure nodes have finished processing current requests before disposing
+                                    foreach (var node in prior.Nodes)
+                                        lock(_disposeQueue) _disposeQueue.Enqueue(new DisposeQueueItem
+                                        {
+#if DEBUG
+                                            WhenUtc = DateTime.UtcNow.AddSeconds(30),
+#else
+                                            WhenUtc = DateTime.UtcNow.AddMinutes(5),
+#endif
+                                            Disposable = node
+                                        });
+                                }
+                            }
+                        }
+
+                        lock (_disposeQueue)
+                        {
+                            if (_disposeQueue.Count > 0)
+                            {
+                                var next = _disposeQueue.Peek();
+                                if (next != null && DateTime.UtcNow >= next.WhenUtc)
+                                {
+                                    Trace.WriteLine($"[DISPOSE] Disposing of " + next.Disposable);
+                                    next.Disposable.Dispose();
+                                    _disposeQueue.Dequeue();
                                 }
                             }
                         }
@@ -74,8 +127,9 @@ namespace Gravity.Server.Utility
                     {
                         return;
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        Trace.WriteLine($"[EXCEPTION] Node graph update thread {ex.Message}");
                     }
                 }
             })
@@ -90,12 +144,14 @@ namespace Gravity.Server.Utility
 
         public void Configure(NodeGraphConfiguration configuration)
         {
+            Trace.WriteLine($"[CONFIG] There is a new node graph configuration");
             try
             {
                 configuration = configuration.Sanitize();
             }
             catch (Exception ex)
             {
+                Trace.WriteLine($"[CONFIG] Exception processing node graph configuration. " + ex.Message);
                 throw new Exception("There was a problem with sanitizing the configuration data", ex);
             }
 
@@ -115,6 +171,7 @@ namespace Gravity.Server.Utility
             }
             catch (Exception ex)
             {
+                Trace.WriteLine($"[CONFIG] Exception configuring node graph nodes. " + ex.Message);
                 throw new Exception("There was a problem re-configuring nodes", ex);
             }
 
@@ -130,16 +187,20 @@ namespace Gravity.Server.Utility
             }
             catch (Exception ex)
             {
+                Trace.WriteLine($"[CONFIG] Exception binding nodes into a graph. " + ex.Message);
                 throw new Exception("There was a problem with binding nodes into a graph", ex);
             }
 
-            var prior = _current as NodeGraphInstance;
-            _current = instance;
+            _newInstance = instance;
 
-            if (prior != null)
+            if (_currentInstance == null)
             {
-                for (var i = 0; i < prior.Nodes.Length; i++)
-                    prior.Nodes[i].Dispose();
+                Trace.WriteLine($"[CONFIG] There is no current node graph instance, the new configuration will be applied immediately");
+                _currentInstance = instance;
+            }
+            else
+            {
+                Trace.WriteLine($"[CONFIG] Waiting for new node graph to come online");
             }
         }
 
@@ -349,12 +410,12 @@ namespace Gravity.Server.Utility
 
         INode INodeGraph.NodeByName(string name)
         {
-            return _current.NodeByName(name);
+            return _currentInstance.NodeByName(name);
         }
 
         T[] INodeGraph.GetNodes<T>(Func<INode, T> map, Func<INode, bool> predicate)
         {
-            return _current.GetNodes(map, predicate);
+            return _currentInstance.GetNodes(map, predicate);
         }
 
         private class NodeGraphInstance: INodeGraph
@@ -376,6 +437,12 @@ namespace Gravity.Server.Utility
                 if (predicate != null) enumeration = enumeration.Where(predicate);
                 return enumeration.Select(map).ToArray();
             }
+        }
+
+        private class DisposeQueueItem
+        {
+            public DateTime WhenUtc;
+            public IDisposable Disposable;
         }
     }
 }

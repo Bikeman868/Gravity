@@ -1,27 +1,18 @@
 ﻿using System;
 using System.Linq;
-using System.Threading.Tasks;
 using Gravity.Server.Interfaces;
 using Gravity.Server.Utility;
-using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.ProcessingNodes.LoadBalancing
 {
-    internal abstract class LoadBalancerNode: INode
+    internal abstract class LoadBalancerNode : ProcessingNode
     {
-        public string Name { get; set; }
         public string[] Outputs { get; set; }
-        public bool Disabled { get; set; }
-        public bool Offline { get; private set; }
         public NodeOutput[] OutputNodes;
 
         private DateTime _nextTrafficUpdate;
 
-        public virtual void Dispose()
-        {
-        }
-
-        void INode.Bind(INodeGraph nodeGraph)
+        public override void Bind(INodeGraph nodeGraph)
         {
             OutputNodes = Outputs.Select(name => new NodeOutput
             {
@@ -30,7 +21,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
             }).ToArray();
         }
 
-        void INode.UpdateStatus()
+        public override void UpdateStatus()
         {
             var nodes = OutputNodes;
             var offline = true;
@@ -63,7 +54,5 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
 
             Offline = offline;
         }
-
-        public abstract Task ProcessRequest(IRequestContext context);
     }
 }

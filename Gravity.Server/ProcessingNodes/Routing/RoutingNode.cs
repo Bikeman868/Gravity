@@ -9,12 +9,9 @@ using System.Collections.Generic;
 
 namespace Gravity.Server.ProcessingNodes.Routing
 {
-    internal class RoutingNode: INode
+    internal class RoutingNode: ProcessingNode
     {
-        public string Name { get; set; }
-        public bool Disabled { get; set; }
         public RouterOutputConfiguration[] Outputs { get; set; }
-        public bool Offline { get; private set; }
         public NodeOutput[] OutputNodes;
 
         private readonly IExpressionParser _expressionParser;
@@ -28,11 +25,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
             _expressionParser = expressionParser;
         }
 
-        public void Dispose()
-        {
-        }
-
-        void INode.Bind(INodeGraph nodeGraph)
+        public override void Bind(INodeGraph nodeGraph)
         {
             _outputRule = new GroupRule[Outputs.Length];
             OutputNodes = new NodeOutput[Outputs.Length];
@@ -51,7 +44,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
             }
         }
 
-        void INode.UpdateStatus()
+        public override void UpdateStatus()
         {
             var nodes = OutputNodes;
             var routes = _outputRule;
@@ -87,7 +80,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
             Offline = offline;
         }
 
-        Task INode.ProcessRequest(IRequestContext context)
+        public override Task ProcessRequest(IRequestContext context)
         {
             for (var i = 0; i < _outputRule.Length; i++)
             {
