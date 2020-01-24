@@ -51,21 +51,36 @@ namespace Gravity.Server.Ui.Nodes
             for (var i = 0; i < server.IpAddresses.Length; i++)
             {
                 var ipAddress = server.IpAddresses[i].Address.ToString();
+                var methodsPerMinute = server.IpAddresses[i].TrafficAnalytics.MethodsPerMinute;
+
+                Tuple<string, float>[] methodData;
+                    
+                lock (methodsPerMinute)
+                {
+                    var methods = methodsPerMinute.Keys.ToList();
+                    methodData = new Tuple<string, float>[methods.Count];
+
+                    for (var j = 0; j < methods.Count; j++)
+                        methodData[j] = new Tuple<string, float>(methods[j], (float)methodsPerMinute[methods[j]]);
+                }
+
+                bottomSection.AddChild(CreatePieChart(ipAddress + " Methods", "/min", methodData, TotalHandling.Sum));
+            }
+
+            for (var i = 0; i < server.IpAddresses.Length; i++)
+            {
+                var ipAddress = server.IpAddresses[i].Address.ToString();
                 var statusCodesPerMinute = server.IpAddresses[i].TrafficAnalytics.StatusCodesPerMinute;
 
                 Tuple<string, float>[] statusCodeData;
-                    
+
                 lock (statusCodesPerMinute)
                 {
                     var statusCodes = statusCodesPerMinute.Keys.ToList();
                     statusCodeData = new Tuple<string, float>[statusCodes.Count];
 
                     for (var j = 0; j < statusCodes.Count; j++)
-                    {
-                        statusCodeData[j] = new Tuple<string, float>(
-                            statusCodes[j].ToString(),
-                            (float)statusCodesPerMinute[statusCodes[j]]);
-                    }
+                        statusCodeData[j] = new Tuple<string, float>(statusCodes[j].ToString(), (float)statusCodesPerMinute[statusCodes[j]]);
                 }
 
                 bottomSection.AddChild(CreatePieChart(ipAddress + " Status", "/min", statusCodeData, TotalHandling.Sum));

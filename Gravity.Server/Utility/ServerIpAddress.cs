@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Threading;
 
 namespace Gravity.Server.Utility
@@ -19,7 +20,10 @@ namespace Gravity.Server.Utility
 
         public ServerIpAddress()
         {
-            TrafficAnalytics = new TrafficAnalytics();
+            TrafficAnalytics = new TrafficAnalytics
+            {
+                AverageInterval = TimeSpan.FromMinutes(1)
+            };
         }
 
         public void IncrementConnectionCount()

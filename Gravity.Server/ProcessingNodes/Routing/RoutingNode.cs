@@ -158,6 +158,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
                         context.Log?.Log(LogType.Step, LogLevel.Standard, () => $"Router '{Name}' sending the request to node '{node.Name}'");
 
                         var trafficAnalyticInfo = output.TrafficAnalytics.BeginRequest();
+                        trafficAnalyticInfo.Method = context.Incoming.Method;
                         var task = node.ProcessRequest(context);
 
                         if (task == null)
@@ -168,6 +169,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
                         return task.ContinueWith(t =>
                         {
+                            trafficAnalyticInfo.StatusCode = context.Outgoing.StatusCode;
                             output.TrafficAnalytics.EndRequest(trafficAnalyticInfo);
                         });
                     }

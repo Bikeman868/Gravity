@@ -42,7 +42,7 @@ namespace Gravity.Server.Utility
             _requests = new List<TrafficAnalyticInfo>();
             _lock = new object();
             _intervals = new List<IntervalStats>();
-            AverageInterval = TimeSpan.FromSeconds(5);
+            AverageInterval = TimeSpan.FromSeconds(60);
             _methodsPerMinute = new DefaultDictionary<string, double>(StringComparer.OrdinalIgnoreCase);
             _statusCodesPerMinute = new DefaultDictionary<ushort, double>(NumberComparer.UnsignedShort);
         }
@@ -113,17 +113,21 @@ namespace Gravity.Server.Utility
             {
                 foreach (var interval in _intervals)
                 {
-                    foreach (var method in interval.MethodCounts.Keys)
+                    var intervalMethods = interval.MethodCounts.Keys.ToList();
+                    foreach (var method in intervalMethods)
                         methodsPerMinute[method] = methodsPerMinute[method] + interval.MethodCounts[method];
 
-                    foreach (var status in interval.StatusCounts.Keys)
+                    var intervalStatuses = interval.StatusCounts.Keys.ToList();
+                    foreach (var status in intervalStatuses)
                         statusCodesPerMinute[status] = statusCodesPerMinute[status] + interval.StatusCounts[status];
                 }
 
-                foreach (var method in methodsPerMinute.Keys)
+                var methods = methodsPerMinute.Keys.ToList();
+                foreach (var method in methods)
                     methodsPerMinute[method] = methodsPerMinute[method] * 60 / elapsedSeconds;
 
-                foreach (var status in statusCodesPerMinute.Keys)
+                var statusCodes = statusCodesPerMinute.Keys.ToList();
+                foreach (var status in statusCodes)
                     statusCodesPerMinute[status] = statusCodesPerMinute[status] * 60 / elapsedSeconds;
             }
 

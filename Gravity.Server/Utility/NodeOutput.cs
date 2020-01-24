@@ -20,7 +20,10 @@ namespace Gravity.Server.Utility
 
         public NodeOutput()
         {
-            TrafficAnalytics = new TrafficAnalytics();
+            TrafficAnalytics = new TrafficAnalytics
+            {
+                AverageInterval = TimeSpan.FromMinutes(5)
+            };
         }
 
         public void IncrementConnectionCount()
