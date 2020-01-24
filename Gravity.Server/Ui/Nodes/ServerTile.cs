@@ -24,6 +24,8 @@ namespace Gravity.Server.Ui.Nodes
         {
             var ipAddresses = server.IpAddresses;
 
+            LinkUrl = "/ui/node?name=" + server.Name;
+
             var details = new List<string>();
 
             if (server.Healthy.HasValue)

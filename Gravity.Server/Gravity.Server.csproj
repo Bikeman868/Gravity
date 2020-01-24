@@ -177,6 +177,7 @@
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Script.cs" />
     <Compile Include="ProcessingNodes\Transform\IScriptParser.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Parser.cs" />
+    <Compile Include="Ui\Components\PageRefreshComponent.cs" />
     <Compile Include="Ui\Components\NodeDiagramComponent.cs" />
     <Compile Include="Ui\Drawings\DashboardNodeDrawing.cs" />
     <Compile Include="Ui\Drawings\DashboardDrawing.cs" />
@@ -236,7 +237,7 @@
     <Compile Include="Ui\Nodes\ServerTile.cs" />
     <Compile Include="Ui\Nodes\RoundRobinTile.cs" />
     <Compile Include="Ui\Nodes\ResponseTile.cs" />
-    <Compile Include="Ui\Nodes\CorsDrawing.cs" />
+    <Compile Include="Ui\Nodes\CorsTile.cs" />
     <Compile Include="Ui\Nodes\TransformTile.cs" />
     <Compile Include="Ui\Nodes\RouterTile.cs" />
     <Compile Include="Ui\Pages.cs" />

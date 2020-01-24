@@ -10,9 +10,9 @@ namespace Gravity.Server.Ui.Shapes
     {
         private readonly Tuple<string, float>[] _data;
 
-        public LegendDrawing(string units, string numberFormat, Tuple<string, float>[] data)
+        public LegendDrawing(string units, string numberFormat, Tuple<string, float>[] data, string chartCss)
         {
-            CssClass = "legend";
+            CssClass = chartCss + " legend";
 
             for (var i = 0; i < data.Length; i++)
             {
@@ -53,7 +53,7 @@ namespace Gravity.Server.Ui.Shapes
                     CenterY = Height / 2f,
                     Radius = Height * 0.45f
                 };
-                ring.CustomAttributes.Add("class", "segment_" + (_segment + 1).ToString());
+                ring.CustomAttributes.Add("class", "segment_" + ((_segment % 9) + 1).ToString());
                 container.Children.Add(ring);
 
                 var label = new SvgText(_label);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Gravity.Server.Configuration;
 using Gravity.Server.ProcessingNodes.LoadBalancing;
 using Gravity.Server.Utility;
+using Svg;
 
 namespace Gravity.Server.Ui.Nodes
 {
@@ -28,6 +29,8 @@ namespace Gravity.Server.Ui.Nodes
             _drawing = drawing;
             _loadBalancer = loadBalancer;
             _trafficIndicatorThresholds = trafficIndicatorConfiguration.Thresholds;
+
+            LinkUrl = "/ui/node?name=" + loadBalancer.Name;
 
             if (details != null)
                 AddDetails(details, null, loadBalancer.Offline ? "disabled" : string.Empty);

@@ -18,6 +18,7 @@ namespace Gravity.Server.Ui.Nodes
                 2, 
                 internalRequest.Name)
         {
+            LinkUrl = "/ui/node?name=" + internalRequest.Name;
         }
     }
 }

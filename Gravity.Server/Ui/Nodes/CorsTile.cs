@@ -5,12 +5,12 @@ using Gravity.Server.Ui.Shapes;
 
 namespace Gravity.Server.Ui.Nodes
 {
-    internal class CorsDrawing: NodeTile
+    internal class CorsTile: NodeTile
     {
         private readonly DrawingElement _drawing;
         private readonly CorsNode _corsNode;
 
-        public CorsDrawing(
+        public CorsTile(
             DrawingElement drawing, 
             CorsNode corsNode,
             DashboardConfiguration.NodeConfiguration nodeConfiguration) 
@@ -24,6 +24,8 @@ namespace Gravity.Server.Ui.Nodes
         {
             _drawing = drawing;
             _corsNode = corsNode;
+
+            LinkUrl = "/ui/node?name=" + corsNode.Name;
 
             var details = new List<string>();
 

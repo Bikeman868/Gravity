@@ -27,6 +27,8 @@ namespace Gravity.Server.Ui.Nodes
             _drawing = drawing;
             _transform = transform;
 
+            LinkUrl = "/ui/node?name=" + transform.Name;
+
             if (!string.IsNullOrEmpty(transform.Description))
             {
                 var details = transform.Description.Split('\n').ToList();

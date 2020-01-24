@@ -34,7 +34,7 @@ namespace Gravity.Server.Ui.Nodes
                     (float)router.OutputNodes[i].TrafficAnalytics.RequestsPerMinute);
             }
 
-            topSection.AddChild(CreatePieChart("Request Rate", "/min", requestRateData, TotalHandling.Sum));
+            topSection.AddChild(CreatePieChart("Request Rate", "/min", requestRateData, TotalHandling.Sum,"rate_piechart"));
 
             var requestTimeData = new Tuple<string, float>[router.OutputNodes.Length];
             for (var i = 0; i < router.OutputNodes.Length; i++)
@@ -47,7 +47,7 @@ namespace Gravity.Server.Ui.Nodes
                     (float)router.OutputNodes[i].TrafficAnalytics.RequestTime.TotalMilliseconds);
             }
 
-            topSection.AddChild(CreatePieChart("Request Time", "ms", requestTimeData, TotalHandling.Maximum));
+            topSection.AddChild(CreatePieChart("Request Time", "ms", requestTimeData, TotalHandling.Maximum, "time_piechart"));
 
             for (var i = 0; i < router.OutputNodes.Length; i++)
             {
@@ -66,7 +66,7 @@ namespace Gravity.Server.Ui.Nodes
                     for (var j = 0; j < methods.Count; j++)
                         methodData[j] = new Tuple<string, float>(methods[j], (float)methodsPerMinute[methods[j]]);
                 }
-                methodsSection.AddChild(CreatePieChart(nodeTitle + " Methods", "/min", methodData, TotalHandling.Sum));
+                methodsSection.AddChild(CreatePieChart(nodeTitle + " Methods", "/min", methodData, TotalHandling.Sum, "method_piechart"));
 
                 Tuple<string, float>[] statusCodeData;
                 lock (statusCodesPerMinute)
@@ -77,7 +77,7 @@ namespace Gravity.Server.Ui.Nodes
                     for (var j = 0; j < statusCodes.Count; j++)
                         statusCodeData[j] = new Tuple<string, float>(statusCodes[j].ToString(), (float)statusCodesPerMinute[statusCodes[j]]);
                 }
-                statusCodesSection.AddChild(CreatePieChart(nodeTitle + " Status", "/min", statusCodeData, TotalHandling.Sum));
+                statusCodesSection.AddChild(CreatePieChart(nodeTitle + " Status", "/min", statusCodeData, TotalHandling.Sum, "status_piechart"));
             }
         }
     }

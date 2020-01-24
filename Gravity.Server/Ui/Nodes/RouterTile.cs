@@ -30,6 +30,8 @@ namespace Gravity.Server.Ui.Nodes
             _router = router;
             _trafficIndicatorThresholds = trafficIndicatorConfiguration.Thresholds;
 
+            LinkUrl = "/ui/node?name=" + router.Name;
+
             var details = new List<string>();
 
             if (router.Outputs != null)

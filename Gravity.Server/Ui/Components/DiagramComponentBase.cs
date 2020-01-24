@@ -26,14 +26,14 @@ namespace Gravity.Server.Ui.Components
         {
             if (pageArea == PageArea.Body)
             {
-                var rootElement = DrawDiagram();
+                var rootElement = DrawDiagram(context);
                 Write(rootElement, context.Html);
             }
 
             return base.WritePageArea(context, pageArea);
         }
 
-        protected abstract DrawingElement DrawDiagram();
+        protected abstract DrawingElement DrawDiagram(IRenderContext context);
 
         private void Write(DrawingElement rootElement, IHtmlWriter writer)
         {

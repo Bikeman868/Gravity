@@ -86,7 +86,7 @@ namespace Gravity.Server.Ui.Drawings
                     else if (stickySession != null) nodeDrawing = new StickySessionTile(this, stickySession, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
                     else if (transform != null) nodeDrawing = new TransformTile(this, transform, nodeDrawingConfig);
                     else if (leastConnections != null) nodeDrawing = new LeastConnectionsTile(this, leastConnections, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
-                    else if (cors != null) nodeDrawing = new CorsDrawing(this, cors, nodeDrawingConfig);
+                    else if (cors != null) nodeDrawing = new CorsTile(this, cors, nodeDrawingConfig);
                     else nodeDrawing = new NodeTile(this, node.Name, "", true);
 
                     nodeDrawing.Left = nodeDrawingConfig.X;

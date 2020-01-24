@@ -19,6 +19,8 @@ namespace Gravity.Server.Ui.Nodes
                 2, 
                 response.Name)
         {
+            LinkUrl = "/ui/node?name=" + response.Name;
+
             var details = new List<string>();
 
             details.Add(response.StatusCode + " " + response.ReasonPhrase);

@@ -33,7 +33,7 @@ namespace Gravity.Server.Ui.Nodes
                     (float)loadBalancer.OutputNodes[i].TrafficAnalytics.RequestsPerMinute);
             }
 
-            bottomSection.AddChild(CreatePieChart("Request Rate", "/min", requestRateData, TotalHandling.Sum));
+            bottomSection.AddChild(CreatePieChart("Request Rate", "/min", requestRateData, TotalHandling.Sum, "rate_piechart"));
 
             var requestTimeData = new Tuple<string, float>[loadBalancer.OutputNodes.Length];
             for (var i = 0; i < loadBalancer.OutputNodes.Length; i++)
@@ -46,7 +46,7 @@ namespace Gravity.Server.Ui.Nodes
                     (float)loadBalancer.OutputNodes[i].TrafficAnalytics.RequestTime.TotalMilliseconds);
             }
 
-            bottomSection.AddChild(CreatePieChart("Request Time", "ms", requestTimeData, TotalHandling.Maximum));
+            bottomSection.AddChild(CreatePieChart("Request Time", "ms", requestTimeData, TotalHandling.Maximum, "time_piechart"));
         }
     }
 }

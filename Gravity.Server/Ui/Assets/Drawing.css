@@ -84,29 +84,55 @@ line.connection_heavy { stroke-width: 2.8; stroke: #009900; }
 g.disabled > rect { stroke:#808080; fill:#fefefe; opacity: 0.6; }
 g.disabled > text { stroke:#d0d0d0; fill:#d0d0d0; }
 
-g.piechart > rect { stroke: #a0a0a0; fill: #fdfdfd; }
-
-g.pie circle.center { fill:#ffffff }
-g.pie circle.segment_1 { fill:transparent; stroke: #009900; stroke-width: 25;}
-g.pie circle.segment_2 { fill:transparent; stroke: #990000; stroke-width: 25;}
-g.pie circle.segment_3 { fill:transparent; stroke: #000099; stroke-width: 25;}
-g.pie circle.segment_4 { fill:transparent; stroke: #999900; stroke-width: 25;}
-g.pie circle.segment_5 { fill:transparent; stroke: #009999; stroke-width: 25;}
-g.pie circle.segment_6 { fill:transparent; stroke: #990099; stroke-width: 25;}
-g.pie circle.segment_7 { fill:transparent; stroke: #660066; stroke-width: 25;}
-g.pie circle.segment_8 { fill:transparent; stroke: #006600; stroke-width: 25;}
-g.pie circle.segment_9 { fill:transparent; stroke: #660000; stroke-width: 25;}
+g.rate_piechart > rect { stroke: #a0a0a0; fill: #fdfdfd; }
+g.time_piechart > rect { stroke: #a0a090; fill: #fdfdfa; }
+g.method_piechart > rect { stroke: #90a0a0; fill: #fafdfd; }
+g.status_piechart > rect { stroke: #a090a0; fill: #fdfafd; }
 
 g.pie text { font-size: 20px; padding: 0; margin: 0; }
-
-g.legend circle.segment_1 { fill:#ffffff; stroke: #009900; stroke-width: 3;}
-g.legend circle.segment_2 { fill:#ffffff; stroke: #990000; stroke-width: 3;}
-g.legend circle.segment_3 { fill:#ffffff; stroke: #000099; stroke-width: 3;}
-g.legend circle.segment_4 { fill:#ffffff; stroke: #999900; stroke-width: 3;}
-g.legend circle.segment_5 { fill:#ffffff; stroke: #009999; stroke-width: 3;}
-g.legend circle.segment_6 { fill:#ffffff; stroke: #990099; stroke-width: 3;}
-g.legend circle.segment_7 { fill:#ffffff; stroke: #660066; stroke-width: 3;}
-g.legend circle.segment_8 { fill:#ffffff; stroke: #006600; stroke-width: 3;}
-g.legend circle.segment_9 { fill:#ffffff; stroke: #660000; stroke-width: 3;}
-
 g.legend text { font-size: 8px; padding: 0; margin: 0; }
+
+g.pie circle.center { fill:#ffffff }
+g.pie circle { stroke-width: 25;}
+g.legend circle { stroke-width: 3;}
+
+g.rate_piechart circle.segment_1 { fill:transparent; stroke: #009900; }
+g.rate_piechart circle.segment_2 { fill:transparent; stroke: #990000; }
+g.rate_piechart circle.segment_3 { fill:transparent; stroke: #000099; }
+g.rate_piechart circle.segment_4 { fill:transparent; stroke: #999900; }
+g.rate_piechart circle.segment_5 { fill:transparent; stroke: #009999; }
+g.rate_piechart circle.segment_6 { fill:transparent; stroke: #990099; }
+g.rate_piechart circle.segment_7 { fill:transparent; stroke: #660066; }
+g.rate_piechart circle.segment_8 { fill:transparent; stroke: #006600; }
+g.rate_piechart circle.segment_9 { fill:transparent; stroke: #660000; }
+
+g.time_piechart circle.segment_1 { fill:transparent; stroke: #006600; }
+g.time_piechart circle.segment_2 { fill:transparent; stroke: #660000; }
+g.time_piechart circle.segment_3 { fill:transparent; stroke: #009900; }
+g.time_piechart circle.segment_4 { fill:transparent; stroke: #990000; }
+g.time_piechart circle.segment_5 { fill:transparent; stroke: #000099; }
+g.time_piechart circle.segment_6 { fill:transparent; stroke: #999900; }
+g.time_piechart circle.segment_7 { fill:transparent; stroke: #009999; }
+g.time_piechart circle.segment_8 { fill:transparent; stroke: #990099; }
+g.time_piechart circle.segment_9 { fill:transparent; stroke: #660066; }
+
+g.method_piechart circle.segment_1 { fill:transparent; stroke: #660066; }
+g.method_piechart circle.segment_2 { fill:transparent; stroke: #006600; }
+g.method_piechart circle.segment_3 { fill:transparent; stroke: #660000; }
+g.method_piechart circle.segment_4 { fill:transparent; stroke: #009900; }
+g.method_piechart circle.segment_5 { fill:transparent; stroke: #990000; }
+g.method_piechart circle.segment_6 { fill:transparent; stroke: #000099; }
+g.method_piechart circle.segment_7 { fill:transparent; stroke: #999900; }
+g.method_piechart circle.segment_8 { fill:transparent; stroke: #009999; }
+g.method_piechart circle.segment_9 { fill:transparent; stroke: #990099; }
+
+g.status_piechart circle.segment_1 { fill:transparent; stroke: #009999; }
+g.status_piechart circle.segment_2 { fill:transparent; stroke: #990099; }
+g.status_piechart circle.segment_3 { fill:transparent; stroke: #660066; }
+g.status_piechart circle.segment_4 { fill:transparent; stroke: #006600; }
+g.status_piechart circle.segment_5 { fill:transparent; stroke: #660000; }
+g.status_piechart circle.segment_6 { fill:transparent; stroke: #009900; }
+g.status_piechart circle.segment_7 { fill:transparent; stroke: #990000; }
+g.status_piechart circle.segment_8 { fill:transparent; stroke: #000099; }
+g.status_piechart circle.segment_9 { fill:transparent; stroke: #999900; }
+

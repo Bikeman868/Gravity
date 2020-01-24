@@ -26,8 +26,8 @@ namespace Gravity.Server.Ui.Shapes
         public void Attach(DrawingElement drawingElement)
         {
             var element = drawingElement.Container;
-            element.CustomAttributes.Add("onmouseover", "ShowPopup(evt, '" + _popupId + "')");
-            element.CustomAttributes.Add("onmouseout", "HidePopup(evt, '" + _popupId + "')");
+            element.CustomAttributes.Add("onmouseover", "showPopup(evt, '" + _popupId + "')");
+            element.CustomAttributes.Add("onmouseout", "hidePopup(evt, '" + _popupId + "')");
         }
 
         protected override SvgElement GetContainer()

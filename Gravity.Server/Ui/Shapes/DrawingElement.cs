@@ -27,6 +27,7 @@ namespace Gravity.Server.Ui.Shapes
         public DrawingElement Parent;
 
         public SvgElement Container;
+        public string LinkUrl;
 
         protected ConnectionPoint[] ConnectionPoints;
 
@@ -257,9 +258,20 @@ namespace Gravity.Server.Ui.Shapes
         public virtual SvgElement Draw()
         {
             Container = GetContainer();
+            var result = Container;
+
             if (Container != null)
+            {
+                if (!string.IsNullOrEmpty(LinkUrl))
+                {
+                    var anchor = new NonSvgElement("a");
+                    anchor.CustomAttributes.Add("href", LinkUrl);
+                    anchor.Children.Add(Container);
+                    result = anchor;
+                }
                 DrawChildren(Container.Children);
-            return Container;
+            }
+            return result;
         }
 
         /// <summary>

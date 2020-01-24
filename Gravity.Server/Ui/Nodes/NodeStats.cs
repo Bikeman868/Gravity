@@ -26,9 +26,10 @@ namespace Gravity.Server.Ui.Nodes
             string title,
             string units,
             Tuple<string, float>[] pieChartData,
-            TotalHandling totalHandling)
+            TotalHandling totalHandling,
+            string css)
         {
-            return new PieChartDrawing(150, title, units, pieChartData, totalHandling);
+            return new PieChartDrawing(150, title, units, pieChartData, totalHandling, "n1", css);
         }
 
         protected override void ArrangeChildren()

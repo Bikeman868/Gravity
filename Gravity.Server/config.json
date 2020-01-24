@@ -40,15 +40,6 @@
               ]
             },
             {
-              "to": "B",
-              "logic": "All",
-              "conditions": [
-                { "condition": "{method} = GET" },
-                { "condition": "{header[host]} = gravity.localhost" },
-                { "condition": "{path[1]} = ui" }
-              ]
-            },
-            {
               "to": "G",
               "logic": "All",
               "conditions": [
@@ -77,7 +68,7 @@
       "servers": [
         {
           "name": "I",
-          "disabled": false,
+          "disabled": true,
           "port": 443,
           "host": "stockhouse.com",
           "connectionTimeout": "00:00:30",

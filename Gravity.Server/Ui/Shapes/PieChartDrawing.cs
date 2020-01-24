@@ -16,9 +16,10 @@ namespace Gravity.Server.Ui.Shapes
             string units,
             Tuple<string, float>[] data,
             TotalHandling totalHandling,
-            string numberFormat = "n1")
+            string numberFormat = "n1",
+            string css = "piechart")
         {
-            CssClass = "piechart";
+            CssClass = css;
 
             LeftMargin = width / 10f;
             RightMargin = width / 10f;
@@ -31,7 +32,7 @@ namespace Gravity.Server.Ui.Shapes
             }
             .HeadingLevel(2));
 
-            var pie = new PieDrawing(width, data);
+            var pie = new PieDrawing(width, data, css);
 
             var total = 0f;
             switch (totalHandling)
@@ -58,7 +59,7 @@ namespace Gravity.Server.Ui.Shapes
 
             AddChild(pie);
 
-            AddChild(new LegendDrawing(units, numberFormat, data));
+            AddChild(new LegendDrawing(units, numberFormat, data, css));
         }
 
         protected override void ArrangeChildren()

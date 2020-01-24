@@ -4,20 +4,16 @@
     }
 }
 
-function ShowPopup(evt, id) {
+function showPopup(evt, id) {
     var elements = document.getElementsByClassName(id);
     for (var item of elements) {
       item.setAttributeNS(null, "visibility", "visible");
     }
 }
 
-function HidePopup(evt, id) {
+function hidePopup(evt, id) {
     var elements = document.getElementsByClassName(id);
     for (var item of elements) {
         item.setAttributeNS(null, "visibility", "hidden");
     }
-}
-
-function Navigate(url) {
-    window.location = url;
 }

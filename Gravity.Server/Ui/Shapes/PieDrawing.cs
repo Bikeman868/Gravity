@@ -9,14 +9,16 @@ namespace Gravity.Server.Ui.Shapes
     internal class PieDrawing: DrawingElement
     {
         private readonly Tuple<string, float>[] _data;
+        private readonly string _css;
 
-        public PieDrawing(float width, Tuple<string, float>[] data)
+        public PieDrawing(float width, Tuple<string, float>[] data, string css)
         {
             Width = width;
             Height = width;
             FixedSize = true;
-            CssClass = "pie";
+            CssClass = css + " pie";
             _data = data;
+            _css = css;
         }
 
         public override SvgElement Draw()
@@ -40,7 +42,7 @@ namespace Gravity.Server.Ui.Shapes
                             CenterY = Height / 2f,
                             Radius = Width * 0.45f
                         };
-                        outerRing.CustomAttributes.Add("class", "segment_" + (i + 1).ToString());
+                        outerRing.CustomAttributes.Add("class", _css + " segment_" + ((i % 9) + 1).ToString());
                         outerRing.CustomAttributes.Add("stroke-dasharray", arc.ToString() + " " + (circumference-arc).ToString());
                         outerRing.CustomAttributes.Add("stroke-dashoffset", dashOffset.ToString());
 

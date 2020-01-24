@@ -34,7 +34,7 @@ namespace Gravity.Server.Ui.Nodes
                     (float)server.IpAddresses[i].TrafficAnalytics.RequestsPerMinute);
             }
 
-            bottomSection.AddChild(CreatePieChart("Request Rate", "/min", requestRateData, TotalHandling.Sum));
+            bottomSection.AddChild(CreatePieChart("Request Rate", "/min", requestRateData, TotalHandling.Sum, "rate_piechart"));
 
             var requestTimeData = new Tuple<string, float>[server.IpAddresses.Length];
             for (var i = 0; i < server.IpAddresses.Length; i++)
@@ -46,7 +46,7 @@ namespace Gravity.Server.Ui.Nodes
                     (float)server.IpAddresses[i].TrafficAnalytics.RequestTime.TotalMilliseconds);
             }
 
-            bottomSection.AddChild(CreatePieChart("Request Time", "ms", requestTimeData, TotalHandling.Maximum));
+            bottomSection.AddChild(CreatePieChart("Request Time", "ms", requestTimeData, TotalHandling.Maximum, "time_piechart"));
 
             for (var i = 0; i < server.IpAddresses.Length; i++)
             {
@@ -64,7 +64,7 @@ namespace Gravity.Server.Ui.Nodes
                         methodData[j] = new Tuple<string, float>(methods[j], (float)methodsPerMinute[methods[j]]);
                 }
 
-                bottomSection.AddChild(CreatePieChart(ipAddress + " Methods", "/min", methodData, TotalHandling.Sum));
+                bottomSection.AddChild(CreatePieChart(ipAddress + " Methods", "/min", methodData, TotalHandling.Sum, "method_piechart"));
             }
 
             for (var i = 0; i < server.IpAddresses.Length; i++)
@@ -83,7 +83,7 @@ namespace Gravity.Server.Ui.Nodes
                         statusCodeData[j] = new Tuple<string, float>(statusCodes[j].ToString(), (float)statusCodesPerMinute[statusCodes[j]]);
                 }
 
-                bottomSection.AddChild(CreatePieChart(ipAddress + " Status", "/min", statusCodeData, TotalHandling.Sum));
+                bottomSection.AddChild(CreatePieChart(ipAddress + " Status", "/min", statusCodeData, TotalHandling.Sum, "status_piechart"));
             }
 
         }
