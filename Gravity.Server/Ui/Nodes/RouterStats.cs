@@ -12,8 +12,7 @@ namespace Gravity.Server.Ui.Nodes
         public RouterStats(
             DrawingElement drawing, 
             RoutingNode router,
-            DashboardConfiguration dashboardConfiguration,
-            TrafficIndicatorConfiguration trafficIndicatorConfiguration)
+            DashboardConfiguration dashboardConfiguration)
             : base(drawing)
         {
             var nodeConfiguration = FindNodeConfiguration(dashboardConfiguration, router.Name);
@@ -21,7 +20,7 @@ namespace Gravity.Server.Ui.Nodes
             var topSection = AddSection();
             var bottomSection = AddSection();
 
-            topSection.AddChild(new RouterTile(drawing, router, nodeConfiguration, trafficIndicatorConfiguration));
+            topSection.AddChild(new RouterTile(drawing, router, nodeConfiguration, dashboardConfiguration.TrafficIndicator));
 
             var requestRateData = new Tuple<string, float>[router.OutputNodes.Length];
             for (var i = 0; i < router.OutputNodes.Length; i++)
@@ -47,7 +46,7 @@ namespace Gravity.Server.Ui.Nodes
                     (float)router.OutputNodes[i].TrafficAnalytics.RequestTime.TotalMilliseconds);
             }
 
-            bottomSection.AddChild(CreatePieChart("Request Time", "ms", requestRateData, TotalHandling.Maximum));
+            bottomSection.AddChild(CreatePieChart("Request Time", "ms", requestTimeData, TotalHandling.Maximum));
         }
     }
 }

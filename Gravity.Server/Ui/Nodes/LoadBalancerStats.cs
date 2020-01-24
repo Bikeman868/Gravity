@@ -46,7 +46,7 @@ namespace Gravity.Server.Ui.Nodes
                     (float)loadBalancer.OutputNodes[i].TrafficAnalytics.RequestTime.TotalMilliseconds);
             }
 
-            bottomSection.AddChild(CreatePieChart("Request Time", "ms", requestRateData, TotalHandling.Maximum));
+            bottomSection.AddChild(CreatePieChart("Request Time", "ms", requestTimeData, TotalHandling.Maximum));
         }
     }
 }

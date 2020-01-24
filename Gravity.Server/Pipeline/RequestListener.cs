@@ -120,7 +120,7 @@ namespace Gravity.Server.Pipeline
                     requestContext.Log?.Log(LogType.Request, LogLevel.Standard, () => 
                         $"Starting new request to {requestContext.Incoming.Method} {requestContext.Incoming.Scheme.ToString().ToLower()}://{requestContext.Incoming.DomainName}{requestContext.Incoming.Path}{requestContext.Incoming.Query}");
 
-                    var startTime = output.TrafficAnalytics.BeginRequest();
+                    var trafficAnalyticInfo = output.TrafficAnalytics.BeginRequest();
 
                     var task = output.Node.ProcessRequest(requestContext);
 
@@ -133,7 +133,7 @@ namespace Gravity.Server.Pipeline
 
                     return task.ContinueWith(t =>
                     {
-                        output.TrafficAnalytics.EndRequest(startTime);
+                        output.TrafficAnalytics.EndRequest(trafficAnalyticInfo);
                         requestContext.Log?.Log(LogType.Request, LogLevel.Standard, () => $"Completed request with {requestContext.Outgoing.StatusCode} response");
                         requestContext.Dispose();
                     });

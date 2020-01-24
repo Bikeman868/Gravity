@@ -40,6 +40,15 @@
               ]
             },
             {
+              "to": "B",
+              "logic": "All",
+              "conditions": [
+                { "condition": "{method} = GET" },
+                { "condition": "{header[host]} = gravity.localhost" },
+                { "condition": "{path[1]} = ui" }
+              ]
+            },
+            {
               "to": "G",
               "logic": "All",
               "conditions": [
@@ -68,7 +77,7 @@
       "servers": [
         {
           "name": "I",
-          "disabled": true,
+          "disabled": false,
           "port": 443,
           "host": "stockhouse.com",
           "connectionTimeout": "00:00:30",
@@ -408,9 +417,9 @@
       "enabled": true,
       "method": "Trace",
       "directory": "c:\\Logs",
-      "maxLogLevel": "Detailed",
+      "maxLogLevel": "VeryDetailed",
       "maxLogFileAge": "00:05:00",
-      "maxLogFileSize": 20000
+      "maxLogFileSize": 200000
     }
   },
   "owinFramework": {

@@ -108,7 +108,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
 
             var cookies = context.Incoming.GetCookies();
             var sessionId = cookies.ContainsKey(SessionCookie) ? cookies[SessionCookie] : null;
-            long startTime;
+            TrafficAnalyticInfo trafficAnalyticInfo;
 
             if (string.IsNullOrEmpty(sessionId))
             {
@@ -132,7 +132,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
                     });
                 }
 
-                startTime = output.TrafficAnalytics.BeginRequest();
+                trafficAnalyticInfo = output.TrafficAnalytics.BeginRequest();
                 output.IncrementConnectionCount();
 
                 context.Outgoing.OnSendHeaders.Add(ctx =>
@@ -164,13 +164,13 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
 
                 if (task == null)
                 {
-                    output.TrafficAnalytics.EndRequest(startTime);
+                    output.TrafficAnalytics.EndRequest(trafficAnalyticInfo);
                     return null;
                 }
 
                 return task.ContinueWith(t =>
                 {
-                    output.TrafficAnalytics.EndRequest(startTime);
+                    output.TrafficAnalytics.EndRequest(trafficAnalyticInfo);
                     output.DecrementConnectionCount();
                 });
             }
@@ -222,20 +222,20 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
 
             context.Log?.Log(LogType.Step, LogLevel.Standard, () => $"Sticky session load balancer '{Name}' routing request to '{sessionOutput.Name}'");
 
-            startTime = sessionOutput.TrafficAnalytics.BeginRequest();
+            trafficAnalyticInfo = sessionOutput.TrafficAnalytics.BeginRequest();
             sessionOutput.IncrementConnectionCount();
 
             var sessionTask = sessionOutput.Node.ProcessRequest(context);
 
             if (sessionTask == null)
             {
-                sessionOutput.TrafficAnalytics.EndRequest(startTime);
+                sessionOutput.TrafficAnalytics.EndRequest(trafficAnalyticInfo);
                 return null;
             }
 
             return sessionTask.ContinueWith(t =>
             {
-                sessionOutput.TrafficAnalytics.EndRequest(startTime);
+                sessionOutput.TrafficAnalytics.EndRequest(trafficAnalyticInfo);
                 sessionOutput.DecrementConnectionCount();
             });
         }

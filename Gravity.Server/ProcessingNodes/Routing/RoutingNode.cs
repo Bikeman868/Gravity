@@ -157,18 +157,18 @@ namespace Gravity.Server.ProcessingNodes.Routing
                     {
                         context.Log?.Log(LogType.Step, LogLevel.Standard, () => $"Router '{Name}' sending the request to node '{node.Name}'");
 
-                        var startTime = output.TrafficAnalytics.BeginRequest();
+                        var trafficAnalyticInfo = output.TrafficAnalytics.BeginRequest();
                         var task = node.ProcessRequest(context);
 
                         if (task == null)
                         {
-                            output.TrafficAnalytics.EndRequest(startTime);
+                            output.TrafficAnalytics.EndRequest(trafficAnalyticInfo);
                             return null;
                         }
 
                         return task.ContinueWith(t =>
                         {
-                            output.TrafficAnalytics.EndRequest(startTime);
+                            output.TrafficAnalytics.EndRequest(trafficAnalyticInfo);
                         });
                     }
                 }

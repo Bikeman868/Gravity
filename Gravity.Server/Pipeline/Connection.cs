@@ -30,8 +30,7 @@ namespace Gravity.Server.ProcessingNodes.Server
         Busy,
         Old,
         Disconnected,
-        Pending,
-        Fault
+        Pending
     }
 
     internal class Connection: IDisposable
@@ -109,6 +108,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                         log?.Log(LogType.TcpIp, LogLevel.Standard, () => $"Authenticating server's SSL certificate for {_domainName}");
                         sslStream.AuthenticateAsClient(_domainName);
+                        log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"The server's SSL certificate is valid for {_domainName}");
                     }
 
                     _lastUsedUtc = DateTime.UtcNow;

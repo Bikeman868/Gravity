@@ -183,6 +183,7 @@
     <Compile Include="Ui\Drawings\DiagramGenerator.cs" />
     <Compile Include="Interfaces\IDrawingGenerator.cs" />
     <Compile Include="Ui\Drawings\SvgSerializer.cs" />
+    <Compile Include="Ui\Nodes\ServerStats.cs" />
     <Compile Include="Ui\Nodes\StickySessionStats.cs" />
     <Compile Include="Ui\Nodes\LoadBalancerTile.cs" />
     <Compile Include="Ui\ApiService.cs" />
@@ -199,6 +200,7 @@
     <Compile Include="Utility\DefaultDictionary.cs" />
     <Compile Include="Utility\Factory.cs" />
     <Compile Include="Utility\LogFactory.cs" />
+    <Compile Include="Utility\NumberComparer.cs" />
     <Compile Include="Utility\Timer.cs" />
     <Compile Include="ProcessingNodes\Routing\ExpressionParser.cs" />
     <Compile Include="Utility\ServerIpAddress.cs" />
@@ -253,6 +255,7 @@
     <Compile Include="Ui\Shapes\TitledDrawing.cs" />
     <Compile Include="Ui\Shapes\TitledListDrawing.cs" />
     <Compile Include="Ui\Shapes\VerticalListDrawing.cs" />
+    <Compile Include="Utility\TrafficAnalyticInfo.cs" />
     <Compile Include="Utility\TrafficAnalytics.cs" />
   </ItemGroup>
   <ItemGroup>

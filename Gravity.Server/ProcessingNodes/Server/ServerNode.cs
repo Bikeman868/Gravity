@@ -225,14 +225,15 @@ namespace Gravity.Server.ProcessingNodes.Server
             var serverRequestContext = (IRequestContext)new ServerRequestContext(context, ipAddress.Address, port, scheme);
 
             ipAddress.IncrementConnectionCount();
-            var startTicks = ipAddress.TrafficAnalytics.BeginRequest();
+            var trafficAnalyticInfo = ipAddress.TrafficAnalytics.BeginRequest();
+            trafficAnalyticInfo.Method = serverRequestContext.Incoming.Method;
 
             return Send(serverRequestContext)
                 .ContinueWith(sendTask =>
                 {
                     if (sendTask.IsFaulted)
                     {
-                        context.Log?.Log(LogType.Exception, LogLevel.Important, () => $"Server node '{Name}' failed to send the request. {sendTask.Exception.Message}");
+                        context.Log?.Log(LogType.Exception, LogLevel.Important, () => $"Server node '{Name}' failed to send the request. {sendTask.Exception?.Message}");
                         throw new ServerNodeException(this, "failed to send to server", sendTask.Exception);
                     }
 
@@ -242,7 +243,8 @@ namespace Gravity.Server.ProcessingNodes.Server
                         throw new ServerNodeException(this, "timeout sending to server");
                     }
 
-                    ipAddress.TrafficAnalytics.EndRequest(startTicks);
+                    trafficAnalyticInfo.StatusCode = serverRequestContext.Outgoing.StatusCode;
+                    ipAddress.TrafficAnalytics.EndRequest(trafficAnalyticInfo);
                     ipAddress.DecrementConnectionCount();
                 });
         }
