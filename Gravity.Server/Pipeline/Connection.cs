@@ -293,11 +293,11 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         private Task ReceiveHttp(IRequestContext context, int readTimeoutMs)
         {
-            var hasNoContent = 
-                string.Equals(context.Incoming.Method, "HEAD", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(context.Incoming.Method, "OPTIONS", StringComparison.OrdinalIgnoreCase);
+            var canHaveContent = 
+                !string.Equals(context.Incoming.Method, "HEAD", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(context.Incoming.Method, "OPTIONS", StringComparison.OrdinalIgnoreCase);
 
-            int? contentLength = hasNoContent ? (int?)0 : null;
+            int? contentLength = canHaveContent ? null : (int?) 0;
             var contentBytesReceived = 0;
 
             var line = new StringBuilder();
@@ -462,14 +462,14 @@ namespace Gravity.Server.ProcessingNodes.Server
                 }
             }
 
-            context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => "Starting http receive. Expecting " + (hasNoContent ? "no content" : "possible content"));
+            context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => "Starting http receive. Expecting " + (canHaveContent ? "possible content" : "no content"));
 
             return Task.Run(() =>
             {
                 var buffer = _bufferPool.Get();
                 try
                 {
-                    while (header || !contentLength.HasValue || contentBytesReceived < contentLength.Value)
+                    while (header || (canHaveContent && (!contentLength.HasValue || contentBytesReceived < contentLength.Value)))
                     {
                         var bytesRead = Read(buffer);
 

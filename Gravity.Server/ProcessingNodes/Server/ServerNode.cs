@@ -94,11 +94,11 @@ namespace Gravity.Server.ProcessingNodes.Server
                         if (timeNow > nextRecalculate)
                         {
                             nextRecalculate = timeNow + RecalculateInterval;
-                            var ipAddresses = IpAddresses;
-                            if (ipAddresses != null)
+                            var serverIpAddresses = IpAddresses;
+                            if (serverIpAddresses != null)
                             {
-                                for (var i = 0; i < ipAddresses.Length; i++)
-                                    ipAddresses[i].TrafficAnalytics.Recalculate();
+                                foreach (var serverIpAddress in serverIpAddresses)
+                                    serverIpAddress.TrafficAnalytics.Recalculate();
                             }
                         }
 
@@ -460,7 +460,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
             public bool WillLog(LogType type, LogLevel level)
             {
-                return true;
+                return _logFactory.WillLog(type, level);
             }
 
             public void Log(LogType type, LogLevel level, Func<string> messageFunc)
