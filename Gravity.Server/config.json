@@ -32,28 +32,23 @@
           "routes": [
             {
               "to": "B",
-              "logic": "Any",
+              "logic": "All",
               "groups": [
                 {
                   "logic": "All",
-                  "groups": [],
                   "conditions": [
                     { "condition": "{method} = GET" },
-                    { "condition": "{header[host]} = localhost:52581" },
                     { "condition": "{path[1]} = ui" }
                   ]
                 },
                 {
-                  "logic": "All",
-                  "groups": [],
+                  "logic": "Any",
                   "conditions": [
-                    { "condition": "{method} = GET" },
-                    { "condition": "{header[host]} = gravity.localhost" },
-                    { "condition": "{path[1]} = ui" }
+                    { "condition": "{header[host]} = localhost:52581" },
+                    { "condition": "{header[host]} = gravity.localhost" }
                   ]
                 }
-              ],
-              "conditions": []
+              ]
             },
             {
               "to": "G",
