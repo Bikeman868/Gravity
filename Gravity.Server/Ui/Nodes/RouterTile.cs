@@ -6,7 +6,7 @@ using Gravity.Server.Ui.Shapes;
 
 namespace Gravity.Server.Ui.Nodes
 {
-    internal class RouterTile: NodeTile
+    internal class RouterTile : NodeTile
     {
         private readonly DrawingElement _drawing;
         private readonly RoutingNode _router;
@@ -14,16 +14,16 @@ namespace Gravity.Server.Ui.Nodes
         private readonly double[] _trafficIndicatorThresholds;
 
         public RouterTile(
-            DrawingElement drawing, 
+            DrawingElement drawing,
             RoutingNode router,
             DashboardConfiguration.NodeConfiguration nodeConfiguration,
             TrafficIndicatorConfiguration trafficIndicatorConfiguration)
             : base(
                 drawing,
-                nodeConfiguration?.Title ?? "Router", 
-                "router", 
-                router.Offline, 
-                2, 
+                nodeConfiguration?.Title ?? "Router",
+                "router",
+                router.Offline,
+                2,
                 router.Name)
         {
             _drawing = drawing;
@@ -37,7 +37,7 @@ namespace Gravity.Server.Ui.Nodes
             if (router.Outputs != null)
             {
                 _outputDrawings = router.Outputs
-                    .Select(o => new RouterOutputDrawing(drawing, o, o.RouteTo, null, router.Offline))
+                    .Select(o => new RouterOutputDrawing(drawing, o, o.RouteTo, null, router.Offline || o.Disabled))
                     .ToArray();
 
                 foreach (var outputDrawing in _outputDrawings)
@@ -88,20 +88,38 @@ namespace Gravity.Server.Ui.Nodes
                 string title,
                 bool disabled)
                 : base(
-                    drawing, 
-                    title ?? "Output", 
-                    "router_output", 
-                    disabled, 
-                    3, 
+                    drawing,
+                    title ?? "Output",
+                    "router_output",
+                    disabled,
+                    3,
                     label)
             {
+                AddChild(new GroupDrawing(drawing, routerOutput));
+            }
+        }
+
+        private class GroupDrawing: Tile
+        {
+            public GroupDrawing(
+                DrawingElement drawing,
+                RouterGroupConfiguration groupConfiguration)
+                : base(drawing, "router_group", groupConfiguration.Disabled)
+            {
                 var details = new List<string>();
-
-                if (routerOutput.Conditions != null && routerOutput.Conditions.Length > 0)
+                switch (groupConfiguration.ConditionLogic)
                 {
-                    details.Add("If " + routerOutput.ConditionLogic.ToString().ToLower());
+                    case ConditionLogic.Any:
+                        details.Add("True if " + groupConfiguration.ConditionLogic.ToString().ToLower() + " of these is true");
+                        break;
+                    default:
+                        details.Add("True if " + groupConfiguration.ConditionLogic.ToString().ToLower() + " of these are true");
+                        break;
+                }
 
-                    foreach (var rule in routerOutput.Conditions)
+                if (groupConfiguration.Conditions != null && groupConfiguration.Conditions.Length > 0)
+                {
+                    foreach (var rule in groupConfiguration.Conditions)
                     {
                         if (!rule.Disabled)
                         {
@@ -113,7 +131,16 @@ namespace Gravity.Server.Ui.Nodes
                     }
                 }
 
-                AddDetails(details, null, disabled ? "disabled" : string.Empty);
+                AddDetails(details, null, groupConfiguration.Disabled ? "disabled" : string.Empty);
+
+                if (groupConfiguration.Groups != null && groupConfiguration.Groups.Length > 0)
+                {
+                    foreach (var group in groupConfiguration.Groups)
+                    {
+                        AddChild(new GroupDrawing(drawing, group));
+                    }
+                }
+
             }
         }
     }

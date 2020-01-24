@@ -28,6 +28,9 @@ g.router > text { stroke:#000000; fill:#000000; }
 g.router_output > rect { stroke:#dda2a2; fill:#f8ecec; }
 g.router_output > text { stroke:#000000; fill:#000000; }
 
+g.router_group > rect { stroke:#dda2a2; fill:#f8ecec; opacity:0.4; }
+g.router_group > text { stroke:#000000; fill:#000000; }
+
 g.responder > rect { stroke:#009999; fill:#e6ffff; }
 g.responder > text { stroke:#000000; fill:#000000; }
 

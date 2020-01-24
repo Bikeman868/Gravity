@@ -25,8 +25,8 @@ namespace Gravity.Server.Ui.Components
         {
             if (pageArea == PageArea.Head)
             {
-                context.Html.WriteUnclosedElement("meta", 
-                    "http-equiv", "refresh", 
+                context.Html.WriteUnclosedElement("meta",
+                    "http-equiv", "refresh",
                     "content", "3");
                 context.Html.WriteLine();
             }

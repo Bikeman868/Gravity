@@ -5,6 +5,7 @@ using Gravity.Server.Configuration;
 using Gravity.Server.Interfaces;
 using Gravity.Server.Utility;
 using Gravity.Server.Pipeline;
+using System.Collections.Generic;
 
 namespace Gravity.Server.ProcessingNodes.Routing
 {
@@ -18,7 +19,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
         private readonly IExpressionParser _expressionParser;
 
-        private Route[] _routes;
+        private GroupRule[] _outputRule;
         private DateTime _nextTrafficUpdate;
 
         public RoutingNode(
@@ -33,7 +34,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
         void INode.Bind(INodeGraph nodeGraph)
         {
-            _routes = new Route[Outputs.Length];
+            _outputRule = new GroupRule[Outputs.Length];
             OutputNodes = new NodeOutput[Outputs.Length];
 
             for (var i = 0; i < Outputs.Length; i++)
@@ -46,72 +47,14 @@ namespace Gravity.Server.ProcessingNodes.Routing
                     Node = nodeGraph.NodeByName(outputConfiguration.RouteTo),
                 };
 
-                _routes[i] = new Route
-                {
-                    ConditionLogic = outputConfiguration.ConditionLogic,
-                };
-
-                if (outputConfiguration.Conditions != null && outputConfiguration.Conditions.Length > 0)
-                {
-                    _routes[i].Rules = outputConfiguration.Conditions
-                        .Select<RouterConditionConfiguration,  Rule>(r =>
-                        {
-                            var equals = r.Condition.IndexOf('=');
-                            if (equals < 1 || equals > r.Condition.Length - 2)
-                                throw new Exception("Routing expression must contain 'expr = expr'. You have '" +
-                                                    r.Condition + "'");
-
-                            var prefix = r.Condition[equals - 1];
-                            var isPrefixed = "<>!~".Contains(prefix);
-
-                            var leftSide = r.Condition.Substring(0, isPrefixed ? equals - 1 : equals);
-                            var rightSide = r.Condition.Substring(equals + 1);
-
-                            if (isPrefixed)
-                            {
-                                switch (prefix)
-                                {
-                                    case '~':
-                                        return new ContainsRule
-                                        {
-                                            Expression1 = _expressionParser.Parse<string>(leftSide),
-                                            Expression2 = _expressionParser.Parse<string>(rightSide),
-                                        };
-                                    case '!':
-                                        return new NotEqualsRule
-                                        {
-                                            Expression1 = _expressionParser.Parse<string>(leftSide),
-                                            Expression2 = _expressionParser.Parse<string>(rightSide),
-                                        };
-                                    case '<':
-                                        return new StartsWithRule
-                                        {
-                                            Expression1 = _expressionParser.Parse<string>(leftSide),
-                                            Expression2 = _expressionParser.Parse<string>(rightSide),
-                                        };
-                                    case '>':
-                                        return new EndsWithRule
-                                        {
-                                            Expression1 = _expressionParser.Parse<string>(leftSide),
-                                            Expression2 = _expressionParser.Parse<string>(rightSide),
-                                        };
-                                }
-                            }
-                            return new EqualsRule
-                            {
-                                Expression1 = _expressionParser.Parse<string>(leftSide),
-                                Expression2 = _expressionParser.Parse<string>(rightSide),
-                            };
-                        })
-                        .ToArray();
-                }
+                _outputRule[i] = new GroupRule(outputConfiguration, _expressionParser);
             }
         }
 
         void INode.UpdateStatus()
         {
             var nodes = OutputNodes;
-            var routes = _routes;
+            var routes = _outputRule;
             var offline = true;
 
             if (routes != null && nodes != null)
@@ -146,33 +89,40 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
         Task INode.ProcessRequest(IRequestContext context)
         {
-            for (var i = 0; i < _routes.Length; i++)
+            for (var i = 0; i < _outputRule.Length; i++)
             {
-                var route = _routes[i];
-                if (route.IsMatch(context))
+                if (!_outputRule[i].IsMatch(context))
                 {
-                    var output = OutputNodes[i];
-                    var node = output.Node;
-                    if (node != null)
+                    context.Log?.Log(LogType.Step, LogLevel.VeryDetailed, () => $"Router '{Name}' matches the request but has no output node");
+                    continue;
+                }
+
+                var output = OutputNodes[i];
+                var node = output.Node;
+
+                if (node == null)
+                {
+                    context.Log?.Log(LogType.Step, LogLevel.Detailed, () => $"Router '{Name}' output {i+1} matches the request but is not connected to a node");
+                }
+                else
+                {
+                    context.Log?.Log(LogType.Step, LogLevel.Standard, () => $"Router '{Name}' output {i + 1} matches the request, sending the request to node '{node.Name}'");
+
+                    var trafficAnalyticInfo = output.TrafficAnalytics.BeginRequest();
+                    trafficAnalyticInfo.Method = context.Incoming.Method;
+                    var task = node.ProcessRequest(context);
+
+                    if (task == null)
                     {
-                        context.Log?.Log(LogType.Step, LogLevel.Standard, () => $"Router '{Name}' sending the request to node '{node.Name}'");
-
-                        var trafficAnalyticInfo = output.TrafficAnalytics.BeginRequest();
-                        trafficAnalyticInfo.Method = context.Incoming.Method;
-                        var task = node.ProcessRequest(context);
-
-                        if (task == null)
-                        {
-                            output.TrafficAnalytics.EndRequest(trafficAnalyticInfo);
-                            return null;
-                        }
-
-                        return task.ContinueWith(t =>
-                        {
-                            trafficAnalyticInfo.StatusCode = context.Outgoing.StatusCode;
-                            output.TrafficAnalytics.EndRequest(trafficAnalyticInfo);
-                        });
+                        output.TrafficAnalytics.EndRequest(trafficAnalyticInfo);
+                        return null;
                     }
+
+                    return task.ContinueWith(t =>
+                    {
+                        trafficAnalyticInfo.StatusCode = context.Outgoing.StatusCode;
+                        output.TrafficAnalytics.EndRequest(trafficAnalyticInfo);
+                    });
                 }
             }
 
@@ -186,12 +136,89 @@ namespace Gravity.Server.ProcessingNodes.Routing
             });
         }
 
-        private class Route
+        private abstract class Rule
+        {
+            public abstract bool IsMatch(IRequestContext context);
+        }
+
+        private class GroupRule: Rule
         {
             public Rule[] Rules;
             public ConditionLogic ConditionLogic;
 
-            public bool IsMatch(IRequestContext context)
+            public GroupRule(
+                RouterGroupConfiguration configuration, 
+                IExpressionParser expressionParser)
+            {
+                if (configuration.Disabled) return;
+
+                ConditionLogic = configuration.ConditionLogic;
+                var rules = new List<Rule>();
+
+                if (configuration.Conditions != null)
+                {
+                    rules.AddRange(configuration.Conditions.Select<RouterConditionConfiguration, Rule>(r =>
+                        {
+                            var equals = r.Condition.IndexOf('=');
+                            if (equals < 1 || equals > r.Condition.Length - 2)
+                                throw new Exception("Routing expression must contain 'expr = expr'. You have '" + r.Condition + "'");
+
+                            var prefix = r.Condition[equals - 1];
+                            var isPrefixed = "<>!~".Contains(prefix);
+
+                            var leftSide = r.Condition.Substring(0, isPrefixed ? equals - 1 : equals);
+                            var rightSide = r.Condition.Substring(equals + 1);
+
+                            if (isPrefixed)
+                            {
+                                switch (prefix)
+                                {
+                                    case '~':
+                                        return new ContainsRule
+                                        {
+                                            Expression1 = expressionParser.Parse<string>(leftSide),
+                                            Expression2 = expressionParser.Parse<string>(rightSide),
+                                        };
+                                    case '!':
+                                        return new NotEqualsRule
+                                        {
+                                            Expression1 = expressionParser.Parse<string>(leftSide),
+                                            Expression2 = expressionParser.Parse<string>(rightSide),
+                                        };
+                                    case '<':
+                                        return new StartsWithRule
+                                        {
+                                            Expression1 = expressionParser.Parse<string>(leftSide),
+                                            Expression2 = expressionParser.Parse<string>(rightSide),
+                                        };
+                                    case '>':
+                                        return new EndsWithRule
+                                        {
+                                            Expression1 = expressionParser.Parse<string>(leftSide),
+                                            Expression2 = expressionParser.Parse<string>(rightSide),
+                                        };
+                                }
+                            }
+                            return new EqualsRule
+                            {
+                                Expression1 = expressionParser.Parse<string>(leftSide),
+                                Expression2 = expressionParser.Parse<string>(rightSide),
+                            };
+                        }));
+                }
+
+                if (configuration.Groups != null)
+                {
+                    rules.AddRange(
+                        configuration.Groups
+                        .Where(g => !g.Disabled)
+                        .Select(g => new GroupRule(g, expressionParser)));
+                }
+
+                Rules = rules.ToArray();
+            }
+
+            public override bool IsMatch(IRequestContext context)
             {
                 if (Rules == null)
                     return true;
@@ -207,11 +234,6 @@ namespace Gravity.Server.ProcessingNodes.Routing
                 }
                 throw new Exception("Routing node does not understand ConditionLogic=" + ConditionLogic);
             }
-        }
-
-        private abstract class Rule
-        {
-            public abstract bool IsMatch(IRequestContext context);
         }
 
         private class EqualsRule : Rule

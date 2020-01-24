@@ -78,6 +78,7 @@
     <Compile Include="Configuration\RouterConditionConfiguration.cs" />
     <Compile Include="Configuration\ConditionLogic.cs" />
     <Compile Include="Configuration\ResponseConfiguration.cs" />
+    <Compile Include="Configuration\RouterGroupConfiguration.cs" />
     <Compile Include="Configuration\ScriptLanguage.cs" />
     <Compile Include="Configuration\TrafficIndicatorConfiguration.cs" />
     <Compile Include="Configuration\TransformConfiguration.cs" />
@@ -184,6 +185,7 @@
     <Compile Include="Ui\Drawings\DiagramGenerator.cs" />
     <Compile Include="Interfaces\IDrawingGenerator.cs" />
     <Compile Include="Ui\Drawings\SvgSerializer.cs" />
+    <Compile Include="Ui\Nodes\Tile.cs" />
     <Compile Include="Ui\Nodes\ServerStats.cs" />
     <Compile Include="Ui\Nodes\StickySessionStats.cs" />
     <Compile Include="Ui\Nodes\LoadBalancerTile.cs" />

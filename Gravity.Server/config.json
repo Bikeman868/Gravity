@@ -32,12 +32,28 @@
           "routes": [
             {
               "to": "B",
-              "logic": "All",
-              "conditions": [
-                { "condition": "{method} = GET" },
-                { "condition": "{header[host]} = localhost:52581" },
-                { "condition": "{path[1]} = ui" }
-              ]
+              "logic": "Any",
+              "groups": [
+                {
+                  "logic": "All",
+                  "groups": [],
+                  "conditions": [
+                    { "condition": "{method} = GET" },
+                    { "condition": "{header[host]} = localhost:52581" },
+                    { "condition": "{path[1]} = ui" }
+                  ]
+                },
+                {
+                  "logic": "All",
+                  "groups": [],
+                  "conditions": [
+                    { "condition": "{method} = GET" },
+                    { "condition": "{header[host]} = gravity.localhost" },
+                    { "condition": "{path[1]} = ui" }
+                  ]
+                }
+              ],
+              "conditions": []
             },
             {
               "to": "G",
@@ -269,13 +285,13 @@
               "name": "B",
               "title": "Gravity UI",
               "x": 700,
-              "y": 80
+              "y": 20
             },
             {
               "name": "C",
               "title": "Round robbin",
               "x": 700,
-              "y": 230
+              "y": 270
             },
             {
               "name": "D",
@@ -299,7 +315,7 @@
               "name": "G",
               "title": "Not found response",
               "x": 700,
-              "y": 150
+              "y": 200
             },
             {
               "name": "H",
@@ -339,7 +355,7 @@
             {
               "name": "N",
               "x": 450,
-              "y": 50
+              "y": 0
             },
             {
               "name": "O",

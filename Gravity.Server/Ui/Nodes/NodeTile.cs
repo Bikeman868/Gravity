@@ -5,17 +5,12 @@ using Svg;
 
 namespace Gravity.Server.Ui.Nodes
 {
-    internal class NodeTile : RectangleDrawing
+    internal class NodeTile : Tile
     {
-        public ConnectionPoint TopLeftSideConnection;
-        public ConnectionPoint TopRightSideConnection;
-        public ConnectionPoint BottomMiddleConnection;
-
         protected readonly DrawingElement Header;
         protected readonly DrawingElement Title;
         protected readonly DrawingElement Label;
         protected readonly TextDrawing LabelText;
-        protected SvgUnit ChildSpacing;
 
         public NodeTile(
             DrawingElement drawing, 
@@ -24,12 +19,8 @@ namespace Gravity.Server.Ui.Nodes
             bool disabled,
             int headingLevel = 2,
             string label = null)
+            : base(drawing, cssClass, disabled)
         {
-            CornerRadius = 3f;
-            ChildSpacing = 5f;
-
-            CssClass = disabled ? "disabled " + cssClass : cssClass;
-
             AddChild(new SpacerDrawing(15, 20));
 
             Header = new HorizontalListDrawing
@@ -62,7 +53,7 @@ namespace Gravity.Server.Ui.Nodes
 
                 LabelText = new TextDrawing
                 {
-                    Text = new[] {label}, 
+                    Text = new[] { label },
                     CssClass = disabled ? "disabled label" : "label"
                 };
 
@@ -92,32 +83,6 @@ namespace Gravity.Server.Ui.Nodes
             if (disabled) Title.CssClass = "disabled " + Title.CssClass;
 
             Header.AddChild(Title);
-
-            TopLeftSideConnection = new ConnectionPoint(() =>
-            {
-                float left;
-                float top;
-                GetAbsolutePosition(out left, out top);
-                return new Tuple<float, float>(left, top + 10);
-            });
-
-            TopRightSideConnection = new ConnectionPoint(() =>
-            {
-                float left;
-                float top;
-                GetAbsolutePosition(out left, out top);
-                return new Tuple<float, float>(left + Width, top + 10);
-            });
-
-            BottomMiddleConnection = new ConnectionPoint(() =>
-            {
-                float left;
-                float top;
-                GetAbsolutePosition(out left, out top);
-                return new Tuple<float, float>(left + Width / 2, top + Height);
-            });
-
-            ConnectionPoints = new[] { TopLeftSideConnection, TopRightSideConnection, BottomMiddleConnection };
         }
 
         protected PopupBoxDrawing AddHeaderButton(DrawingElement page, string caption)
@@ -126,27 +91,5 @@ namespace Gravity.Server.Ui.Nodes
             Header.AddChild(button);
             return button.PopupBox;
         }
-
-        protected override void ArrangeChildren()
-        {
-            ArrangeChildrenVertically(ChildSpacing);
-        }
-
-        protected void AddDetails(List<string> details, DrawingElement parent = null, string cssClasses = null)
-        {
-            if (details.Count > 0)
-            {
-                parent = parent ?? this;
-                parent.AddChild(new TextDetailsDrawing(cssClasses)
-                {
-                    Text = details.ToArray()
-                });
-            }
-        }
-
-        public virtual void AddLines(IDictionary<string, NodeTile> nodeDrawings)
-        {
-        }
-
     }
 }
