@@ -69,12 +69,23 @@ For example you can route requests to different pools of servers based on the ho
 header, path, query string etc. You can also route GET requests to a larger pool
 of servers than PUT, POST and DELETE requests for example.
 
+This node is also useful for segregating traffic from specific IP address ranges
+and handling it differently, for example more detailed logging or specific fixed
+responses.
+
+Note that this node matches requests, not responses. You can not route traffic
+based on the response because the traffic must have already been routed to a server
+in order to have a response.
+
 ### Transform Node
 
 Applies URL Rewrite module rules to a request. See the readme file in my UrlRewrite.Net 
 repo for a detailed definition of the rule syntax. Rules can be applied to the incomming
 request, the outbound response or both. The rules can be embedded directly into the
 load balancer configuration or supplied in an separate file.
+
+These rules affect the request header only. This node does not modify the content
+of the request or response.
 
 ### Response Node
 
@@ -111,6 +122,19 @@ this client will be routed to the same server again on the next request.
 
 These nodes have a list of nodes to send requests to next and always send requests
 to the output that has the least number of active connections.
+
+### Log Level Node
+
+These nodes change the level of detail in the log. This allows you to capture more
+detail for requests that are pssing through a specific portion of the pipeline.
+
+### Custom Log Node
+
+These nodes capture information about specific request types and write a log file
+to disk. You can specify which request methods to capture (POST, GET etc) or capture
+all methods, and you can specify the return codes to capture (503, 200, 404 etc) or
+capture all response codes. If you want to be more specific about what to capture
+please configue a Router Node in front of the Custom Log.
 
 ## Compiling and running
 

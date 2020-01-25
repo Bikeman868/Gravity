@@ -363,40 +363,40 @@
             {
               "name": "C",
               "title": "Round robbin",
-              "x": 100, "y": 230
+              "x": 0, "y": 30
             },
             {
               "name": "D",
               "title": "Server D",
-              "x": 350, "y": 220
+              "x": 250, "y": 20
             },
             {
               "name": "E",
               "title": "Server E",
-              "x": 350, "y": 300
+              "x": 250, "y": 100
             },
             {
               "name": "F",
               "title": "Server F",
-              "x": 350, "y": 380
+              "x": 250, "y": 180
             },
             {
               "name": "I",
               "title": "stockhouse.com",
-              "x": 800, "y": 500
+              "x": 700, "y": 300
             },
             {
               "name": "O",
               "title": "Stockhouse transform",
-              "x": 400, "y": 500
+              "x": 300, "y": 300
             },
             {
               "name": "P",
-              "x": 250, "y": 500
+              "x": 150, "y": 300
             },
             {
               "name": "Q",
-              "x": 620, "y": 500
+              "x": 520, "y": 300
             }
           ]
         }
