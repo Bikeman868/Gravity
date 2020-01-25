@@ -179,21 +179,21 @@ A simple Router Node configuration might look like this:
             "to": "B",
             "logic": "All",
             "groups": [
-				{
-					"logic": "All",
-					"conditions": [
-						{ "condition": "{method} = GET" },
-						{ "condition": "{path[1]} = ui" },
-						{ "condition": "{ipv4} = loopback" }
-					]
-				},
-				{
-					"logic": "Any",
-					"conditions": [
-						{ "condition": "{header[host]} = localhost:52581" },
-						{ "condition": "{header[host]} = gravity.localhost" }
-					]
-				}
+                {
+                    "logic": "All",
+                    "conditions": [
+                        { "condition": "{method} = GET" },
+                        { "condition": "{path[1]} = ui" },
+                        { "condition": "{ipv4} = loopback" }
+                    ]
+                },
+                {
+                    "logic": "Any",
+                    "conditions": [
+                        { "condition": "{header[host]} = localhost:52581" },
+                        { "condition": "{header[host]} = gravity.localhost" }
+                    ]
+                }
             ]
         },
         {
