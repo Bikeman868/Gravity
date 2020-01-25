@@ -224,8 +224,8 @@
     <Compile Include="Pipeline\Connection.cs" />
     <Compile Include="Pipeline\ConnectionPool.cs" />
     <Compile Include="ProcessingNodes\SpecialPurpose\InternalNode.cs" />
-    <Compile Include="Utility\NodeGraph.cs" />
-    <Compile Include="Utility\NodeOutput.cs" />
+    <Compile Include="Pipeline\NodeGraph.cs" />
+    <Compile Include="Pipeline\NodeOutput.cs" />
     <Compile Include="ProcessingNodes\LoadBalancing\RoundRobinNode.cs" />
     <Compile Include="ProcessingNodes\Routing\RoutingNode.cs" />
     <Compile Include="ProcessingNodes\Server\ServerNode.cs" />

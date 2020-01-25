@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading;
-using Gravity.Server.Pipeline;
+using Gravity.Server.Utility;
 
-namespace Gravity.Server.Utility
+namespace Gravity.Server.Pipeline
 {
     internal class NodeOutput: IComparable
     {
@@ -51,7 +51,7 @@ namespace Gravity.Server.Utility
             var a = x as NodeOutput;
             var b = y as NodeOutput;
             if (ReferenceEquals(a, null)) return ReferenceEquals(b, null);
-            return string.Equals(a.Name, b?.Name, System.StringComparison.OrdinalIgnoreCase);
+            return string.Equals(a.Name, b?.Name, StringComparison.OrdinalIgnoreCase);
         }
 
         public int CompareTo(object obj)

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Gravity.Server.Interfaces;
-using Gravity.Server.Utility;
+using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.ProcessingNodes.LoadBalancing
 {

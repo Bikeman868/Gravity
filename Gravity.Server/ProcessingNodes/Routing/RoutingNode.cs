@@ -6,6 +6,7 @@ using Gravity.Server.Interfaces;
 using Gravity.Server.Utility;
 using Gravity.Server.Pipeline;
 using System.Collections.Generic;
+using System.Net;
 
 namespace Gravity.Server.ProcessingNodes.Routing
 {
@@ -236,6 +237,24 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
             public override bool IsMatch(IRequestContext context)
             {
+                if (Expression1.BaseType == typeof(IPAddress))
+                {
+                    var address1String = Expression1.Evaluate(context);
+                    if (string.IsNullOrEmpty(address1String)) return false;
+
+                    var address2String = Expression2.Evaluate(context);
+                    if (string.IsNullOrEmpty(address2String)) return false;
+
+                    if (!IPAddress.TryParse(address1String, out var address1)) return false;
+
+                    IPAddress address2;
+                    if (string.Equals("loopback", address2String, StringComparison.OrdinalIgnoreCase))
+                        address2 = address1.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork ? IPAddress.Loopback : IPAddress.IPv6Loopback;
+                    else if (!IPAddress.TryParse(address2String, out address2)) return false;
+
+                    return address1.Equals(address2);
+                }
+
                 var value1 = Expression1.Evaluate(context);
                 var value2 = Expression2.Evaluate(context);
 
@@ -270,6 +289,40 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
             public override bool IsMatch(IRequestContext context)
             {
+                if (Expression1.BaseType == typeof(IPAddress))
+                {
+                    var address1String = Expression1.Evaluate(context);
+                    if (string.IsNullOrEmpty(address1String)) return false;
+
+                    var address2String = Expression2.Evaluate(context);
+                    if (string.IsNullOrEmpty(address2String)) return false;
+
+                    if (!IPAddress.TryParse(address1String, out var address1)) return false;
+
+                    IPAddress address2;
+                    var mask = uint.MaxValue;
+
+                    var cidrSeparator = address2String.IndexOf("/");
+                    if (cidrSeparator < 0)
+                    {
+                        if (string.Equals("loopback", address2String, StringComparison.OrdinalIgnoreCase))
+                            address2 = address1.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork ? IPAddress.Loopback : IPAddress.IPv6Loopback;
+                        else if (!IPAddress.TryParse(address2String, out address2)) return false;
+                    }
+                    else
+                    {
+                        if (!IPAddress.TryParse(address2String.Substring(0, cidrSeparator), out address2)) return false;
+                        if (!int.TryParse(address2String.Substring(cidrSeparator + 1), out var cidrBlock)) return false;
+                        if (cidrBlock > 32 || cidrBlock < 4) return false;
+                        unchecked { mask <<= 32 - cidrBlock; }
+                    }
+
+                    var address1Value = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(address1.GetAddressBytes(), 0));
+                    var address2Value = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(address2.GetAddressBytes(), 0));
+
+                    return (address1Value & mask) == address2Value;
+                }
+
                 var value1 = Expression1.Evaluate(context);
                 if (string.IsNullOrEmpty(value1)) return false;
 

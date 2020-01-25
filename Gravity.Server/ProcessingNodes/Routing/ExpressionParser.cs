@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Text.RegularExpressions;
 using Gravity.Server.Interfaces;
 using Gravity.Server.Pipeline;
@@ -9,17 +10,19 @@ namespace Gravity.Server.ProcessingNodes.Routing
     internal class ExpressionParser: IExpressionParser
     {
         private readonly Regex _delimitedExpressionRegex = new Regex("{(.*)}", RegexOptions.Compiled);
-        private readonly Regex _pathElementExpressionRegex = new Regex("path\\[(.*)]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private readonly Regex _headerExpressionRegex = new Regex("header\\[(.*)]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private readonly Regex _queryExpressionRegex = new Regex("query\\[(.*)]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private readonly Regex _pathElementExpressionRegex = new Regex("^path\\[(.*)]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private readonly Regex _headerExpressionRegex = new Regex("^header\\[(.*)]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private readonly Regex _queryExpressionRegex = new Regex("^query\\[(.*)]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private readonly Regex _pathExpressionRegex = new Regex("^path$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private readonly Regex _nullExpressionRegex = new Regex("^null$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private readonly Regex _methodExpressionRegex = new Regex("^method$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private readonly Regex _ipv4ExpressionRegex = new Regex("^ipv4$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private readonly Regex _ipv6ExpressionRegex = new Regex("^ipv6$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         IExpression<T> IExpressionParser.Parse<T>(string expression)
         {
             if (string.IsNullOrWhiteSpace(expression))
-                return new DefaultExpression<T>();
+                return new NullExpression<T>();
 
             expression = expression.Trim();
 
@@ -31,7 +34,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
             var nullMatch = _nullExpressionRegex.Match(expression);
             if (nullMatch.Success)
-                return new DefaultExpression<T>();
+                return new NullExpression<T>();
 
             var methodMatch = _methodExpressionRegex.Match(expression);
             if (methodMatch.Success)
@@ -53,11 +56,21 @@ namespace Gravity.Server.ProcessingNodes.Routing
             if (queryMatch.Success)
                 return new QueryExpression<T>(queryMatch.Groups[1].Value);
 
+            var ipv4Match = _ipv4ExpressionRegex.Match(expression);
+            if (ipv4Match.Success)
+                return new Ipv4Expression<T>();
+
+            var ipv6Match = _ipv6ExpressionRegex.Match(expression);
+            if (ipv6Match.Success)
+                return new Ipv6Expression<T>();
+
             throw new Exception("Unknown expression syntax '" + expression + "'");
         }
 
-        private class DefaultExpression<T> : IExpression<T>
+        private class NullExpression<T> : IExpression<T>
         {
+            Type IExpression<T>.BaseType => typeof(string);
+
             T IExpression<T>.Evaluate(IRequestContext context)
             {
                 return default(T);
@@ -67,6 +80,8 @@ namespace Gravity.Server.ProcessingNodes.Routing
         private class LiteralExpression<T> : IExpression<T>
         {
             private readonly T _value;
+
+            Type IExpression<T>.BaseType => typeof(T);
 
             public LiteralExpression(string expression)
             {
@@ -85,6 +100,8 @@ namespace Gravity.Server.ProcessingNodes.Routing
         private class HeaderExpression<T> : IExpression<T>
         {
             private readonly string _headerName;
+
+            Type IExpression<T>.BaseType => typeof(string);
 
             public HeaderExpression(string headerName)
             {
@@ -105,6 +122,8 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
         private class MethodExpression<T> : IExpression<T>
         {
+            Type IExpression<T>.BaseType => typeof(string);
+
             T IExpression<T>.Evaluate(IRequestContext context)
             {
                 var method = context.Incoming.Method;
@@ -118,6 +137,8 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
         private class PathExpression<T> : IExpression<T>
         {
+            Type IExpression<T>.BaseType => typeof(string);
+
             T IExpression<T>.Evaluate(IRequestContext context)
             {
                 var path = context.Incoming.Path.Value;
@@ -129,9 +150,55 @@ namespace Gravity.Server.ProcessingNodes.Routing
             }
         }
 
+        private class Ipv4Expression<T> : IExpression<T>
+        {
+            Type IExpression<T>.BaseType => typeof(IPAddress);
+
+            T IExpression<T>.Evaluate(IRequestContext context)
+            {
+                var address = context.Incoming.SourceAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork
+                    ? context.Incoming.SourceAddress
+                    : (context.Incoming.SourceAddress.Equals(IPAddress.IPv6Loopback)
+                        ? IPAddress.Loopback
+                        : context.Incoming.SourceAddress.MapToIPv4());
+
+                if (typeof(string) == typeof(T))
+                    return (T)(object)address.ToString();
+
+                if (typeof(IPAddress) == typeof(T))
+                    return (T)(object)address;
+
+                return (T)Convert.ChangeType(address, typeof(T));
+            }
+        }
+
+        private class Ipv6Expression<T> : IExpression<T>
+        {
+            Type IExpression<T>.BaseType => typeof(IPAddress);
+
+            T IExpression<T>.Evaluate(IRequestContext context)
+            {
+                var address = context.Incoming.SourceAddress.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6
+                    ? context.Incoming.SourceAddress
+                    : (context.Incoming.SourceAddress.Equals(IPAddress.Loopback)
+                        ? IPAddress.IPv6Loopback
+                        : context.Incoming.SourceAddress.MapToIPv6());
+
+                if (typeof(string) == typeof(T))
+                    return (T)(object)address.ToString();
+
+                if (typeof(IPAddress) == typeof(T))
+                    return (T)(object)address;
+
+                return (T)Convert.ChangeType(address, typeof(T));
+            }
+        }
+
         private class QueryExpression<T> : IExpression<T>
         {
             private readonly string _parameterName;
+
+            Type IExpression<T>.BaseType => typeof(string);
 
             public QueryExpression(string parameterName)
             {
@@ -172,6 +239,8 @@ namespace Gravity.Server.ProcessingNodes.Routing
         private class PathElementExpression<T> : IExpression<T>
         {
             private readonly int _index;
+
+            Type IExpression<T>.BaseType => typeof(string);
 
             public PathElementExpression(int index)
             {
