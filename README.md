@@ -171,7 +171,7 @@ describing the configuration options.
 
 A simple Router Node configuration might look like this:
 
-`
+```
 {
     "name": "N",
     "routes": [
@@ -209,7 +209,8 @@ A simple Router Node configuration might look like this:
         }
     ]
 }
-`
+```
+
 The Router Node must have a name, the name should be kept short and should not
 contain any spaces or special characters. When the node is displayed on a dashboard
 you can choose a display label for the node, so this node name is not normally shown
@@ -232,48 +233,50 @@ has a 'to' property,
 
 Each condition is an expression and some flags, for example:
 
-`
+```
 { "condition": "{ipv4} ~= 192.168.0.0/16", "negate": false, "disabled": false }
-`
+```
 
 Conditions can be inverted by setting the negate property to true, and they can
 be temporarily removed from the logic by setting their disabled property to true.
 
-The 'condition' property consists of two expressions and a comparison operator.
+The condition property consists of two expressions and a comparison operator.
 The comparison operator can be
 
-= meaning that the two expressions evaluate to the same value.
-< meaning that the left expression has lower value than the right hand value.
-> meaning that the left expression has higher value than the right hand value.
-!= meaning that the two expressions evaluate to different values.
-!< meaning that the left expression has higher or equal value than the right hand value.
-!> meaning that the left expression has lower or equal value than the right hand value.
-~= meaning that the left expression is contained in the right hand value.
+`=` meaning that the two expressions evaluate to the same value.
+`<` meaning that the left expression has lower value than the right hand value.
+`>` meaning that the left expression has higher value than the right hand value.
+`!=` meaning that the two expressions evaluate to different values.
+`!<` meaning that the left expression has higher or equal value than the right hand value.
+`!>` meaning that the left expression has lower or equal value than the right hand value.
+`~=` meaning that the left expression is contained in the right hand value.
 
 The expressions are taken an literal values unless they are enclosed in curly
 braces. The curly braces retrieve information from the incoming request as follows:
 
-{path[0..n]} - retrieves an element from the path. {path[1]} is the first path element, {path[2]} is the second element etc. {path[-1]} is the last path element, {path[-2]} is the second to last etc.
+`{path[0..n]}` - retrieves an element from the path. `{path[1]}` is the first path element, 
+`{path[2]}` is the second element etc. `{path[-1]}` is the last path element, `{path[-2]}`
+is the second to last etc.
 
-{path} - retrieves the entire path.
+`{path}` - retrieves the entire path.
 
-{header[name]} - retrieves a header from the request, for example {header[Accept]}.
+`{header[name]}` - retrieves a header from the request, for example `{header[Accept]}`.
 
-{query[name]} - retrieves a query string parameter, for example {query[page]}.
+`{query[name]}` - retrieves a query string parameter, for example `{query[page]}`.
 
-{null} - retrieves a null value. This can be used to test for the absence of something.
+`{null}` - retrieves a null value. This can be used to test for the absence of something.
 
-{method[name]} - retrieves the request method. For example {method[POST]}.
+`{method[name]}` - retrieves the request method. For example `{method[POST]}`.
 
-{ipv4} - retrieves IP v4 address where the request came from.
+`{ipv4}` - retrieves IP v4 address where the request came from.
 
-{ipv6} - retrieves IP v6 address where the request came from.
+`{ipv6}` - retrieves IP v6 address where the request came from.
 
-When using {ipv4} or {ipv6} you can use some special notation for the right side expression. The
-word 'loopback' means the IP v4 or IP v6 loopback address (which are 127.0.0.1 and ::1 respectively)
+When using `{ipv4}` or `{ipv6}` you can use some special notation for the right side expression. The
+word `loopback` means the IP v4 or IP v6 loopback address (which are 127.0.0.1 and ::1 respectively)
 as appropriate.
 
-When using {ipv4} or {ipv6} with the ~= operator, you can specify a CIDR block to compare
+When using `{ipv4}` or `{ipv6}` with the `~=` operator, you can specify a CIDR block to compare
 and the expression will be true for any IP address within that CIDR block.
 
 The router evaluates the routes in the order that they are written and finds the
@@ -281,6 +284,4 @@ first one that matches the request and in online. Online means that their is a
 downstream path to a node that produces responses. If there is no way to get a 
 response from a given route then that route will be skipped and the logic will
 move on to the next route in the list.
-
-
 
