@@ -173,41 +173,41 @@ A simple Router Node configuration might look like this:
 
 ```
 {
-    "name": "N",
-    "routes": [
-        {
-            "to": "B",
-            "logic": "All",
-            "groups": [
-                {
-                    "logic": "All",
-                    "conditions": [
-                        { "condition": "{method} = GET" },
-                        { "condition": "{path[1]} = ui" },
-                        { "condition": "{ipv4} = loopback" }
-                    ]
-                },
-                {
-                    "logic": "Any",
-                    "conditions": [
-                        { "condition": "{header[host]} = localhost:52581" },
-                        { "condition": "{header[host]} = gravity.localhost" }
-                    ]
-                }
-            ]
-        },
-        {
-            "to": "G",
+  "name": "N",
+  "routes": [
+     {
+        "to": "B",
+        "logic": "All",
+        "groups": [
+          {
             "logic": "All",
             "conditions": [
-                { "condition": "{method} = GET" },
-                { "condition": "{path[0]} = /favicon.ico" }
+              { "condition": "{method} = GET" },
+              { "condition": "{path[1]} = ui" },
+              { "condition": "{ipv4} = loopback" }
             ]
-        },
-        {
-            "to": "C"
-        }
-    ]
+          },
+          {
+            "logic": "Any",
+            "conditions": [
+              { "condition": "{header[host]} = localhost:52581" },
+              { "condition": "{header[host]} = gravity.localhost" }
+             ]
+          }
+        ]
+     },
+     {
+       "to": "G",
+       "logic": "All",
+       "conditions": [
+           { "condition": "{method} = GET" },
+           { "condition": "{path[0]} = /favicon.ico" }
+       ]
+     },
+     {
+       "to": "C"
+     }
+  ]
 }
 ```
 
