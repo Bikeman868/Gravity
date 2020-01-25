@@ -70,6 +70,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\ChangeLogFilterConfiguration.cs" />
     <Compile Include="Configuration\CorsConfiguration.cs" />
     <Compile Include="Configuration\InternalEndpointConfiguration.cs" />
     <Compile Include="Configuration\DashboardConfiguration.cs" />
@@ -103,6 +104,7 @@
     <Compile Include="Pipeline\ServerRequestContext.cs" />
     <Compile Include="ProcessingNodes\LoadBalancing\LoadBalancerNode.cs" />
     <Compile Include="Pipeline\RequestListener.cs" />
+    <Compile Include="ProcessingNodes\Logging\ChangeLogFilterNode.cs" />
     <Compile Include="ProcessingNodes\ProcessingNode.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Actions\AbortRequest.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Actions\Action.cs" />
@@ -196,6 +198,7 @@
     <Compile Include="Ui\Nodes\LeastConnectionsStats.cs" />
     <Compile Include="Ui\Nodes\RoundRobinStats.cs" />
     <Compile Include="Ui\Nodes\RouterStats.cs" />
+    <Compile Include="Ui\Nodes\ChangeLogFilterTile.cs" />
     <Compile Include="Ui\Shapes\TotalHandling.cs" />
     <Compile Include="Ui\Shapes\PieChartDrawing.cs" />
     <Compile Include="Ui\Shapes\LegendDrawing.cs" />
@@ -268,6 +271,7 @@
   <ItemGroup>
     <Content Include="config.json" />
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>

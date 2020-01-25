@@ -49,6 +49,9 @@ g.server_ip_address_unhealthy > text { stroke:#ff0066; fill:#ff0066; }
 g.transform > rect { stroke: #6A5ACD; fill: #e2e2f8; }
 g.transform > text { stroke:#696969; fill:#696969; }
 
+g.logging > rect { stroke: #6A5ACD; fill: #e2e2f8; }
+g.logging > text { stroke:#696969; fill:#696969; }
+
 g.cors > rect { stroke: #6A5ACD; fill: #e2e2f8; }
 g.cors > text { stroke:#696969; fill:#696969; }
 

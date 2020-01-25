@@ -114,6 +114,8 @@ namespace Gravity.Server.ProcessingNodes.Transform
         {
             if (_nextNode == null)
             {
+                context.Log?.Log(LogType.Step, LogLevel.Important, () => $"Transform node '{Name}' has no downstream and will return 503");
+
                 return Task.Run(() => 
                 { 
                     context.Outgoing.StatusCode = 503;
@@ -122,7 +124,11 @@ namespace Gravity.Server.ProcessingNodes.Transform
                 });
             }
 
-            if (!Disabled)
+            if (Disabled)
+            {
+                context.Log?.Log(LogType.Step, LogLevel.Standard, () => $"Transform node '{Name}' is disabled and will not perform any transformation");
+            }
+            else
             {
                 if (_requestTransform != null)
                 {

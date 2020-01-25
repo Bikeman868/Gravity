@@ -40,6 +40,8 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
         {
             if (_nextNode == null)
             {
+                context.Log?.Log(LogType.Step, LogLevel.Important, () => $"CORS '{Name}' has no downstream");
+
                 return Task.Run(() =>
                 {
                     context.Outgoing.StatusCode = 503;
@@ -48,7 +50,11 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
                 });
             }
 
-            if (!Disabled)
+            if (Disabled)
+            {
+                context.Log?.Log(LogType.Step, LogLevel.Standard, () => $"CORS '{Name}' is disabled and will pass request through");
+            }
+            else
             {
                 if (!context.Incoming.Headers.TryGetValue("Origin", out var origins))
                     origins = new string[] { null };
@@ -62,18 +68,23 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
 
                 if (context.Incoming.Method == "OPTIONS")
                 {
+                    context.Log?.Log(LogType.Step, LogLevel.Standard, () => $"CORS '{Name}' handling an OPTIONS request");
+
                     if (string.IsNullOrEmpty(origin))
                     {
+                        context.Log?.Log(LogType.Step, LogLevel.Standard, () => $"CORS '{Name}' no 'Origin' header present, returning 403");
                         context.Outgoing.StatusCode = 403;
                     }
                     else
                     {
                         if (!isCrossOrigin || _allowedOriginsRegex.IsMatch(origin))
                         {
+                            context.Log?.Log(LogType.Step, LogLevel.Standard, () => $"CORS '{Name}' this an allowed origin");
                             context.Outgoing.Headers["Access-Control-Allow-Origin"] = new [] { origin };
                         }
                         else
                         {
+                            context.Log?.Log(LogType.Step, LogLevel.Standard, () => $"CORS '{Name}' this not an allowed origin");
                             context.Outgoing.Headers["Access-Control-Allow-Origin"] = new[] { WebsiteOrigin };
                         }
 
@@ -91,11 +102,14 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
                         context.Incoming.Method == "PUT" ||
                         context.Incoming.Method == "DELETE")
                     {
+                        context.Log?.Log(LogType.Step, LogLevel.Standard, () => $"CORS '{Name}' evaluating {context.Incoming.Method} request");
+
                         // Note that the browser will never send this header in a cross-site request
                         // without first obtaining permission from the server using a pre-flight CORS check.
                         if (!context.Incoming.Headers.TryGetValue("X-Requested-With", out var requestedWithHeaders) ||
                             !string.Equals(requestedWithHeaders[0], "XMLHttpRequest", StringComparison.OrdinalIgnoreCase))
                         {
+                            context.Log?.Log(LogType.Step, LogLevel.Standard, () => $"CORS '{Name}' request does not contain 'X-Requested-With: XMLHttpRequest' header, returning 403");
                             context.Outgoing.StatusCode = 403;
                             handled = true;
                         }
@@ -111,6 +125,7 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
 
                 if (handled)
                 {
+                    context.Log?.Log(LogType.Step, LogLevel.Standard, () => $"CORS '{Name}' handled the request and is returning a response");
                     return Task.Run(() => context.Outgoing.SendHeaders(context));
                 }
             }

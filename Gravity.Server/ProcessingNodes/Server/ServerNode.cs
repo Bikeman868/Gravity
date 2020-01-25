@@ -458,6 +458,10 @@ namespace Gravity.Server.ProcessingNodes.Server
             {
             }
 
+            public void SetFilter(LogType[] logTypes, LogLevel maximumLogLevel)
+            {
+            }
+
             public bool WillLog(LogType type, LogLevel level)
             {
                 return _logFactory.WillLog(type, level);

@@ -5,6 +5,7 @@ using Gravity.Server.Configuration;
 using Gravity.Server.Interfaces;
 using Gravity.Server.Pipeline;
 using Gravity.Server.ProcessingNodes.LoadBalancing;
+using Gravity.Server.ProcessingNodes.Logging;
 using Gravity.Server.ProcessingNodes.Routing;
 using Gravity.Server.ProcessingNodes.Server;
 using Gravity.Server.ProcessingNodes.SpecialPurpose;
@@ -77,6 +78,7 @@ namespace Gravity.Server.Ui.Drawings
                     var transform = node as TransformNode;
                     var leastConnections = node as LeastConnectionsNode;
                     var cors = node as CorsNode;
+                    var changeLogFilter = node as ChangeLogFilterNode;
 
                     if (internalRequest != null) nodeDrawing = new InternalRequestTile(this, internalRequest, nodeDrawingConfig);
                     else if (response != null) nodeDrawing = new ResponseTile(this, response, nodeDrawingConfig);
@@ -87,6 +89,7 @@ namespace Gravity.Server.Ui.Drawings
                     else if (transform != null) nodeDrawing = new TransformTile(this, transform, nodeDrawingConfig);
                     else if (leastConnections != null) nodeDrawing = new LeastConnectionsTile(this, leastConnections, nodeDrawingConfig, dashboardConfiguration.TrafficIndicator);
                     else if (cors != null) nodeDrawing = new CorsTile(this, cors, nodeDrawingConfig);
+                    else if (changeLogFilter != null) nodeDrawing = new ChangeLogFilterTile(this, changeLogFilter, nodeDrawingConfig);
                     else nodeDrawing = new NodeTile(this, node.Name, "", true);
 
                     nodeDrawing.Left = nodeDrawingConfig.X;

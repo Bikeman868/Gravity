@@ -361,6 +361,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                 var statusString = headerLines[0].Substring(firstSpaceIndex + 1, secondSpaceIndex - firstSpaceIndex);
                 if (ushort.TryParse(statusString, out var statusCode))
                 {
+                    context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"Response status code {statusCode}");
                     context.Outgoing.StatusCode = statusCode;
                 }
                 else
@@ -370,6 +371,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                 }
 
                 context.Outgoing.ReasonPhrase = headerLines[0].Substring(secondSpaceIndex + 1);
+                context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"Response reason phrase '{context.Outgoing.ReasonPhrase}'");
 
                 for (var j = 1; j < headerLines.Count; j++)
                 {

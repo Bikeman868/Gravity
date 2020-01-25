@@ -31,6 +31,9 @@ namespace Gravity.Server.Configuration
         [JsonProperty("transforms")]
         public TransformConfiguration[] TransformNodes { get; set; }
 
+        [JsonProperty("changeLogFilters")]
+        public ChangeLogFilterConfiguration[] ChangeLogFilterNodes { get; set; }
+
         public NodeGraphConfiguration Sanitize()
         {
             if (ServerNodes == null)

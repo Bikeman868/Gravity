@@ -7,6 +7,7 @@ using Gravity.Server.Configuration;
 using Gravity.Server.Interfaces;
 using Gravity.Server.Pipeline;
 using Gravity.Server.ProcessingNodes.LoadBalancing;
+using Gravity.Server.ProcessingNodes.Logging;
 using Gravity.Server.ProcessingNodes.Routing;
 using Gravity.Server.ProcessingNodes.Server;
 using Gravity.Server.ProcessingNodes.SpecialPurpose;
@@ -168,6 +169,7 @@ namespace Gravity.Server.Utility
                 ConfigureServerNodes(configuration, nodes);
                 ConfigureStickySessionNodes(configuration, nodes);
                 ConfigureTransformNodes(configuration, nodes);
+                ConfigureChangeLogFilterNodes(configuration, nodes);
             }
             catch (Exception ex)
             {
@@ -403,6 +405,26 @@ namespace Gravity.Server.Utility
                         ResponseScriptFile = transformNodeConfiguration.ResponseScriptFile,
                     };
                     transformNodeConfiguration.Node = node;
+                    nodes.Add(node);
+                }
+            }
+        }
+
+        private void ConfigureChangeLogFilterNodes(NodeGraphConfiguration configuration, List<INode> nodes)
+        {
+            if (configuration.ChangeLogFilterNodes != null)
+            {
+                foreach (var changeLogFilterNodeConfiguration in configuration.ChangeLogFilterNodes)
+                {
+                    var node = new ChangeLogFilterNode
+                    {
+                        Name = changeLogFilterNodeConfiguration.Name,
+                        Disabled = changeLogFilterNodeConfiguration.Disabled,
+                        OutputNode = changeLogFilterNodeConfiguration.OutputNode,
+                        MaximumLogLevel = changeLogFilterNodeConfiguration.MaximumLogLevel,
+                        LogTypes = changeLogFilterNodeConfiguration.LogTypes
+                    };
+                    changeLogFilterNodeConfiguration.Node = node;
                     nodes.Add(node);
                 }
             }

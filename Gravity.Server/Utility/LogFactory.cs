@@ -29,18 +29,10 @@ namespace Gravity.Server.Utility
                 "/gravity/log", 
                 c =>
                 {
+                    _filter = ConstructFilter(c.LogTypes, c.MaximumLogLevel);
+
                     if ((int)c.MaximumLogLevel < 1)
-                    {
-                        _filter = (t, l) => false;
                         c.Enabled = false;
-                    }
-                    else
-                    {
-                        var logTypeMask = c.LogTypes.Length == 0 
-                            ? -1
-                            : c.LogTypes.Aggregate(0, (m, t) => m |= (int)t);
-                        _filter = (t, l) => l <= c.MaximumLogLevel && ((int)t & logTypeMask) != 0;
-                    }
 
                     if (c.Method == LogMethod.File)
                     {
@@ -90,6 +82,18 @@ namespace Gravity.Server.Utility
             return log;
         }
 
+        public static Func<LogType, LogLevel, bool> ConstructFilter(LogType[] logTypes, LogLevel maximumLogLevel)
+        {
+            if ((int)maximumLogLevel < 1)
+                return (t, l) => false;
+
+            var logTypeMask = logTypes == null || logTypes.Length == 0
+                ? -1
+                : logTypes.Aggregate(0, (m, t) => m |= (int)t);
+
+            return (t, l) => l <= maximumLogLevel && ((int)t & logTypeMask) != 0;
+        }
+
         public bool WillLog(LogType type, LogLevel level)
         {
             return _filter(type, level);
@@ -98,10 +102,11 @@ namespace Gravity.Server.Utility
         private class FileLog: ILog
         {
             private readonly long _key;
-            private readonly Func<LogType, LogLevel, bool> _filter;
             private readonly LogFileWriter _writer;
             private readonly List<string> _logEntries = new List<string>();
             private readonly DateTime _start;
+
+            private Func<LogType, LogLevel, bool> _filter;
 
             public FileLog(long key, Func<LogType, LogLevel, bool> filter, LogFileWriter writer)
             {
@@ -114,6 +119,11 @@ namespace Gravity.Server.Utility
             public void Dispose()
             {
                 Task.Run(() => _writer.WriteLog(_key, _logEntries));
+            }
+
+            public void SetFilter(LogType[] logTypes, LogLevel maximumLogLevel)
+            {
+                _filter = ConstructFilter(logTypes, maximumLogLevel);
             }
 
             public bool WillLog(LogType type, LogLevel level)
@@ -134,8 +144,9 @@ namespace Gravity.Server.Utility
         private class TraceLog : ILog
         {
             private readonly long _key;
-            private readonly Func<LogType, LogLevel, bool> _filter;
             private readonly DateTime _start;
+
+            private Func<LogType, LogLevel, bool> _filter;
 
             public TraceLog(long key, Func<LogType, LogLevel, bool> filter)
             {
@@ -146,6 +157,11 @@ namespace Gravity.Server.Utility
 
             public void Dispose()
             {
+            }
+
+            public void SetFilter(LogType[] logTypes, LogLevel maximumLogLevel)
+            {
+                _filter = ConstructFilter(logTypes, maximumLogLevel);
             }
 
             public bool WillLog(LogType type, LogLevel level)
