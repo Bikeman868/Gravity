@@ -34,6 +34,9 @@ namespace Gravity.Server.Configuration
         [JsonProperty("changeLogFilters")]
         public ChangeLogFilterConfiguration[] ChangeLogFilterNodes { get; set; }
 
+        [JsonProperty("customLogs")]
+        public CustomLogConfiguration[] CustomLogNodes { get; set; }
+
         public NodeGraphConfiguration Sanitize()
         {
             if (ServerNodes == null)
@@ -56,6 +59,8 @@ namespace Gravity.Server.Configuration
                 if (ServerNodes != null) foreach (var node in ServerNodes) node.Sanitize();
                 if (StickySessionNodes != null) foreach (var node in StickySessionNodes) node.Sanitize();
                 if (TransformNodes != null) foreach (var node in TransformNodes) node.Sanitize();
+                if (ChangeLogFilterNodes != null) foreach (var node in ChangeLogFilterNodes) node.Sanitize();
+                if (CustomLogNodes != null) foreach (var node in CustomLogNodes) node.Sanitize();
 
                 // Check for circular graphs
 

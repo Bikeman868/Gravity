@@ -39,6 +39,7 @@ namespace Gravity.Server.Ui.Drawings
             var leastConnections = node as LeastConnectionsNode;
             var cors = node as CorsNode;
             var changeLogFilter = node as ChangeLogFilterNode;
+            var customLog = node as CustomLogNode;
 
             if (internalRequest != null) nodeDrawing = new InternalRequestTile(this, internalRequest, nodeDrawingConfig);
             else if (response != null) nodeDrawing = new ResponseTile(this, response, nodeDrawingConfig);
@@ -50,6 +51,7 @@ namespace Gravity.Server.Ui.Drawings
             else if (leastConnections != null) nodeDrawing = new LeastConnectionsStats(this, leastConnections, dashboardConfiguration, nodeDrawingConfig);
             else if (cors != null) nodeDrawing = new CorsTile(this, cors, nodeDrawingConfig);
             else if (changeLogFilter != null) nodeDrawing = new ChangeLogFilterTile(this, changeLogFilter, nodeDrawingConfig);
+            else if (customLog != null) nodeDrawing = new CustomLogTile(this, customLog, nodeDrawingConfig);
             else nodeDrawing = new NodeTile(this, node.Name, "", true);
 
             nodeDrawing.Left = 10;

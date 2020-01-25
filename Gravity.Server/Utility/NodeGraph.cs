@@ -430,6 +430,32 @@ namespace Gravity.Server.Utility
             }
         }
 
+        private void ConfigureCustomLogNodes(NodeGraphConfiguration configuration, List<INode> nodes)
+        {
+            if (configuration.ChangeLogFilterNodes != null)
+            {
+                foreach (var customLogConfiguration in configuration.CustomLogNodes)
+                {
+                    var node = new CustomLogNode
+                    {
+                        Name = customLogConfiguration.Name,
+                        Disabled = customLogConfiguration.Disabled,
+                        OutputNode = customLogConfiguration.OutputNode,
+                        Methods = customLogConfiguration.Methods,
+                        StatusCodes = customLogConfiguration.StatusCodes,
+                        Directory = customLogConfiguration.Directory,
+                        FileNamePrefix = customLogConfiguration.FileNamePrefix,
+                        MaximumLogFileAge = customLogConfiguration.MaximumLogFileAge,
+                        MaximumLogFileSize = customLogConfiguration.MaximumLogFileSize,
+                        Detailed = customLogConfiguration.Detailed,
+                        ContentType = customLogConfiguration.ContentType,
+                    };
+                    customLogConfiguration.Node = node;
+                    nodes.Add(node);
+                }
+            }
+        }
+
         INode INodeGraph.NodeByName(string name)
         {
             return _currentInstance.NodeByName(name);

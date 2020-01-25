@@ -70,6 +70,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\CustomLogConfiguration.cs" />
     <Compile Include="Configuration\ChangeLogFilterConfiguration.cs" />
     <Compile Include="Configuration\CorsConfiguration.cs" />
     <Compile Include="Configuration\InternalEndpointConfiguration.cs" />
@@ -104,6 +105,7 @@
     <Compile Include="Pipeline\ServerRequestContext.cs" />
     <Compile Include="ProcessingNodes\LoadBalancing\LoadBalancerNode.cs" />
     <Compile Include="Pipeline\RequestListener.cs" />
+    <Compile Include="ProcessingNodes\Logging\CustomLogNode.cs" />
     <Compile Include="ProcessingNodes\Logging\ChangeLogFilterNode.cs" />
     <Compile Include="ProcessingNodes\ProcessingNode.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Actions\AbortRequest.cs" />
@@ -188,6 +190,7 @@
     <Compile Include="Ui\Drawings\DiagramGenerator.cs" />
     <Compile Include="Interfaces\IDrawingGenerator.cs" />
     <Compile Include="Ui\Drawings\SvgSerializer.cs" />
+    <Compile Include="Ui\Nodes\CustomLogTile.cs" />
     <Compile Include="Ui\Nodes\Tile.cs" />
     <Compile Include="Ui\Nodes\ServerStats.cs" />
     <Compile Include="Ui\Nodes\StickySessionStats.cs" />
@@ -207,6 +210,7 @@
     <Compile Include="Utility\DefaultDictionary.cs" />
     <Compile Include="Utility\Factory.cs" />
     <Compile Include="Utility\LogFactory.cs" />
+    <Compile Include="Utility\LogFileWriter.cs" />
     <Compile Include="Utility\NumberComparer.cs" />
     <Compile Include="Utility\Timer.cs" />
     <Compile Include="ProcessingNodes\Routing\ExpressionParser.cs" />
