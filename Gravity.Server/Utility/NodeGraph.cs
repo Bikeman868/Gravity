@@ -60,7 +60,7 @@ namespace Gravity.Server.Utility
                     {
                         Thread.Sleep(100);
 
-                        bool UpdateGraph(INodeGraph graph)
+                        bool UpdateGraph(INodeGraph graph, bool logActions)
                         {
                             if (graph == null) return false;
 
@@ -71,7 +71,23 @@ namespace Gravity.Server.Utility
                                 try
                                 {
                                     node.UpdateStatus();
-                                    if (node.Offline) offline = true;
+                                    if (logActions)
+                                    {
+                                        if (node.Offline && !node.Disabled)
+                                        {
+                                            Trace.WriteLine($"[CONFIG] Node {node.Name} is OFFLINE");
+                                            offline = true;
+                                        }
+                                        else
+                                        {
+                                            Trace.WriteLine($"[CONFIG] Node {node.Name} is online");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (node.Offline && !node.Disabled) 
+                                            offline = true;
+                                    }
                                 }
                                 catch (Exception ex)
                                 {
@@ -82,11 +98,11 @@ namespace Gravity.Server.Utility
                             return !offline;
                         }
 
-                        UpdateGraph(_currentInstance);
+                        UpdateGraph(_currentInstance, false);
 
                         if (!ReferenceEquals(_currentInstance, _newInstance))
                         {
-                            if (UpdateGraph(_newInstance))
+                            if (UpdateGraph(_newInstance, true))
                             {
                                 Trace.WriteLine($"[CONFIG] Bringing new node graph online");
 
@@ -170,6 +186,7 @@ namespace Gravity.Server.Utility
                 ConfigureStickySessionNodes(configuration, nodes);
                 ConfigureTransformNodes(configuration, nodes);
                 ConfigureChangeLogFilterNodes(configuration, nodes);
+                ConfigureCustomLogNodes(configuration, nodes);
             }
             catch (Exception ex)
             {

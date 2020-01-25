@@ -73,18 +73,18 @@
       "roundRobin": [
         {
           "name": "C",
-          "outputs": [ "D", "E", "O" ]
+          "outputs": [ "D", "E", "P" ]
         }
       ],
       "servers": [
         {
           "name": "I",
-          "disabled": true,
+          "disabled": false,
           "port": 443,
           "host": "stockhouse.com",
           "connectionTimeout": "00:00:30",
           "responseTimeout": "00:00:20",
-          "readTimeoutMs": "200",
+          "readTimeoutMs": "500",
           "reuseConnections": true,
           "healthCheckPort": 443,
           "healthCheckMethod": "HEAD",
@@ -97,7 +97,7 @@
           "host": "localhost",
           "connectionTimeout": "00:00:20",
           "responseTimeout": "00:00:10",
-          "healthCheckHost": "mycompany.com",
+          "healthCheckHost": "somecompany.com",
           "healthCheckMethod": "GET",
           "healthCheckPort": 80,
           "reuseConnections": true,
@@ -183,7 +183,7 @@
           "name": "A",
           "output": "N",
           "description": [
-            "Remove www from host name if present"
+            "Remove www from domain name"
           ],
           "scriptLanguage": "UrlRewriteModule",
           "requestScript": [
@@ -203,11 +203,9 @@
         },
         {
           "name": "O",
-          "output": "I",
+          "output": "Q",
           "description": [
-            "Add X-Forwarded-For header",
-            "Add X-Real-IP header",
-            "Add X-Powered-By header"
+            "Fix request headers"
           ],
           "scriptLanguage": "UrlRewriteModule",
           "requestScript": [
@@ -216,10 +214,7 @@
             "    <rule name='set-headers'>",
             "      <rewrite to='header' toIndex='X-Forwarded-For' from='serverVariable' fromIndex='LocalIpAddress'/>",
             "      <rewrite to='header' toIndex='X-Real-IP' from='serverVariable' fromIndex='LocalIpAddress'/>",
-            "    </rule>",
-            "    <rule>",
-            "      <condition scope='pathElement' index='1' test='equals' value='ms' />",
-            "      <rewrite to='path' toIndex='0' value='/content/general/helloworld' />",
+            "      <rewrite to='host' value='stockhouse.com'/>",
             "    </rule>",
             "  </rules>",
             "</rewrite>"
@@ -236,6 +231,20 @@
             "</rewrite>"
           ]
         }
+      ],
+      "changeLogFilters": [
+        {
+          "name": "P",
+          "output": "O",
+          "logLevel":  "Important"
+        }
+      ],
+      "customLogs": [
+        {
+          "name": "Q",
+          "output": "I",
+          "detailed":  false
+        }
       ]
     },
     "ui": {
@@ -245,24 +254,15 @@
           "listeners": [
             {
               "name": "1",
-              "x": 0,
-              "y": 50,
-              "width": 200,
-              "height": 100
+              "x": 0, "y": 50, "width": 200, "height": 100
             },
             {
               "name": "2",
-              "x": 0,
-              "y": 250,
-              "width": 200,
-              "height": 100
+              "x": 0, "y": 250, "width": 200, "height": 100
             },
             {
               "name": "3",
-              "x": 0,
-              "y": 450,
-              "width": 200,
-              "height": 100
+              "x": 0, "y": 450, "width": 200, "height": 100
             }
           ],
           "trafficIndicator": {
@@ -273,90 +273,83 @@
             {
               "name": "A",
               "title": "Incoming transform",
-              "x": 200,
-              "y": 50
+              "x": 200, "y": 50
             },
             {
               "name": "B",
               "title": "Gravity UI",
-              "x": 700,
-              "y": 20
+              "x": 700, "y": 20
             },
             {
               "name": "C",
               "title": "Round robbin",
-              "x": 700,
-              "y": 270
+              "x": 700, "y": 270
             },
             {
               "name": "D",
               "title": "Server D",
-              "x": 950,
-              "y": 220
+              "x": 950, "y": 220
             },
             {
               "name": "E",
               "title": "Server E",
-              "x": 950,
-              "y": 300
+              "x": 950, "y": 300
             },
             {
               "name": "F",
               "title": "Server F",
-              "x": 950,
-              "y": 380
+              "x": 950, "y": 380
             },
             {
               "name": "G",
               "title": "Not found response",
-              "x": 700,
-              "y": 200
+              "x": 700, "y": 200
             },
             {
               "name": "H",
               "title": "Sticky sessions",
-              "x": 550,
-              "y": 800
+              "x": 550, "y": 800
             },
             {
               "name": "I",
               "title": "stockhouse.com",
-              "x": 1100,
-              "y": 650
+              "x": 1450, "y": 650
             },
             {
               "name": "J",
-              "x": 300,
-              "y": 800
+              "x": 300, "y": 800
             },
             {
               "name": "K",
               "title": "Least connected",
-              "x": 550,
-              "y": 550
+              "x": 550, "y": 550
             },
             {
               "name": "L",
               "title": "CORS",
-              "x": 300,
-              "y": 550
+              "x": 300, "y": 550
             },
             {
               "name": "M",
               "title": "localhost",
-              "x": 800,
-              "y": 830
+              "x": 800, "y": 830
             },
             {
               "name": "N",
-              "x": 450,
-              "y": 0
+              "x": 450, "y": 0
             },
             {
               "name": "O",
               "title": "Stockhouse transform",
-              "x": 850,
-              "y": 500
+              "x": 980, "y": 500
+            },
+            {
+              "name": "P",
+              "x": 850, "y": 500
+            },
+            {
+              "name": "Q",
+              "x": 1200, "y": 500
             }
           ]
         },
@@ -370,38 +363,40 @@
             {
               "name": "C",
               "title": "Round robbin",
-              "x": 100,
-              "y": 230
+              "x": 100, "y": 230
             },
             {
               "name": "D",
               "title": "Server D",
-              "x": 350,
-              "y": 220
+              "x": 350, "y": 220
             },
             {
               "name": "E",
               "title": "Server E",
-              "x": 350,
-              "y": 300
+              "x": 350, "y": 300
             },
             {
               "name": "F",
               "title": "Server F",
-              "x": 350,
-              "y": 380
+              "x": 350, "y": 380
             },
             {
               "name": "I",
               "title": "stockhouse.com",
-              "x": 500,
-              "y": 500
+              "x": 800, "y": 500
             },
             {
               "name": "O",
               "title": "Stockhouse transform",
-              "x": 250,
-              "y": 500
+              "x": 400, "y": 500
+            },
+            {
+              "name": "P",
+              "x": 250, "y": 500
+            },
+            {
+              "name": "Q",
+              "x": 620, "y": 500
             }
           ]
         }

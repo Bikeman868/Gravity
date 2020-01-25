@@ -99,23 +99,24 @@ namespace Gravity.Server.Ui.Nodes
             }
         }
 
-        private class GroupDrawing: Tile
+        private class GroupDrawing : Tile
         {
             public GroupDrawing(
                 DrawingElement drawing,
                 RouterGroupConfiguration groupConfiguration)
                 : base(drawing, "router_group", groupConfiguration.Disabled)
             {
-                var details = new List<string>();
-                switch (groupConfiguration.ConditionLogic)
+                if ((groupConfiguration.Conditions == null || groupConfiguration.Conditions.Length == 0) && 
+                    (groupConfiguration.Groups == null || groupConfiguration.Groups.Length == 0))
                 {
-                    case ConditionLogic.Any:
-                        details.Add("True if " + groupConfiguration.ConditionLogic.ToString().ToLower() + " of these is true");
-                        break;
-                    default:
-                        details.Add("True if " + groupConfiguration.ConditionLogic.ToString().ToLower() + " of these are true");
-                        break;
+                    AddDetails(new List<string> { "Always" }, null, groupConfiguration.Disabled ? "disabled" : string.Empty);
+                    return;
                 }
+
+                var details = new List<string>
+                {
+                    "If " + groupConfiguration.ConditionLogic.ToString().ToLower() + " of"
+                };
 
                 if (groupConfiguration.Conditions != null && groupConfiguration.Conditions.Length > 0)
                 {

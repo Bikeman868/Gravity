@@ -45,8 +45,14 @@ namespace Gravity.Server.Utility
             CreateFile();
         }
 
+        ~LogFileWriter()
+        {
+            Dispose();
+        }
+
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             CloseFile();
         }
 
@@ -123,11 +129,11 @@ namespace Gravity.Server.Utility
 
             try
             {
-                if (!_directory.Exists)
-                    Directory.CreateDirectory(_directory.FullName);
+                if (!_directory.Exists) _directory.Create();
 
                 _fileInfo = new FileInfo(_directory.FullName + "\\" + _fileNamePrefix + DateTime.UtcNow.Ticks.ToString("d020") + ".txt");
-                _fileWriter = new StreamWriter(_fileInfo.Create(), Encoding.UTF8);
+                _fileWriter = new StreamWriter(File.Open(_fileInfo.FullName, FileMode.Create, FileAccess.ReadWrite, FileShare.Read), Encoding.UTF8);
+                _fileWriter.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ssK"));
             }
             catch (Exception ex)
             {

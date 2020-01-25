@@ -30,15 +30,19 @@ namespace Gravity.Server.Ui.Nodes
 
             LinkUrl = "/ui/node?name=" + changeLogFilter.Name;
 
-            var logTypesString = changeLogFilter.LogTypes == null || changeLogFilter.LogTypes.Length == 0
-                ? "all log types"
-                : string.Join(", ", changeLogFilter.LogTypes);
-
-            var details = new List<string>
+            var details = new List<string>();
+            if (changeLogFilter.MaximumLogLevel == 0)
             {
-                $"Set max log level to {changeLogFilter.MaximumLogLevel}",
-                $"Include {logTypesString} in the log"
-            };
+                details.Add("Disable logging");
+            }
+            else
+            {
+                details.Add($"Log level {changeLogFilter.MaximumLogLevel}");
+                if (changeLogFilter.LogTypes == null || changeLogFilter.LogTypes.Length == 0)
+                    details.Add("All message types");
+                else
+                    details.AddRange(changeLogFilter.LogTypes.Select(t => "Log " + t.ToString()));
+            }
             AddDetails(details, null, changeLogFilter.Offline ? "disabled" : string.Empty);
         }
 

@@ -32,13 +32,23 @@ namespace Gravity.Server.Ui.Nodes
 
             var details = new List<string>
             {
-                $"For {string.Join(", ", customLog.Methods)} requests",
-                $"For {string.Join(", ", customLog.StatusCodes)} result codes",
-                $"Create log files in {customLog.Directory}\\{customLog.FileNamePrefix}",
-                $"Keep files for {customLog.MaximumLogFileAge}",
-                $"Include {customLog.ContentType} in the log",
-                $"Multiple lines {customLog.Detailed}"
+                $"Path {customLog.Directory}{customLog.FileNamePrefix}*.txt",
+                $"Keep for {customLog.MaximumLogFileAge}",
+                $"Format {customLog.ContentType}",
             };
+
+            details.Add(customLog.Detailed ? "Multiple lines" : "Single line");
+
+            if (customLog.Methods != null && customLog.Methods.Length > 0)
+                details.AddRange(customLog.Methods.Select(m => "Log " + m + " requests"));
+            else
+                details.Add("Log all requests");
+
+            if (customLog.StatusCodes != null && customLog.StatusCodes.Length > 0)
+                details.AddRange(customLog.StatusCodes.Select(s => "Log " + s + " responses"));
+            else
+                details.Add("Log all responses");
+
             AddDetails(details, null, customLog.Offline ? "disabled" : string.Empty);
         }
 

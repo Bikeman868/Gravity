@@ -63,5 +63,31 @@ namespace Gravity.Server.Configuration
         /// </summary>
         [JsonProperty("contentType")]
         public string ContentType { get; set; }
+
+        public override void Sanitize()
+        {
+            if (Methods != null)
+            {
+                var allowedMethods = new[] { "POST", "PUT", "DELETE", "GET", "HEAD", "OPTIONS" };
+                Methods = Methods.Select(m => m.ToUpper()).Where(m => allowedMethods.Contains(m)).ToArray();
+            }
+
+            if (string.IsNullOrEmpty(Directory))
+                Directory = "C:\\Logs\\Custom\\";
+            else
+                if (!Directory.EndsWith("\\")) Directory = Directory + "\\";
+
+            if (FileNamePrefix == null) FileNamePrefix = Name + "_";
+
+            if (MaximumLogFileAge == default(TimeSpan)) MaximumLogFileAge = TimeSpan.FromHours(6);
+            if (MaximumLogFileAge < TimeSpan.FromMinutes(10)) MaximumLogFileAge = TimeSpan.FromMinutes(10);
+            if (MaximumLogFileAge > TimeSpan.FromDays(90)) MaximumLogFileAge = TimeSpan.FromDays(90);
+
+            if (MaximumLogFileSize == default(long)) MaximumLogFileSize = 100000;
+            if (MaximumLogFileSize < 1000) MaximumLogFileSize = 1000;
+            if (MaximumLogFileSize > 100000000) MaximumLogFileSize = 100000000;
+
+            ContentType = "text/plain"; // Currently this is the only supported option
+        }
     }
 }
