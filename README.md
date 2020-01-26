@@ -348,27 +348,27 @@ paths with a router configured like this:
 "routers": [
   {
     "name": "R",
-	"routes": [
-	  {
-	    "to": "GOOD",
+    "routes": [
+      {
+        "to": "GOOD",
         "logic": "Any",
         "conditions": [
           { "condition": "{ipv4} = (~\\goodguys_ipv4.txt)" },
           { "condition": "{ipv6} = (~\\goodguys_ipv6.txt)" }
         ]
       },
-	  {
-	    "to": "BAD",
+      {
+        "to": "BAD",
         "logic": "Any",
         "conditions": [
           { "condition": "{ipv4} = (~\\badguys_ipv4.txt)", "negate": true },
           { "condition": "{ipv6} = (~\\badguys_ipv6.txt)", "negate": true }
         ]
       },
-	  {
-	    "to": "OTHER"
+      {
+        "to": "OTHER"
       }
-	}
+    }
   }
 ]
 ```
