@@ -340,16 +340,41 @@ at the start or end of the line is also discarded so that you can indent lines f
 want to include a `#` symbol in your data you must prefix it with a `\` escape character, and if you
 want to include a `\` character in your data you must escape it also by using `\\`.
 
-For example you can create files called `badguys_ipv4.txt` and `badguys_ipv6.txt` and put them in the 
-root folder of the website, then block all of the IP addresses on this list by adding conditions like these:
+For example you can create files called `badguys_ipv4.txt`, `badguys_ipv6.txt`, `goodguys_ipv4.txt` 
+and `goodguys_ipv6.txt` in the root folder of the website, then route good and bad guys to different
+paths with a router configured like this:
 
 ```
-{ "condition": "{ipv4} = (~\\badguys_ipv4.txt)", "negate": true },
-{ "condition": "{ipv6} = (~\\badguys_ipv6.txt)", "negate": true },
+"routers": [
+  {
+    "name": "R",
+	"routes": [
+	  {
+	    "to": "GOOD",
+        "logic": "Any",
+        "conditions": [
+          { "condition": "{ipv4} = (~\\goodguys_ipv4.txt)" },
+          { "condition": "{ipv6} = (~\\goodguys_ipv6.txt)" }
+        ]
+      },
+	  {
+	    "to": "BAD",
+        "logic": "Any",
+        "conditions": [
+          { "condition": "{ipv4} = (~\\badguys_ipv4.txt)", "negate": true },
+          { "condition": "{ipv6} = (~\\badguys_ipv6.txt)", "negate": true }
+        ]
+      },
+	  {
+	    "to": "OTHER"
+      }
+	}
+  }
+]
 ```
 
-This condition will be met for all addresses that are not in the bad guys list. In this case your
-`badguys_ipv4.txt` file might look something like this:
+This router will route all requests from bad guys to the `BAD` node, all good guys to the `GOOD` node and
+everyone else to the `OTHER` node.
 
 ```
 # This is a list of IPv4 addresses to block
