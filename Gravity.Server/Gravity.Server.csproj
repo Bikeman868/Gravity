@@ -65,6 +65,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Ui\Assets\drawing.css" />
     <EmbeddedResource Include="Ui\Assets\drawing.js" />
+    <Content Include="badguys_ipv4.txt" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>

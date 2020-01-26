@@ -37,9 +37,18 @@
                 {
                   "logic": "All",
                   "conditions": [
-                    { "condition": "{method} = GET", "disabled": true},
+                    { "condition": "{method} = GET" },
                     { "condition": "{path[1]} = ui" },
-                    { "condition": "{ipv4} = loopback", "negate":  false }
+                    {
+                      "condition": "{ipv4} = loopback",
+                      "negate": false,
+                      "disabled": true
+                    },
+                    {
+                      "condition": "{ipv4} = [192.168.3.0/24, 127.0.0.1]",
+                      "negate": false,
+                      "disabled": false
+                    }
                   ]
                 },
                 {
@@ -60,7 +69,13 @@
               ]
             },
             {
-              "to": "C"
+              "to": "C",
+              "conditions": [
+                {
+                  "condition": "{ipv4} = (~\\badguys_ipv4.txt)",
+                  "negate": true
+                }
+              ]
             }
           ]
         }

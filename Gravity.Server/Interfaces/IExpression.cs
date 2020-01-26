@@ -8,5 +8,6 @@ namespace Gravity.Server.Interfaces
         Type BaseType { get; }
         bool IsLiteral { get; }
         T Evaluate(IRequestContext context);
+        IExpression<TNew> Cast<TNew>();
     }
 }

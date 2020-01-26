@@ -1,9 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Net;
+using System.Text;
 using System.Text.RegularExpressions;
 using Gravity.Server.Interfaces;
 using Gravity.Server.Pipeline;
 using Microsoft.Owin;
+using OwinFramework.Interfaces.Utility;
 
 namespace Gravity.Server.ProcessingNodes.Routing
 {
@@ -19,6 +24,13 @@ namespace Gravity.Server.ProcessingNodes.Routing
         private readonly Regex _ipv4ExpressionRegex = new Regex("^ipv4$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private readonly Regex _ipv6ExpressionRegex = new Regex("^ipv6$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+        private readonly IHostingEnvironment _hostingEnvironment;
+
+        public ExpressionParser(IHostingEnvironment hostingEnvironment)
+        {
+            _hostingEnvironment = hostingEnvironment;
+        }
+
         IExpression<T> IExpressionParser.Parse<T>(string expression)
         {
             if (string.IsNullOrWhiteSpace(expression))
@@ -28,7 +40,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
             var match = _delimitedExpressionRegex.Match(expression);
             if (!match.Success)
-                return new LiteralExpression<T>(expression);
+                return new LiteralExpression<T>(expression, _hostingEnvironment);
 
             expression = match.Groups[1].Value;
 
@@ -73,6 +85,11 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
             bool IExpression<T>.IsLiteral => true;
 
+            IExpression<TNew> IExpression<T>.Cast<TNew>()
+            {
+                return new NullExpression<TNew>();
+            }
+
             T IExpression<T>.Evaluate(IRequestContext context)
             {
                 return default(T);
@@ -81,18 +98,160 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
         private class LiteralExpression<T> : IExpression<T>
         {
+            private readonly string _expression;
             private readonly T _value;
+            private readonly Type _baseType;
+            private readonly IHostingEnvironment _hostingEnvironment;
 
-            Type IExpression<T>.BaseType => typeof(T);
+            Type IExpression<T>.BaseType => _baseType;
 
             bool IExpression<T>.IsLiteral => true;
 
-            public LiteralExpression(string expression)
+            public LiteralExpression(int value)
             {
-                if (typeof (string) == typeof (T))
-                    _value = (T)(object)expression;
+                _baseType = typeof(int);
 
-                _value = (T)Convert.ChangeType(expression, typeof (T));
+                if (typeof(int) == typeof(T))
+                    _value = (T)(object)value;
+
+                _value = (T)Convert.ChangeType(value, typeof(T));
+            }
+
+            public LiteralExpression(string expression, IHostingEnvironment hostingEnvironment)
+            {
+                _expression = expression;
+                _hostingEnvironment = hostingEnvironment;
+
+                if (expression.StartsWith("[") && expression.EndsWith("]"))
+                {
+                    // This is a comma separated list of strings
+                    _baseType = typeof(string[]);
+                    _value = default;
+                }
+                else if (expression.StartsWith("(") && expression.EndsWith(")"))
+                {
+                    // This is a file name to load with a list of strings
+                    _baseType = typeof(string[]);
+                    _value = default;
+                }
+                else
+                {
+                    // This is a single literal value
+                    _baseType = typeof(string);
+
+                    if (typeof(string) == typeof(T))
+                        _value = (T)(object)expression;
+
+                    _value = (T)Convert.ChangeType(expression, typeof(T));
+                }
+            }
+
+            private LiteralExpression(
+                string expression, 
+                object value, 
+                Type baseType,
+                IHostingEnvironment hostingEnvironment)
+            {
+                _expression = expression;
+                _value = (T)value;
+                _baseType = baseType;
+                _hostingEnvironment = hostingEnvironment;
+            }
+
+            IExpression<TNew> IExpression<T>.Cast<TNew>()
+            {
+                if (typeof(TNew) == typeof(string))
+                {
+                    return new LiteralExpression<TNew>(
+                        _expression,
+                        (TNew)(object)_value,
+                        _baseType,
+                        _hostingEnvironment);
+                }
+
+                if (typeof(TNew) == typeof(string[]) && _baseType == typeof(string[]))
+                {
+                    if (_expression.StartsWith("[") && _expression.EndsWith("]"))
+                    {
+                        var value = _expression
+                            .Substring(1, _expression.Length - 2)
+                            .Split(',')
+                            .Select(s => s.Trim())
+                            .ToArray();
+
+                        return new LiteralExpression<TNew>(
+                            _expression,
+                            (TNew)(object)value,
+                            _baseType,
+                            _hostingEnvironment);
+                    }
+
+                    if (_expression.StartsWith("(") && _expression.EndsWith(")"))
+                    {
+                        string fileName = _expression.Substring(1, _expression.Length - 2).Trim();
+                        var file = new FileInfo(_hostingEnvironment.MapPath(fileName));
+
+                        string[] value;
+                        if (file.Exists)
+                        {
+                            using (var reader = file.OpenText())
+                            {
+                                var lines = new List<string>();
+                                var line = new StringBuilder();
+
+                                var fileContent = reader.ReadToEnd();
+                                for (var i = 0; i < fileContent.Length; i++)
+                                {
+                                    var c = fileContent[i];
+                                    if (c == '\r') continue;
+                                    if (c == '\n')
+                                    {
+                                        if (line.Length > 0)
+                                        {
+                                            lines.Add(line.ToString().Trim());
+                                            line.Clear();
+                                        }
+                                        continue;
+                                    }
+                                    if (c == '#')
+                                    {
+                                        while (i + 1 < fileContent.Length && fileContent[i + 1] != '\n') i++;
+                                        continue;
+                                    }
+                                    if (line.Length == 0 && char.IsWhiteSpace(c)) continue;
+                                    if (c == '\\')
+                                    {
+                                        line.Append(fileContent[i + 1]);
+                                        i++;
+                                        continue;
+                                    }
+                                    line.Append(c);
+                                }
+
+
+                                if (line.Length > 0)
+                                    lines.Add(line.ToString().Trim());
+
+                                value = lines.ToArray();
+                            }
+                        }
+                        else
+                        {
+                            value = new string[0];
+                        }
+                        return new LiteralExpression<TNew>(
+                            _expression,
+                            (TNew)(object)value,
+                            _baseType,
+                            _hostingEnvironment);
+                    }
+                }
+
+                return new LiteralExpression<TNew>(
+                    _expression,
+                    (T)Convert.ChangeType(_expression, typeof(T)),
+                    _baseType,
+                    _hostingEnvironment);
             }
 
             T IExpression<T>.Evaluate(IRequestContext context)
@@ -114,6 +273,11 @@ namespace Gravity.Server.ProcessingNodes.Routing
                 _headerName = headerName;
             }
 
+            IExpression<TNew> IExpression<T>.Cast<TNew>()
+            {
+                return new HeaderExpression<TNew>(_headerName);
+            }
+
             T IExpression<T>.Evaluate(IRequestContext context)
             {
                 if (!context.Incoming.Headers.TryGetValue(_headerName, out var header))
@@ -132,6 +296,11 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
             bool IExpression<T>.IsLiteral => false;
 
+            IExpression<TNew> IExpression<T>.Cast<TNew>()
+            {
+                return new MethodExpression<TNew>();
+            }
+
             T IExpression<T>.Evaluate(IRequestContext context)
             {
                 var method = context.Incoming.Method;
@@ -149,6 +318,11 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
             bool IExpression<T>.IsLiteral => false;
 
+            IExpression<TNew> IExpression<T>.Cast<TNew>()
+            {
+                return new PathExpression<TNew>();
+            }
+
             T IExpression<T>.Evaluate(IRequestContext context)
             {
                 var path = context.Incoming.Path.Value;
@@ -165,6 +339,11 @@ namespace Gravity.Server.ProcessingNodes.Routing
             Type IExpression<T>.BaseType => typeof(IPAddress);
 
             bool IExpression<T>.IsLiteral => false;
+
+            IExpression<TNew> IExpression<T>.Cast<TNew>()
+            {
+                return new Ipv4Expression<TNew>();
+            }
 
             T IExpression<T>.Evaluate(IRequestContext context)
             {
@@ -189,6 +368,11 @@ namespace Gravity.Server.ProcessingNodes.Routing
             Type IExpression<T>.BaseType => typeof(IPAddress);
 
             bool IExpression<T>.IsLiteral => false;
+
+            IExpression<TNew> IExpression<T>.Cast<TNew>()
+            {
+                return new Ipv6Expression<TNew>();
+            }
 
             T IExpression<T>.Evaluate(IRequestContext context)
             {
@@ -219,6 +403,11 @@ namespace Gravity.Server.ProcessingNodes.Routing
             public QueryExpression(string parameterName)
             {
                 _parameterName = parameterName;
+            }
+
+            IExpression<TNew> IExpression<T>.Cast<TNew>()
+            {
+                return new QueryExpression<TNew>(_parameterName);
             }
 
             T IExpression<T>.Evaluate(IRequestContext context)
@@ -263,6 +452,11 @@ namespace Gravity.Server.ProcessingNodes.Routing
             public PathElementExpression(int index)
             {
                 _index = index;
+            }
+
+            IExpression<TNew> IExpression<T>.Cast<TNew>()
+            {
+                return new PathElementExpression<TNew>(_index);
             }
 
             T IExpression<T>.Evaluate(IRequestContext context)

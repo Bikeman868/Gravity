@@ -1,0 +1,7 @@
+﻿# This is a list of IPv4 addresses to block
+
+123.4.5.6       # Caught spamming June 12 2019
+99.98.97.0/24   # Cloud provider hosting botnets
+
+1.2.3.4/32      # Nail this sucker
+# 127.0.0.1

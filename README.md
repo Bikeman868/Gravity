@@ -275,8 +275,9 @@ For IP address comparisons the prefix is ignored.
 
 #### Expressions
 
-The expressions in conditions are taken an literal values unless they are enclosed in curly
-braces. The curly braces define what to retrieve from the incoming request as follows:
+The expressions in conditions are taken as literal values by default.
+
+You can enclose the expression in curly braces to extract values from the incoming request as follows:
 
 `{path[0..n]}` - retrieves an element from the path. `{path[1]}` is the first path element, 
 `{path[2]}` is the second element etc. `{path[-1]}` is the last path element, `{path[-2]}`
@@ -316,3 +317,44 @@ is marginally more efficient for IPv4 addresses.
 
 'site' means the local network. This works for both IPv4 and IPv6 addresses. For example the
 condition `{ipv4} = site` returns true for source addresses of `192.168.3.56` and `10.4.56.1`.
+
+An expression can also be a list of values separated by commas and encluded in square brackets.
+For example the condition
+
+```
+{
+    "condition": "{ipv4} = [192.168.3.0/24, 127.0.0.1]",
+    "negate": false,
+    "disabled": false
+}
+
+```
+will match any IPv4 address in the range 192.168.3.0 to 192.168.3.255 or the loopback address 127.0.0.1.
+
+An expression can also be a file name enclosed in round brackets. This will load the file as a list
+of literal values and behaves in the same way as the square bracket case except that each value in the
+list is one line from the file.
+
+When loading the file, blank lines are ignored and anything after a `#` symbol is discarded. Whitespace 
+at the start or end of the line is also discarded so that you can indent lines for readability. If you
+want to include a `#` symbol in your data you must prefix it with a `\` escape character, and if you
+want to include a `\` character in your data you must escape it also by using `\\`.
+
+For example you can create files called `badguys_ipv4.txt` and `badguys_ipv6.txt` and put them in the 
+root folder of the website, then block all of the IP addresses on this list by adding conditions like these:
+
+```
+{ "condition": "{ipv4} = (~\\badguys_ipv4.txt)", "negate": true },
+{ "condition": "{ipv6} = (~\\badguys_ipv6.txt)", "negate": true },
+```
+
+This condition will be met for all addresses that are not in the bad guys list. In this case your
+`badguys_ipv4.txt` file might look something like this:
+
+```
+# This is a list of IPv4 addresses to block
+123.4.5.6       # Caught spamming June 12 2019
+99.98.97.0/24   # Cloud provider hosting botnets
+```
+
+

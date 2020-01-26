@@ -154,75 +154,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
                 {
                     rules.AddRange(configuration.Conditions
                         .Where(c => !c.Disabled)
-                        .Select<RouterConditionConfiguration, Rule>(c =>
-                        {
-                            var equals = c.Condition.IndexOf('=');
-                            if (equals < 1 || equals > c.Condition.Length - 2)
-                                throw new Exception($"Routing condition must contain 'expr = expr'. You have '{c.Condition}'");
-
-                            var prefix = c.Condition[equals - 1];
-                            var isPrefixed = "<>!~".Contains(prefix);
-
-                            var leftSide = c.Condition.Substring(0, isPrefixed ? equals - 1 : equals);
-                            var rightSide = c.Condition.Substring(equals + 1);
-
-                            var leftExpression = expressionParser.Parse<string>(leftSide);
-                            var rightExpression = expressionParser.Parse<string>(rightSide);
-
-                            if (leftExpression.BaseType == typeof(IPAddress))
-                            {
-                                // Prefixes are not relevant to IP address comparisons
-                                return new IPAddressEqualityRule
-                                {
-                                    Negate = c.Negate,
-                                    Expression1 = expressionParser.Parse<IPAddress>(leftSide),
-                                    Expression2 = rightExpression,
-                                };
-                            }
-                            else // Use string comparison by default
-                            {
-                                if (isPrefixed)
-                                {
-                                    switch (prefix)
-                                    {
-                                        case '~':
-                                            return new StringContainsRule
-                                            {
-                                                Negate = c.Negate,
-                                                Expression1 = leftExpression,
-                                                Expression2 = rightExpression,
-                                            };
-                                        case '!':
-                                            return new StringInequalityRule
-                                            {
-                                                Negate = c.Negate,
-                                                Expression1 = leftExpression,
-                                                Expression2 = rightExpression,
-                                            };
-                                        case '<':
-                                            return new StringStartsWithRule
-                                            {
-                                                Negate = c.Negate,
-                                                Expression1 = leftExpression,
-                                                Expression2 = rightExpression,
-                                            };
-                                        case '>':
-                                            return new StringEndsWithRule
-                                            {
-                                                Negate = c.Negate,
-                                                Expression1 = leftExpression,
-                                                Expression2 = rightExpression,
-                                            };
-                                    }
-                                }
-                                return new StringEqualityRule
-                                {
-                                    Negate = c.Negate,
-                                    Expression1 = leftExpression,
-                                    Expression2 = rightExpression,
-                                };
-                            }
-                        }));
+                        .Select(c => CreateConditionRule(c, expressionParser)));
                 }
 
                 if (configuration.Groups != null)
@@ -253,6 +185,78 @@ namespace Gravity.Server.ProcessingNodes.Routing
                         return Rules.Any(r => r.Negate ? r.IsMatch(context) : !r.IsMatch(context));
                 }
                 throw new Exception("Routing node does not understand ConditionLogic=" + ConditionLogic);
+            }
+
+            private Rule CreateConditionRule(
+                RouterConditionConfiguration conditionConfiguration, 
+                IExpressionParser expressionParser)
+            {
+                var equals = conditionConfiguration.Condition.IndexOf('=');
+                if (equals < 1 || equals > conditionConfiguration.Condition.Length - 2)
+                    throw new Exception($"Routing condition must contain 'expr = expr'. You have '{conditionConfiguration.Condition}'");
+
+                var prefix = conditionConfiguration.Condition[equals - 1];
+                var isPrefixed = "<>!~".Contains(prefix);
+
+                var leftSide = conditionConfiguration.Condition.Substring(0, isPrefixed ? equals - 1 : equals);
+                var rightSide = conditionConfiguration.Condition.Substring(equals + 1);
+
+                var leftExpression = expressionParser.Parse<string>(leftSide);
+                var rightExpression = expressionParser.Parse<string>(rightSide);
+
+                if (leftExpression.BaseType == typeof(IPAddress))
+                {
+                    // Prefixes are not relevant to IP address comparisons
+                    return new IPAddressEqualityRule
+                    {
+                        Negate = conditionConfiguration.Negate,
+                        Expression1 = leftExpression.Cast<IPAddress>(),
+                        Expression2 = rightExpression,
+                    };
+                }
+                else // Use string comparison by default
+                {
+                    if (isPrefixed)
+                    {
+                        switch (prefix)
+                        {
+                            case '~':
+                                return new StringContainsRule
+                                {
+                                    Negate = conditionConfiguration.Negate,
+                                    Expression1 = leftExpression,
+                                    Expression2 = rightExpression,
+                                };
+                            case '!':
+                                return new StringInequalityRule
+                                {
+                                    Negate = conditionConfiguration.Negate,
+                                    Expression1 = leftExpression,
+                                    Expression2 = rightExpression,
+                                };
+                            case '<':
+                                return new StringStartsWithRule
+                                {
+                                    Negate = conditionConfiguration.Negate,
+                                    Expression1 = leftExpression,
+                                    Expression2 = rightExpression,
+                                };
+                            case '>':
+                                return new StringEndsWithRule
+                                {
+                                    Negate = conditionConfiguration.Negate,
+                                    Expression1 = leftExpression,
+                                    Expression2 = rightExpression,
+                                };
+                        }
+                    }
+                    return new StringEqualityRule
+                    {
+                        Negate = conditionConfiguration.Negate,
+                        Expression1 = leftExpression,
+                        Expression2 = rightExpression,
+                    };
+                }
             }
         }
 
@@ -384,7 +388,8 @@ namespace Gravity.Server.ProcessingNodes.Routing
         private class IPAddressEqualityRule : Rule
         {
             private IExpression<string> _expression2;
-            private IPAddressRange _expression2AddressRange;
+
+            private IPAddressRange[] _expression2AddressRanges;
 
             public IExpression<IPAddress> Expression1 { get; set; }
 
@@ -397,8 +402,16 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
                     if (value.IsLiteral)
                     {
-                        var literalValue = value.Evaluate(null);
-                        _expression2AddressRange = IPAddressRange.Parse(literalValue);
+                        if (value.BaseType == typeof(string[]))
+                        {
+                            // The list of strings can come from a file, so will re-evaluate the literal from time to time
+                            ReloadList();
+                        }
+                        else
+                        {
+                            var literalValue = value.Evaluate(null);
+                            _expression2AddressRanges = new[] { IPAddressRange.Parse(literalValue) };
+                        }
                     }
                 }
             }
@@ -408,11 +421,32 @@ namespace Gravity.Server.ProcessingNodes.Routing
                 var address1 = Expression1.Evaluate(context);
 
                 if (_expression2.IsLiteral)
-                    return _expression2AddressRange.Contains(address1);
+                    return _expression2AddressRanges.Any(r => r.Contains(address1));
 
                 var address2 = IPAddress.Parse(Expression2.Evaluate(context));
 
                 return address1.Equals(address2);
+            }
+
+            private void ReloadList()
+            {
+                try
+                {
+                    var expression2Array = _expression2.Cast<string[]>();
+
+                    _expression2AddressRanges = expression2Array.Evaluate(null)
+                        .Select(addressRange => IPAddressRange.Parse(addressRange))
+                        .ToArray();
+                }
+                finally
+                {
+                    Task
+                        .Delay(TimeSpan.FromMinutes(1))
+                        .ContinueWith(delayTask => 
+                        {
+                            if (!delayTask.IsCanceled) ReloadList();
+                        });
+                }
             }
         }
 
