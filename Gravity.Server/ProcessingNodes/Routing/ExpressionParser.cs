@@ -69,7 +69,9 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
         private class NullExpression<T> : IExpression<T>
         {
-            Type IExpression<T>.BaseType => typeof(string);
+            Type IExpression<T>.BaseType => typeof(T);
+
+            bool IExpression<T>.IsLiteral => true;
 
             T IExpression<T>.Evaluate(IRequestContext context)
             {
@@ -82,6 +84,8 @@ namespace Gravity.Server.ProcessingNodes.Routing
             private readonly T _value;
 
             Type IExpression<T>.BaseType => typeof(T);
+
+            bool IExpression<T>.IsLiteral => true;
 
             public LiteralExpression(string expression)
             {
@@ -102,6 +106,8 @@ namespace Gravity.Server.ProcessingNodes.Routing
             private readonly string _headerName;
 
             Type IExpression<T>.BaseType => typeof(string);
+
+            bool IExpression<T>.IsLiteral => false;
 
             public HeaderExpression(string headerName)
             {
@@ -124,6 +130,8 @@ namespace Gravity.Server.ProcessingNodes.Routing
         {
             Type IExpression<T>.BaseType => typeof(string);
 
+            bool IExpression<T>.IsLiteral => false;
+
             T IExpression<T>.Evaluate(IRequestContext context)
             {
                 var method = context.Incoming.Method;
@@ -139,6 +147,8 @@ namespace Gravity.Server.ProcessingNodes.Routing
         {
             Type IExpression<T>.BaseType => typeof(string);
 
+            bool IExpression<T>.IsLiteral => false;
+
             T IExpression<T>.Evaluate(IRequestContext context)
             {
                 var path = context.Incoming.Path.Value;
@@ -153,6 +163,8 @@ namespace Gravity.Server.ProcessingNodes.Routing
         private class Ipv4Expression<T> : IExpression<T>
         {
             Type IExpression<T>.BaseType => typeof(IPAddress);
+
+            bool IExpression<T>.IsLiteral => false;
 
             T IExpression<T>.Evaluate(IRequestContext context)
             {
@@ -175,6 +187,8 @@ namespace Gravity.Server.ProcessingNodes.Routing
         private class Ipv6Expression<T> : IExpression<T>
         {
             Type IExpression<T>.BaseType => typeof(IPAddress);
+
+            bool IExpression<T>.IsLiteral => false;
 
             T IExpression<T>.Evaluate(IRequestContext context)
             {
@@ -199,6 +213,8 @@ namespace Gravity.Server.ProcessingNodes.Routing
             private readonly string _parameterName;
 
             Type IExpression<T>.BaseType => typeof(string);
+
+            bool IExpression<T>.IsLiteral => false;
 
             public QueryExpression(string parameterName)
             {
@@ -241,6 +257,8 @@ namespace Gravity.Server.ProcessingNodes.Routing
             private readonly int _index;
 
             Type IExpression<T>.BaseType => typeof(string);
+
+            bool IExpression<T>.IsLiteral => false;
 
             public PathElementExpression(int index)
             {

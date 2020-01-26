@@ -37,9 +37,9 @@
                 {
                   "logic": "All",
                   "conditions": [
-                    { "condition": "{method} = GET" },
+                    { "condition": "{method} = GET", "disabled": true},
                     { "condition": "{path[1]} = ui" },
-                    { "condition": "{ipv4} = loopback" }
+                    { "condition": "{ipv4} = loopback", "negate":  false }
                   ]
                 },
                 {

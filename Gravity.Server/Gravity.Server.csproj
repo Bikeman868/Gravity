@@ -209,6 +209,7 @@
     <Compile Include="Utility\BufferPool.cs" />
     <Compile Include="Utility\DefaultDictionary.cs" />
     <Compile Include="Utility\Factory.cs" />
+    <Compile Include="Utility\IPAddressRange.cs" />
     <Compile Include="Utility\LogFactory.cs" />
     <Compile Include="Utility\LogFileWriter.cs" />
     <Compile Include="Utility\NumberComparer.cs" />

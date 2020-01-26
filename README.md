@@ -220,6 +220,15 @@ The router must have a list of routes. These are the other nodes in the graph wh
 the router can route requests. Each route must have a 'to' field that is the name of
 the node to route traffic to. Everything else is optional.
 
+The router evaluates the routes in the order that they are written and finds the
+first one that matches the request and in online. Online means that there is a
+downstream path to a node that produces responses. If there is no way to get a 
+response from a given route then that route will be skipped and the logic will
+move on to the next route in the list. This is useful for displaying maintenance
+pages when the system is down for maintainance for example.
+
+#### Groups
+
 Groups are a way of combining expressions. Each group has a 'logic' property that
 defines how the expressions are combined. The options for the 'logic' property are:
 
@@ -227,61 +236,83 @@ All - meaning all expressions must be true for the group to have a true value.
 Any - meaning at least one of the expressions must be true for the group to have a true value.
 None - meaning that all expressions must be false for the group to have a true value.
 
-The expressions inside the group can either be 'conditions' or nested groups or both. The route
+The expressions inside the group can either be `conditions` or nested `groups` or both. The route
 is a special kind of group that also has logic, groups and conditions, but additionally
-has a 'to' property,
+has a `to` property,
+
+#### Conditions
 
 Each condition is an expression and some flags, for example:
 
 ```
-{ "condition": "{ipv4} ~= 192.168.0.0/16", "negate": false, "disabled": false }
+{ "condition": "{ipv4} = 192.168.0.0/16", "negate": false, "disabled": false }
 ```
 
 Conditions can be inverted by setting the negate property to true, and they can
 be temporarily removed from the logic by setting their disabled property to true.
 
-The condition property consists of two expressions and a comparison operator.
-The comparison operator can be
+The condition property consists of two expressions separated by an `=` sign. The
+`=` sign can be prefixed with another symbol whose meaning varies with the type
+of value that is being compared as follows:
 
-`=` meaning that the two expressions evaluate to the same value.
-`<` meaning that the left expression has lower value than the right hand value.
-`>` meaning that the left expression has higher value than the right hand value.
-`!=` meaning that the two expressions evaluate to different values.
-`!<` meaning that the left expression has higher or equal value than the right hand value.
-`!>` meaning that the left expression has lower or equal value than the right hand value.
-`~=` meaning that the left expression is contained in the right hand value.
+For string comparisons, the comparison operators are:
 
-The expressions are taken an literal values unless they are enclosed in curly
-braces. The curly braces retrieve information from the incoming request as follows:
+`=` meaning that the two expressions evaluate to the same case insensitive string.
+`<=` meaning that the left expression matches the beginning of the right hand expression.
+`>=` meaning that the left expression matches the end of the right hand expression.
+`!=` meaning that the two expressions evaluate to different case insensitive strings.
+`~=` meaning that the left expression is contained within the right hand expression.
+
+For number comparisons, the comparison operators are:
+
+`=` meaning that the two expressions evaluate to the same numeric value.
+`<=` meaning that the left expression is numerically less or eaqual to the right hand expression.
+`>=` meaning that the left expression is numerically greater or eaqual to the right hand expression.
+`!=` meaning that the two expressions evaluate to different numeric values.
+
+For IP address comparisons the prefix is ignored.
+`=` meaning that the left expression is an IP address contained in the CIDR block of the right hand expression
+
+#### Expressions
+
+The expressions in conditions are taken an literal values unless they are enclosed in curly
+braces. The curly braces define what to retrieve from the incoming request as follows:
 
 `{path[0..n]}` - retrieves an element from the path. `{path[1]}` is the first path element, 
 `{path[2]}` is the second element etc. `{path[-1]}` is the last path element, `{path[-2]}`
 is the second to last etc.
 
-`{path}` - retrieves the entire path.
+`{path}` - retrieves the entire path including the leading `/` character.
 
-`{header[name]}` - retrieves a header from the request, for example `{header[Accept]}`.
+`{header[name]}` - retrieves a header from the request, for example `{header[Accept]}` 
+returns the `Accept` header from the request.
 
-`{query[name]}` - retrieves a query string parameter, for example `{query[page]}`.
+`{query[name]}` - retrieves a query string parameter, for example the expression `{query[page]}`
+for a request url of `https://mydomain.com/news/current?page=3` would return the value `3`.
 
 `{null}` - retrieves a null value. This can be used to test for the absence of something.
+For example the condition `{query[page]} = {null}` is true for any request that does not have
+a `page` parameter in the query string.
 
-`{method[name]}` - retrieves the request method. For example `{method[POST]}`.
+`{method}` - retrieves the request method. The returned value will be `POST`, `GET`, `PUT`, `DELETE`, `OPTIONS` etc.
 
 `{ipv4}` - retrieves IP v4 address where the request came from.
 
 `{ipv6}` - retrieves IP v6 address where the request came from.
 
-When using `{ipv4}` or `{ipv6}` you can use some special notation for the right side expression. The
-word `loopback` means the IP v4 or IP v6 loopback address (which are 127.0.0.1 and ::1 respectively)
-as appropriate.
+When using `{ipv4}` or `{ipv6}` you can use some special notation for the right side expression. There
+are a small number of reserved words, you can put either an IPv4 or IPv6 address, or you can put
+an IPv4 or IPv6 CIDR block. Note that you should not mix IPv4 and IPv6, in other words you cannot have
+`{ipv4}` as the left hand expression then put an IPv6 CIDR block in the right hand expression.
 
-When using `{ipv4}` or `{ipv6}` with the `~=` operator, you can specify a CIDR block to compare
-and the expression will be true for any IP address within that CIDR block.
+The reserved words are:
 
-The router evaluates the routes in the order that they are written and finds the
-first one that matches the request and in online. Online means that their is a
-downstream path to a node that produces responses. If there is no way to get a 
-response from a given route then that route will be skipped and the logic will
-move on to the next route in the list.
+`loopback` means the IPv4 or IPv6 loopback address (which are 127.0.0.1 and ::1 respectively) 
+as appropriate. For example the condition `{ipv6} = loopback` returns true of the source address
+for the request is `::1` or `127.0.0.1` and `{ipv4} = loopback` means exactly the same thing but
+is marginally more efficient for IPv4 addresses.
 
+'link' means the IPv6 local link network. This only works for IPv6 addresses.
+
+'site' means the local network. This works for both IPv4 and IPv6 addresses. For example the
+condition `{ipv4} = site` returns true for source addresses of `192.168.3.56` and `10.4.56.1`.

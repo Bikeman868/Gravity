@@ -132,6 +132,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
         private abstract class Rule
         {
+            public bool Negate { get; set; }
             public abstract bool IsMatch(IRequestContext context);
         }
 
@@ -151,53 +152,76 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
                 if (configuration.Conditions != null)
                 {
-                    rules.AddRange(configuration.Conditions.Select<RouterConditionConfiguration, Rule>(r =>
+                    rules.AddRange(configuration.Conditions
+                        .Where(c => !c.Disabled)
+                        .Select<RouterConditionConfiguration, Rule>(c =>
                         {
-                            var equals = r.Condition.IndexOf('=');
-                            if (equals < 1 || equals > r.Condition.Length - 2)
-                                throw new Exception("Routing expression must contain 'expr = expr'. You have '" + r.Condition + "'");
+                            var equals = c.Condition.IndexOf('=');
+                            if (equals < 1 || equals > c.Condition.Length - 2)
+                                throw new Exception($"Routing condition must contain 'expr = expr'. You have '{c.Condition}'");
 
-                            var prefix = r.Condition[equals - 1];
+                            var prefix = c.Condition[equals - 1];
                             var isPrefixed = "<>!~".Contains(prefix);
 
-                            var leftSide = r.Condition.Substring(0, isPrefixed ? equals - 1 : equals);
-                            var rightSide = r.Condition.Substring(equals + 1);
+                            var leftSide = c.Condition.Substring(0, isPrefixed ? equals - 1 : equals);
+                            var rightSide = c.Condition.Substring(equals + 1);
 
-                            if (isPrefixed)
+                            var leftExpression = expressionParser.Parse<string>(leftSide);
+                            var rightExpression = expressionParser.Parse<string>(rightSide);
+
+                            if (leftExpression.BaseType == typeof(IPAddress))
                             {
-                                switch (prefix)
+                                // Prefixes are not relevant to IP address comparisons
+                                return new IPAddressEqualityRule
                                 {
-                                    case '~':
-                                        return new ContainsRule
-                                        {
-                                            Expression1 = expressionParser.Parse<string>(leftSide),
-                                            Expression2 = expressionParser.Parse<string>(rightSide),
-                                        };
-                                    case '!':
-                                        return new NotEqualsRule
-                                        {
-                                            Expression1 = expressionParser.Parse<string>(leftSide),
-                                            Expression2 = expressionParser.Parse<string>(rightSide),
-                                        };
-                                    case '<':
-                                        return new StartsWithRule
-                                        {
-                                            Expression1 = expressionParser.Parse<string>(leftSide),
-                                            Expression2 = expressionParser.Parse<string>(rightSide),
-                                        };
-                                    case '>':
-                                        return new EndsWithRule
-                                        {
-                                            Expression1 = expressionParser.Parse<string>(leftSide),
-                                            Expression2 = expressionParser.Parse<string>(rightSide),
-                                        };
-                                }
+                                    Negate = c.Negate,
+                                    Expression1 = expressionParser.Parse<IPAddress>(leftSide),
+                                    Expression2 = rightExpression,
+                                };
                             }
-                            return new EqualsRule
+                            else // Use string comparison by default
                             {
-                                Expression1 = expressionParser.Parse<string>(leftSide),
-                                Expression2 = expressionParser.Parse<string>(rightSide),
-                            };
+                                if (isPrefixed)
+                                {
+                                    switch (prefix)
+                                    {
+                                        case '~':
+                                            return new StringContainsRule
+                                            {
+                                                Negate = c.Negate,
+                                                Expression1 = leftExpression,
+                                                Expression2 = rightExpression,
+                                            };
+                                        case '!':
+                                            return new StringInequalityRule
+                                            {
+                                                Negate = c.Negate,
+                                                Expression1 = leftExpression,
+                                                Expression2 = rightExpression,
+                                            };
+                                        case '<':
+                                            return new StringStartsWithRule
+                                            {
+                                                Negate = c.Negate,
+                                                Expression1 = leftExpression,
+                                                Expression2 = rightExpression,
+                                            };
+                                        case '>':
+                                            return new StringEndsWithRule
+                                            {
+                                                Negate = c.Negate,
+                                                Expression1 = leftExpression,
+                                                Expression2 = rightExpression,
+                                            };
+                                    }
+                                }
+                                return new StringEqualityRule
+                                {
+                                    Negate = c.Negate,
+                                    Expression1 = leftExpression,
+                                    Expression2 = rightExpression,
+                                };
+                            }
                         }));
                 }
 
@@ -220,41 +244,27 @@ namespace Gravity.Server.ProcessingNodes.Routing
                 switch (ConditionLogic)
                 {
                     case ConditionLogic.All:
-                        return Rules.All(r => r.IsMatch(context));
+                        return Rules.All(r => r.Negate ? !r.IsMatch(context) : r.IsMatch(context));
                     case ConditionLogic.None:
-                        return Rules.All(r => !r.IsMatch(context));
+                        return Rules.All(r => r.Negate ? r.IsMatch(context) : !r.IsMatch(context));
                     case ConditionLogic.Any:
-                        return Rules.Any(r => r.IsMatch(context));
+                        return Rules.Any(r => r.Negate ? !r.IsMatch(context) : r.IsMatch(context));
+                    case ConditionLogic.NotAll:
+                        return Rules.Any(r => r.Negate ? r.IsMatch(context) : !r.IsMatch(context));
                 }
                 throw new Exception("Routing node does not understand ConditionLogic=" + ConditionLogic);
             }
         }
 
-        private class EqualsRule : Rule
+        #region String comparison rules
+
+        private class StringEqualityRule : Rule
         {
-            public IExpression<string> Expression1;
-            public IExpression<string> Expression2;
+            public IExpression<string> Expression1 { get; set; }
+            public IExpression<string> Expression2 { get; set; }
 
             public override bool IsMatch(IRequestContext context)
             {
-                if (Expression1.BaseType == typeof(IPAddress))
-                {
-                    var address1String = Expression1.Evaluate(context);
-                    if (string.IsNullOrEmpty(address1String)) return false;
-
-                    var address2String = Expression2.Evaluate(context);
-                    if (string.IsNullOrEmpty(address2String)) return false;
-
-                    if (!IPAddress.TryParse(address1String, out var address1)) return false;
-
-                    IPAddress address2;
-                    if (string.Equals("loopback", address2String, StringComparison.OrdinalIgnoreCase))
-                        address2 = address1.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork ? IPAddress.Loopback : IPAddress.IPv6Loopback;
-                    else if (!IPAddress.TryParse(address2String, out address2)) return false;
-
-                    return address1.Equals(address2);
-                }
-
                 var value1 = Expression1.Evaluate(context);
                 var value2 = Expression2.Evaluate(context);
 
@@ -265,7 +275,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
             }
         }
 
-        private class NotEqualsRule: Rule
+        private class StringInequalityRule: Rule
         {
             public IExpression<string> Expression1;
             public IExpression<string> Expression2;
@@ -282,7 +292,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
             }
         }
 
-        private class ContainsRule: Rule
+        private class StringContainsRule: Rule
         {
             public IExpression<string> Expression1;
             public IExpression<string> Expression2;
@@ -333,7 +343,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
             }
         }
 
-        private class StartsWithRule: Rule
+        private class StringStartsWithRule: Rule
         {
             public IExpression<string> Expression1;
             public IExpression<string> Expression2;
@@ -350,7 +360,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
             }
         }
 
-        private class EndsWithRule: Rule
+        private class StringEndsWithRule: Rule
         {
             public IExpression<string> Expression1;
             public IExpression<string> Expression2;
@@ -366,5 +376,46 @@ namespace Gravity.Server.ProcessingNodes.Routing
                 return value1.EndsWith(value2, StringComparison.OrdinalIgnoreCase);
             }
         }
+
+        #endregion
+
+        #region IP Address comparison rules
+
+        private class IPAddressEqualityRule : Rule
+        {
+            private IExpression<string> _expression2;
+            private IPAddressRange _expression2AddressRange;
+
+            public IExpression<IPAddress> Expression1 { get; set; }
+
+            public IExpression<string> Expression2
+            {
+                get => _expression2;
+                set
+                {
+                    _expression2 = value;
+
+                    if (value.IsLiteral)
+                    {
+                        var literalValue = value.Evaluate(null);
+                        _expression2AddressRange = IPAddressRange.Parse(literalValue);
+                    }
+                }
+            }
+
+            public override bool IsMatch(IRequestContext context)
+            {
+                var address1 = Expression1.Evaluate(context);
+
+                if (_expression2.IsLiteral)
+                    return _expression2AddressRange.Contains(address1);
+
+                var address2 = IPAddress.Parse(Expression2.Evaluate(context));
+
+                return address1.Equals(address2);
+            }
+        }
+
+        #endregion
     }
 }
