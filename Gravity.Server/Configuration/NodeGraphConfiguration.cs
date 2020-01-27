@@ -39,32 +39,29 @@ namespace Gravity.Server.Configuration
 
         public NodeGraphConfiguration Sanitize()
         {
-            if (ServerNodes == null)
+            if (
+                (InternalNodes == null || InternalNodes.Length == 0) &&
+                (ResponseNodes == null || ResponseNodes.Length == 0) &&
+                (ServerNodes == null || ServerNodes.Length == 0) &&
+                (CustomLogNodes == null || CustomLogNodes.Length == 0))
             {
-                // Define the default node graph to use when there is no configuration
-
-                InternalNodes = new[]
-                {
-                    new InternalEndpointConfiguration { Name = "A" }
-                };
+                // If there is no valid configuration then send all requests to the UI
+                InternalNodes = new[] { new InternalEndpointConfiguration { Name = "A" } };
             }
-            else
-            {
-                if (CorsNodes != null) foreach (var node in CorsNodes) node.Sanitize();
-                if (InternalNodes != null) foreach (var node in InternalNodes) node.Sanitize();
-                if (LeastConnectionsNodes != null) foreach (var node in LeastConnectionsNodes) node.Sanitize();
-                if (RoundRobinNodes != null) foreach (var node in RoundRobinNodes) node.Sanitize();
-                if (ResponseNodes != null) foreach (var node in ResponseNodes) node.Sanitize();
-                if (RouterNodes != null) foreach (var node in RouterNodes) node.Sanitize();
-                if (ServerNodes != null) foreach (var node in ServerNodes) node.Sanitize();
-                if (StickySessionNodes != null) foreach (var node in StickySessionNodes) node.Sanitize();
-                if (TransformNodes != null) foreach (var node in TransformNodes) node.Sanitize();
-                if (ChangeLogFilterNodes != null) foreach (var node in ChangeLogFilterNodes) node.Sanitize();
-                if (CustomLogNodes != null) foreach (var node in CustomLogNodes) node.Sanitize();
 
-                // Check for circular graphs
+            if (CorsNodes != null) foreach (var node in CorsNodes) node.Sanitize();
+            if (InternalNodes != null) foreach (var node in InternalNodes) node.Sanitize();
+            if (LeastConnectionsNodes != null) foreach (var node in LeastConnectionsNodes) node.Sanitize();
+            if (RoundRobinNodes != null) foreach (var node in RoundRobinNodes) node.Sanitize();
+            if (ResponseNodes != null) foreach (var node in ResponseNodes) node.Sanitize();
+            if (RouterNodes != null) foreach (var node in RouterNodes) node.Sanitize();
+            if (ServerNodes != null) foreach (var node in ServerNodes) node.Sanitize();
+            if (StickySessionNodes != null) foreach (var node in StickySessionNodes) node.Sanitize();
+            if (TransformNodes != null) foreach (var node in TransformNodes) node.Sanitize();
+            if (ChangeLogFilterNodes != null) foreach (var node in ChangeLogFilterNodes) node.Sanitize();
+            if (CustomLogNodes != null) foreach (var node in CustomLogNodes) node.Sanitize();
 
-            }
+            // TODO: Check for circular graphs
 
             return this;
         }

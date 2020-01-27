@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -32,34 +33,68 @@ namespace Gravity.Server.Ui.Drawings
             _requestListener = requestListener;
             _nodeGraph = nodeGraph;
 
-            _dashboardConfig = configuration.Register(
+            _dashboardConfig = configuration.Register<DashboardConfiguration[]>(
                 "/gravity/ui/dashboards",
                 c =>
                 {
-                    foreach (var dashboardConfiguration in c)
-                        dashboardConfiguration.Sanitize();
+                    if (c != null)
+                        foreach (var dashboardConfiguration in c)
+                            dashboardConfiguration.Sanitize();
                     _dashboardConfigurations = c;
                 },
-                new [] { new DashboardConfiguration() });
+                null);
         }
 
-        public DrawingElement GenerateDashboardDrawing(string dasboardName)
+        public DrawingElement GenerateDashboardDrawing(string dashboardName)
         {
+            var configurationException = _nodeGraph.ConfigurationException;
+            if (configurationException != null)
+            {
+                return ErrorMessageDrawing(new[]
+                {
+                    "# Exception thrown by node graph configuration",
+                    configurationException.Message,
+                    configurationException.StackTrace
+                });
+            }
+
+            var graphNodes = _nodeGraph.GetNodes(n => n);
+            if (graphNodes == null || graphNodes.Length == 0)
+            {
+                return ErrorMessageDrawing(new[]
+                {
+                    "# Empty node graph",
+                    "You must configure a node graph to process any requests"
+                });
+            }
+
+            if (_dashboardConfigurations == null || _dashboardConfigurations.Length == 0)
+            {
+                return ErrorMessageDrawing(new[]
+                {
+                    "# No dashboards",
+                    "You should configure at least one dashboard so that you can see the status of the load balancer"
+                });
+            }
+
             var dashboardConfiguration = _dashboardConfigurations.FirstOrDefault(
-                c => string.Equals(dasboardName, c.Name, StringComparison.OrdinalIgnoreCase)) 
+                c => string.Equals(dashboardName, c.Name, StringComparison.OrdinalIgnoreCase)) 
                 ?? _dashboardConfigurations[0];
 
             return new DashboardDrawing(
                 dashboardConfiguration,
                 _requestListener,
-                _nodeGraph.GetNodes(n => n));
+                graphNodes);
         }
 
         public DrawingElement GenerateNodeDrawing(string nodeName)
         {
+            if (_dashboardConfigurations == null || _dashboardConfigurations.Length == 0) return null;
+
             var nodes = _nodeGraph.GetNodes(n => n, n => string.Equals(n.Name, nodeName, StringComparison.OrdinalIgnoreCase));
             if (nodes.Length == 0) return null;
 
+            // TODO: Node drawing should be specific to the dashboard that was clicked to get to the node drawing
             var dashboardConfiguration = _dashboardConfigurations[0];
             var nodeDrawingConfig = dashboardConfiguration.Nodes.FirstOrDefault(n => string.Equals(n.NodeName, nodeName, StringComparison.OrdinalIgnoreCase));
 
@@ -68,6 +103,26 @@ namespace Gravity.Server.Ui.Drawings
                 nodeDrawingConfig,
                 nodes[0]);
         }
+
+        public DrawingElement ErrorMessageDrawing(IEnumerable<string> lines)
+        {
+            var drawing = new RectangleDrawing
+            {
+                CssClass = "error",
+                BottomMargin = 10,
+                TopMargin = 10,
+                LeftMargin = 10,
+                RightMargin = 10
+            };
+
+            // TODO: use markdown headings to format the text
+
+            var text = new TextDrawing { Text = lines.ToArray() };
+            drawing.AddChild(text);
+
+            return drawing;
+        }
+
 
         public SvgDocument ProduceSvg(DrawingElement rootElement)
         {

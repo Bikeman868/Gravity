@@ -7,6 +7,7 @@ using Gravity.Server.Interfaces;
 using Gravity.Server.Utility;
 using Microsoft.Owin;
 using OwinFramework.Interfaces.Builder;
+using Urchin.Client.Interfaces;
 
 namespace Gravity.Server.Pipeline
 {
@@ -24,14 +25,14 @@ namespace Gravity.Server.Pipeline
         private Thread _trafficUpdateThread;
 
         public RequestListener(
-            IConfiguration configuration,
+            IConfigurationStore configuration,
             INodeGraph nodeGraph,
             ILogFactory logFactory)
         {
             _nodeGraph = nodeGraph;
             _logFactory = logFactory;
 
-            _configurationRegistration = configuration.Register(
+            _configurationRegistration = configuration.Register<ListenerConfiguration>(
                 "/gravity/listener",
                 c =>
                 {
@@ -44,8 +45,7 @@ namespace Gravity.Server.Pipeline
                         Trace.WriteLine("[CONFIG] There is no current listener configuration, the new configuration will be adopted immediately");
                         _currentConfiguration = _newConfiguration;
                     }
-                },
-                new ListenerConfiguration());
+                });
 
             _trafficUpdateThread = new Thread(() =>
             {

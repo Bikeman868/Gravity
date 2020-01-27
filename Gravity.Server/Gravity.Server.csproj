@@ -42,9 +42,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="OwinFramework.Pages.Core">
-      <HintPath>..\packages\Owin.Framework.Pages.Core\lib\net45\OwinFramework.Pages.Core.dll</HintPath>
-    </Reference>
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.ApplicationServices" />
@@ -277,7 +274,6 @@
   <ItemGroup>
     <Content Include="config.json" />
   </ItemGroup>
-  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
@@ -326,6 +322,17 @@
       <ItemGroup>
         <Reference Include="Ioc.Modules">
           <HintPath>..\packages\Ioc.Modules\lib\net45\Ioc.Modules.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5'">
+      <ItemGroup>
+        <Reference Include="Ioc.Modules.Contract">
+          <HintPath>..\packages\Ioc.Modules.Contract\lib\net45\Ioc.Modules.Contract.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>
@@ -412,6 +419,17 @@
   <Choose>
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5'">
       <ItemGroup>
+        <Reference Include="OwinFramework.Pages.Core">
+          <HintPath>..\packages\Owin.Framework.Pages.Core\lib\net45\OwinFramework.Pages.Core.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5'">
+      <ItemGroup>
         <Reference Include="OwinFramework.Pages.DebugMiddleware">
           <HintPath>..\packages\Owin.Framework.Pages.DebugMiddleware\lib\net45\OwinFramework.Pages.DebugMiddleware.dll</HintPath>
           <Private>True</Private>
@@ -467,8 +485,8 @@
   <Choose>
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5'">
       <ItemGroup>
-        <Reference Include="OwinFramework.Configuration.Urchin">
-          <HintPath>..\packages\Owin.Framework.Urchin\lib\net45\OwinFramework.Configuration.Urchin.dll</HintPath>
+        <Reference Include="OwinFramework.Urchin">
+          <HintPath>..\packages\Owin.Framework.Urchin\lib\net45\OwinFramework.Urchin.dll</HintPath>
           <Private>True</Private>
           <Paket>True</Paket>
         </Reference>

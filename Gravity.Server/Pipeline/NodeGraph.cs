@@ -14,6 +14,7 @@ using Gravity.Server.ProcessingNodes.Transform;
 using Microsoft.Owin;
 using OwinFramework.Interfaces.Builder;
 using OwinFramework.Interfaces.Utility;
+using Urchin.Client.Interfaces;
 
 namespace Gravity.Server.Pipeline
 {
@@ -32,7 +33,7 @@ namespace Gravity.Server.Pipeline
         private Thread _thread;
 
         public NodeGraph(
-            IConfiguration configuration,
+            IConfigurationStore configuration,
             IExpressionParser expressionParser,
             IHostingEnvironment hostingEnvironment,
             IFactory factory,
@@ -46,10 +47,7 @@ namespace Gravity.Server.Pipeline
             _logFactory = logFactory;
             _disposeQueue = new Queue<DisposeQueueItem>();
 
-            _configuration = configuration.Register(
-                "/gravity/nodeGraph", 
-                Configure, 
-                new NodeGraphConfiguration());
+            _configuration = configuration.Register<NodeGraphConfiguration>("/gravity/nodeGraph", Configure);
 
             _thread = new Thread(() =>
             {
@@ -168,6 +166,7 @@ namespace Gravity.Server.Pipeline
             }
             catch (Exception ex)
             {
+                _configurationException = ex;
                 Trace.WriteLine($"[CONFIG] Exception processing node graph configuration. " + ex.Message);
                 throw new Exception("There was a problem with sanitizing the configuration data", ex);
             }
@@ -190,6 +189,7 @@ namespace Gravity.Server.Pipeline
             }
             catch (Exception ex)
             {
+                _configurationException = ex;
                 Trace.WriteLine($"[CONFIG] Exception configuring node graph nodes. " + ex.Message);
                 throw new Exception("There was a problem re-configuring nodes", ex);
             }
@@ -206,11 +206,15 @@ namespace Gravity.Server.Pipeline
             }
             catch (Exception ex)
             {
+                _configurationException = ex;
+                instance.ConfigurationException = ex;
+
                 Trace.WriteLine($"[CONFIG] Exception binding nodes into a graph. " + ex.Message);
                 throw new Exception("There was a problem with binding nodes into a graph", ex);
             }
 
             _newInstance = instance;
+            _configurationException = null;
 
             if (_currentInstance == null)
             {
@@ -483,6 +487,9 @@ namespace Gravity.Server.Pipeline
             return _currentInstance?.GetNodes(map, predicate);
         }
 
+        public Exception _configurationException;
+        public Exception ConfigurationException => _configurationException ?? _currentInstance?.ConfigurationException;
+
         private class NodeGraphInstance: INodeGraph
         {
             public INode[] Nodes;
@@ -502,6 +509,8 @@ namespace Gravity.Server.Pipeline
                 if (predicate != null) enumeration = enumeration.Where(predicate);
                 return enumeration.Select(map).ToArray();
             }
+
+            public Exception ConfigurationException { get; set; }
         }
 
         private class DisposeQueueItem

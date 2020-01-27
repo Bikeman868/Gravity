@@ -7,7 +7,7 @@ namespace Gravity.Server.Interfaces
     internal interface INodeGraph
     {
         /// <summary>
-        /// Recondifures the node tree
+        /// Reconfigures the node tree
         /// </summary>
         void Configure(NodeGraphConfiguration configuration);
 
@@ -21,5 +21,11 @@ namespace Gravity.Server.Interfaces
         /// get information for the UI
         /// </summary>
         T[] GetNodes<T>(Func<INode, T> map, Func<INode, bool> predicate = null);
+
+        /// <summary>
+        /// If the last call to Configure resulted in an exception being thrown then
+        /// it is captured here.
+        /// </summary>
+        Exception ConfigurationException { get; }
     }
 }
