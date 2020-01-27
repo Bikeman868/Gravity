@@ -449,7 +449,7 @@ namespace Gravity.Server.Pipeline
 
         private void ConfigureCustomLogNodes(NodeGraphConfiguration configuration, List<INode> nodes)
         {
-            if (configuration.ChangeLogFilterNodes != null)
+            if (configuration.CustomLogNodes != null)
             {
                 foreach (var customLogConfiguration in configuration.CustomLogNodes)
                 {
@@ -475,12 +475,12 @@ namespace Gravity.Server.Pipeline
 
         INode INodeGraph.NodeByName(string name)
         {
-            return _currentInstance.NodeByName(name);
+            return _currentInstance?.NodeByName(name);
         }
 
         T[] INodeGraph.GetNodes<T>(Func<INode, T> map, Func<INode, bool> predicate)
         {
-            return _currentInstance.GetNodes(map, predicate);
+            return _currentInstance?.GetNodes(map, predicate);
         }
 
         private class NodeGraphInstance: INodeGraph
