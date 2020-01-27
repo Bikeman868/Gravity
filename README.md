@@ -12,21 +12,32 @@ using this code please beta test and let me know what you find.
 This is an OWIN based service. The source code as-is will run on IIS but you can
 easily customize it to run on Apache, self host (.exe) etc as supported by OWIN.
 
+I wrote this load-balancer because Nginx is not flexible or customizable enough
+and provides very little visibility into what's happening within the load balancer.
+
+Gravity can do most of the things that Nginx can do. The big difference is that
+Gravity is a request pipeline comprising nodes that can be combined into a 
+request processing graph. Requests enter at the left side of the graph, progress
+through the nodes and reach a server at the right hand side. Requests and responses
+stream through the graph in both directions simultanously. Many different types of
+graph node are provided and each one is configurable resulting in almost infinite
+possibilities.
+
 ### Dashboard
 
-The Gravity server contains a dashboard page that is refreshed periodically and
+The Gravity server contains dashboard pages that is refreshed periodically and
 looks like the screenshot below with using the test configuration checked into 
 the source code.
 
 ![Gravity dashboard](dashboard.png)
 
 You can configure a graph of nodes that define how requests are processed and link
-these nodes together in arbirtary ways. Any node can have its 'disabled' property
+these nodes together in arbirtary ways. Any node can have its `disabled` property
 set to temporarily turn it off this can be useful for example when you want to
 remove a server from the load balancer for maintenance or put up a maintenance mssage
 when the whole site is down for maintenance.
 
-The nodes draw in a dimmed grey color when they are disabled or offline because health
+The nodes draw in a dimmed grey color when they are offline because health
 checks failed. Active nodes are color coded by their function to make the diagram
 easier to understand at a glance.
 
@@ -37,6 +48,11 @@ The lines on the drawing can be:
 * thin green - when there is light traffic
 * medium green - when there is moderate traffic
 * thick green - when there is high traffic
+
+You can make as many dashboards as you like and define what is shown on each one.
+The dashboard configuration also defines the thresholds for changing the thickness 
+of lines, so that dashboards displaying low traffic areas can use lower threshold
+values.
 
 ### Listener Node
 
@@ -71,7 +87,8 @@ of servers than PUT, POST and DELETE requests for example.
 
 This node is also useful for segregating traffic from specific IP address ranges
 and handling it differently, for example more detailed logging or specific fixed
-responses.
+responses. The router can match CIDR blocks and the list of CIDR blocks can
+be configured directly into the node or contained in a text file.
 
 Note that this node matches requests, not responses. You can not route traffic
 based on the response because the traffic must have already been routed to a server
@@ -79,13 +96,20 @@ in order to have a response.
 
 ### Transform Node
 
-Applies URL Rewrite module rules to a request. See the readme file in my UrlRewrite.Net 
-repo for a detailed definition of the rule syntax. Rules can be applied to the incomming
-request, the outbound response or both. The rules can be embedded directly into the
-load balancer configuration or supplied in an separate file.
+Transforms requests that pass through the node using a scripting language. The
+transformation script can be configured directly into the node or contained in
+a text file.
 
-These rules affect the request header only. This node does not modify the content
-of the request or response.
+The transform supports multiple script languages. In all cases the script is compiled
+into a form that is very efficient for execution.
+
+One script language was borrowed from the URL Rewrite project. It is a copy of the same
+code and provides the fame features. See the readme file in my UrlRewrite.Net 
+repo for a detailed definition of the rule syntax. Rules can be applied to the incomming
+request, the outbound response or both.
+
+Another scripting language uses regular expressions to modify the body of the request.
+This script language is under development ... watch this space.
 
 ### Response Node
 

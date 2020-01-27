@@ -1,0 +1,43 @@
+# TODO List
+
+- Delay node
+- Cloud provider detection
+- Bot detection
+- Honey pot
+- Caching node
+- Content transformation
+
+## Delay processing
+
+Instead of blocking bad actors forcing them to change their attack, 
+just slow them down by delaying their requests
+
+## Cloud provider detection
+
+Most cloud hosting platforms have an API that will retrieve a list
+of all CIDR blocks used by that service. We can use these APIs to
+figure out where the user agent is hosted and define processing
+logic based on that.
+
+# Bot detection
+
+Use the user agent header and the IP address to identify bots allowing
+them to be handled differently from regular traffic.
+
+## Honey pot
+
+Server a static version of the website directly from within the load
+balancer. Bad actors can be routed to a honey pot so that they think
+their bot is working but it is not impacting the back-end servers.
+
+## Caching
+
+Have Gravity cache eligible resources and serve them on subsequent 
+requests to reduce load on the back-end servers.
+
+## Content transformation
+
+We need another scripting language that will transform the content as
+it is streamed through the load-balancer (incoming and outgoing). The
+current URL Rewriter scripting language can only change the head part
+of the request and response.
