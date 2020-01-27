@@ -79,6 +79,9 @@ g.popup > text { stroke:#696969; fill:#696969; }
 g.button > rect { stroke:#b3ff66; fill:#40bf80; }
 g.button > text { stroke:#ffffff; fill:#ffffff; }
 
+g.error > rect { stroke:#ff3333; fill:#ffe6e6; }
+g.error > text { stroke:#660000; fill:#660000; }
+
 g.list  >  rect { stroke:#808080; fill:#F5F5DC; opacity:0.8; }
 
 line.connection_unknown { stroke-width: 0.9; stroke: #000000; }

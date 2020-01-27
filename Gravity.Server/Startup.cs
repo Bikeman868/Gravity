@@ -45,7 +45,7 @@ namespace Gravity.Server
             pipelineBuilder.Register(ninject.Get<ListenerMiddleware>()).ConfigureWith(config, "/gravity/middleware/listener");
 #if DEBUG
             pipelineBuilder.Register(ninject.Get<DebugInfoMiddleware>()).ConfigureWith(config, "/gravity/middleware/debugInfo");
-            pipelineBuilder.EnableTracing();
+            pipelineBuilder.EnableTracing(RequestsToTrace.QueryString);
 #endif
 
             app.UseBuilder(pipelineBuilder);

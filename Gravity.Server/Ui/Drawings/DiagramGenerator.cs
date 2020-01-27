@@ -72,8 +72,9 @@ namespace Gravity.Server.Ui.Drawings
             {
                 return ErrorMessageDrawing(new[]
                 {
-                    "# No dashboards",
-                    "You should configure at least one dashboard so that you can see the status of the load balancer"
+                    "# No dashboards configured",
+                    "You should configure at least one dashboard so that you can see the status of the load balancer",
+                    "Dashboards can be configured under `/gravity/ui/dashboards` in the configuration file"
                 });
             }
 
