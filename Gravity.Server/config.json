@@ -104,8 +104,8 @@
           "reuseConnections": true,
           "healthCheckPort": 443,
           "healthCheckMethod": "HEAD",
-          "healthCheckLog": false,
-          "healthCheckInterval": "00:00:30"
+          "healthCheckLog": true,
+          "healthCheckInterval": "00:00:10"
         },
         {
           "name": "M",
@@ -135,7 +135,7 @@
       "responses": [
         {
           "name": "D",
-          "disabled": false,
+          "disabled": true,
           "statusCode": 200,
           "reasonPhrase": "OK",
           "content": "Server D",
@@ -148,7 +148,7 @@
         },
         {
           "name": "E",
-          "disabled": false,
+          "disabled": true,
           "statusCode": 200,
           "reasonPhrase": "OK",
           "content": "Server E",
@@ -161,6 +161,7 @@
         },
         {
           "name": "F",
+          "disabled": true,
           "statusCode": 200,
           "reasonPhrase": "OK",
           "content": "Server F",
@@ -199,7 +200,7 @@
           "name": "A",
           "output": "N",
           "description": [
-            "Remove www from domain name"
+            "Remove www from domain name "
           ],
           "scriptLanguage": "UrlRewriteModule",
           "requestScript": [
@@ -259,7 +260,8 @@
         {
           "name": "Q",
           "output": "I",
-          "detailed":  false
+          "detailed": false,
+          "statusCodes": [503]
         }
       ]
     },
@@ -364,7 +366,7 @@
               "x": 850, "y": 500
             },
             {
-              "name": "Q",
+              "name": "Q", "title": "Log 503",
               "x": 1200, "y": 500
             }
           ]
@@ -430,7 +432,7 @@
       "enabled": true,
       "method": "Trace",
       "directory": "c:\\Logs",
-      "maxLogLevel": "VeryDetailed",
+      "maxLogLevel": "Important",
       "maxLogFileAge": "00:05:00",
       "maxLogFileSize": 200000
     }

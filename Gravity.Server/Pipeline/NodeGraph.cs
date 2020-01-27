@@ -101,6 +101,7 @@ namespace Gravity.Server.Pipeline
 
                         if (!ReferenceEquals(_currentInstance, _newInstance))
                         {
+                            Trace.WriteLine($"[CONFIG] Checking new node graph to see if it online yet");
                             if (UpdateGraph(_newInstance, true))
                             {
                                 Trace.WriteLine($"[CONFIG] Bringing new node graph online");

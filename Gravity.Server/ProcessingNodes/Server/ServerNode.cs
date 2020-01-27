@@ -120,6 +120,9 @@ namespace Gravity.Server.ProcessingNodes.Server
                             {
                                 CheckHealth(log);
                             }
+
+                            if (Healthy != true) 
+                                nextHealthCheck = timeNow + TimeSpan.FromSeconds(2);
                         }
 
                     }

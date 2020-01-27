@@ -31,12 +31,12 @@ namespace Gravity.Server.ProcessingNodes.Logging
         {
             if (Disabled)
             {
-                context.Log?.Log(LogType.Step, LogLevel.Important, () =>
+                context.Log?.Log(LogType.Step, LogLevel.Standard, () =>
                     $"Log level change '{Name}' is disabled, continuing with current logging level");
             }
             else
             {
-                context.Log?.Log(LogType.Step, LogLevel.Important, () =>
+                context.Log?.Log(LogType.Step, LogLevel.Standard, () =>
                     $"Changing the logging level to '{MaximumLogLevel}' and logging {_logLevelsMessage}");
 
                 context.Log?.SetFilter(LogTypes, MaximumLogLevel);

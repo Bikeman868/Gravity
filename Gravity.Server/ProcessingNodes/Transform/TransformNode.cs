@@ -88,6 +88,8 @@ namespace Gravity.Server.ProcessingNodes.Transform
                     var rewriteRuleParser = (IScriptParser)(new UrlRewriteRules.Parser(_factory));
                     _requestTransform = rewriteRuleParser.ParseRequestScript(stream, encoding);
                     break;
+                case ScriptLanguage.RegexReplace:
+                    break;
             }
         }
 
@@ -98,6 +100,8 @@ namespace Gravity.Server.ProcessingNodes.Transform
                 case ScriptLanguage.UrlRewriteModule:
                     var rewriteRuleParser = (IScriptParser)(new UrlRewriteRules.Parser(_factory));
                     _responseTransform = rewriteRuleParser.ParseResponseScript(stream, encoding);
+                    break;
+                case ScriptLanguage.RegexReplace:
                     break;
             }
         }

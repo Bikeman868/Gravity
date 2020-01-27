@@ -7,5 +7,11 @@
         /// URL rewriting module. See https://github.com/Bikeman868/UrlRewrite.Net
         /// </summary>
         UrlRewriteModule,
+
+        /// <summary>
+        /// The script is a set of regular expressions that replace matching 
+        /// content in the request or response body
+        /// </summary>
+        RegexReplace
     }
 }

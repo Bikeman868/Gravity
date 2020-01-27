@@ -134,6 +134,7 @@ namespace Gravity.Server.Utility
                 _fileInfo = new FileInfo(_directory.FullName + "\\" + _fileNamePrefix + DateTime.UtcNow.Ticks.ToString("d020") + ".txt");
                 _fileWriter = new StreamWriter(File.Open(_fileInfo.FullName, FileMode.Create, FileAccess.ReadWrite, FileShare.Read), Encoding.UTF8);
                 _fileWriter.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ssK"));
+                _fileWriter.Flush();
             }
             catch (Exception ex)
             {
