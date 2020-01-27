@@ -361,8 +361,8 @@ paths with a router configured like this:
         "to": "BAD",
         "logic": "Any",
         "conditions": [
-          { "condition": "{ipv4} = (~\\badguys_ipv4.txt)", "negate": true },
-          { "condition": "{ipv6} = (~\\badguys_ipv6.txt)", "negate": true }
+          { "condition": "{ipv4} = (~\\badguys_ipv4.txt)" },
+          { "condition": "{ipv6} = (~\\badguys_ipv6.txt)" }
         ]
       },
       {
