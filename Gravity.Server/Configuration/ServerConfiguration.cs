@@ -46,6 +46,14 @@ namespace Gravity.Server.Configuration
         public bool ReuseConnections { get; set; }
 
         /// <summary>
+        /// The maximum number of connections to open on this server.
+        /// If more requests come in after this limit is reached then
+        /// the load balancer should return 503 responses
+        /// </summary>
+        [JsonProperty("maxConnections")]
+        public int MaximumConnectionCount { get; set; }
+
+        /// <summary>
         /// How frequently to look up the IP addresses of the server in
         /// DNS. Only applies if the host property is not an IP address
         /// </summary>
@@ -95,10 +103,25 @@ namespace Gravity.Server.Configuration
         public int[] HealthCheckCodes { get; set; }
 
         /// <summary>
+        /// How many times does the health check have to fail
+        /// before the server is marked unhealthy
+        /// </summary>
+        [JsonProperty("healthCheckFailCount")]
+        public int HealthCheckMaximumFailCount { get; set; }
+
+        /// <summary>
         /// How frequently to check the health of the server
+        /// when the server is healthy
         /// </summary>
         [JsonProperty("healthCheckInterval")]
         public TimeSpan HealthCheckInterval { get; set; }
+
+        /// <summary>
+        /// How frequently to check the health of the server
+        /// when the server has become unhealthy
+        /// </summary>
+        [JsonProperty("healthCheckUnhealthyInterval")]
+        public TimeSpan HealthCheckUnhealthyInterval { get; set; }
 
         public ServerConfiguration()
         {
@@ -107,12 +130,15 @@ namespace Gravity.Server.Configuration
             ReadTimeoutMs = 200;
             DnsLookupInterval = TimeSpan.FromMinutes(5);
             RecalculateInterval = TimeSpan.FromSeconds(5);
+            MaximumConnectionCount = 1000;
             HealthCheckMethod = "GET";
             HealthCheckPath = "/";
             HealthCheckPort = 80;
             HealthCheckCodes = new[] { 200 };
             HealthCheckLog = false;
+            HealthCheckMaximumFailCount = 2;
             HealthCheckInterval = TimeSpan.FromSeconds(30);
+            HealthCheckUnhealthyInterval = TimeSpan.FromSeconds(2);
         }
 
         public override void Sanitize()

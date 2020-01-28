@@ -32,6 +32,7 @@ namespace Gravity.Server.ProcessingNodes.Server
         public TimeSpan ResponseTimeout { get; set; }
         public int ReadTimeoutMs { get; set; }
         public bool ReuseConnections { get; set; }
+        public int MaximumConnectionCount { get; set; }
 
         public string HealthCheckMethod { get; set; }
         public string HealthCheckHost { get; set; }
@@ -40,6 +41,8 @@ namespace Gravity.Server.ProcessingNodes.Server
         public int[] HealthCheckCodes { get; set; }
         public bool HealthCheckLog { get; set; }
         public TimeSpan HealthCheckInterval { get; set; }
+        public TimeSpan HealthCheckUnhealthyInterval { get; set; }
+        public int HealthCheckMaximumFailCount { get; set; }
 
         public TimeSpan DnsLookupInterval { get; set; }
         public TimeSpan RecalculateInterval { get; set; }
@@ -65,6 +68,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             ResponseTimeout = TimeSpan.FromSeconds(10);
             ReadTimeoutMs = 200;
             ReuseConnections = true;
+            MaximumConnectionCount = 5000;
             DnsLookupInterval = TimeSpan.FromMinutes(5);
             RecalculateInterval = TimeSpan.FromSeconds(5);
             HealthCheckPort = 80;
@@ -72,6 +76,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             HealthCheckPath = new PathString("/");
             HealthCheckInterval = TimeSpan.FromMinutes(1);
             HealthCheckCodes = new[] { 200 };
+            HealthCheckMaximumFailCount = 2;
 
             _connectionPools = new Dictionary<string, ConnectionPool>(StringComparer.OrdinalIgnoreCase);
         }
@@ -122,7 +127,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                             }
 
                             if (Healthy != true) 
-                                nextHealthCheck = timeNow + TimeSpan.FromSeconds(2);
+                                nextHealthCheck = timeNow + HealthCheckUnhealthyInterval;
                         }
 
                     }
@@ -194,7 +199,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
             if (ipAddresses.Count == 0 || Healthy != true)
             {
-                context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Server '{Name}' has no health instances, returning 503");
+                context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Server '{Name}' has no healthy instances, returning 503");
 
                 return Task.Run(() =>
                 {
@@ -220,32 +225,52 @@ namespace Gravity.Server.ProcessingNodes.Server
                 port = 443;
             }
 
-            context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Server '{Name}' sending request to {ipAddress.Address} on port {port} using the {scheme} protocol");
+            var connectionCount = ipAddress.IncrementConnectionCount();
+            if (connectionCount >= MaximumConnectionCount)
+            {
+                context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Server '{Name}' has too many connections, returning 503");
 
+                return Task.Run(() =>
+                {
+                    context.Outgoing.StatusCode = 503;
+                    context.Outgoing.ReasonPhrase = "Too many connections";
+                    context.Outgoing.SendHeaders(context);
+                });
+            }
+
+            context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Server '{Name}' sending request to {ipAddress.Address} on port {port} using the {scheme} protocol");
             var serverRequestContext = (IRequestContext)new ServerRequestContext(context, ipAddress.Address, port, scheme);
 
-            ipAddress.IncrementConnectionCount();
             var trafficAnalyticInfo = ipAddress.TrafficAnalytics.BeginRequest();
             trafficAnalyticInfo.Method = serverRequestContext.Incoming.Method;
 
             return Send(serverRequestContext)
                 .ContinueWith(sendTask =>
                 {
-                    if (sendTask.IsFaulted)
+                    try
                     {
-                        context.Log?.Log(LogType.Exception, LogLevel.Important, () => $"Server node '{Name}' failed to send the request. {sendTask.Exception?.Message}");
-                        throw new ServerNodeException(this, "failed to send to server", sendTask.Exception);
-                    }
+                        if (sendTask.IsFaulted)
+                        {
+                            context.Log?.Log(LogType.Exception, LogLevel.Important,
+                                () =>
+                                    $"Server node '{Name}' failed to send the request. {sendTask.Exception?.Message}");
+                            throw new ServerNodeException(this, "failed to send to server", sendTask.Exception);
+                        }
 
-                    if (sendTask.IsCanceled)
+                        if (sendTask.IsCanceled)
+                        {
+                            context.Log?.Log(LogType.Exception, LogLevel.Important,
+                                () => $"Server node '{Name}' timeout sending to server");
+                            throw new ServerNodeException(this, "timeout sending to server");
+                        }
+                    }
+                    finally
                     {
-                        context.Log?.Log(LogType.Exception, LogLevel.Important, () => $"Server node '{Name}' timeout sending to server");
-                        throw new ServerNodeException(this, "timeout sending to server");
+                        trafficAnalyticInfo.StatusCode = serverRequestContext.Outgoing.StatusCode;
+                        ipAddress.TrafficAnalytics.EndRequest(trafficAnalyticInfo);
+                        ipAddress.DecrementConnectionCount();
+                        serverRequestContext.Dispose();
                     }
-
-                    trafficAnalyticInfo.StatusCode = serverRequestContext.Outgoing.StatusCode;
-                    ipAddress.TrafficAnalytics.EndRequest(trafficAnalyticInfo);
-                    ipAddress.DecrementConnectionCount();
                 });
         }
 
@@ -257,7 +282,8 @@ namespace Gravity.Server.ProcessingNodes.Server
                 {
                     new ServerIpAddress
                     {
-                        Address = ipAddress
+                        Address = ipAddress,
+                        MaximumHealthCheckFailCount = MaximumConnectionCount
                     }
                 };
                 return TimeSpan.FromMinutes(1);

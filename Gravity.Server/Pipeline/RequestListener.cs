@@ -163,7 +163,7 @@ namespace Gravity.Server.Pipeline
                         });
                     }
 
-                    if (output.Disabled) continue;
+                    if (output.Offline) continue;
 
                     var requestContext = (IRequestContext)new OwinRequestContext(owinContext, _logFactory);
                     requestContext.Log?.Log(LogType.Request, LogLevel.Standard, () => 

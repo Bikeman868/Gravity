@@ -364,6 +364,7 @@ namespace Gravity.Server.Pipeline
                         ResponseTimeout = serverNodeConfiguration.ResponseTimeout,
                         ReadTimeoutMs = serverNodeConfiguration.ReadTimeoutMs,
                         ReuseConnections = serverNodeConfiguration.ReuseConnections,
+                        MaximumConnectionCount = serverNodeConfiguration.MaximumConnectionCount,
                         DnsLookupInterval = serverNodeConfiguration.DnsLookupInterval,
                         RecalculateInterval = serverNodeConfiguration.RecalculateInterval,
                         HealthCheckPort = serverNodeConfiguration.HealthCheckPort,
@@ -373,6 +374,8 @@ namespace Gravity.Server.Pipeline
                         HealthCheckCodes = serverNodeConfiguration.HealthCheckCodes,
                         HealthCheckLog = serverNodeConfiguration.HealthCheckLog,
                         HealthCheckInterval = serverNodeConfiguration.HealthCheckInterval,
+                        HealthCheckUnhealthyInterval = serverNodeConfiguration.HealthCheckUnhealthyInterval,
+                        HealthCheckMaximumFailCount = serverNodeConfiguration.HealthCheckMaximumFailCount
                     };
                     node.Initialize();
                     serverNodeConfiguration.Node = node;

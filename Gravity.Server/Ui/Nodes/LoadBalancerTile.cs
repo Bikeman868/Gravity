@@ -32,7 +32,7 @@ namespace Gravity.Server.Ui.Nodes
             LinkUrl = "/ui/node?name=" + loadBalancer.Name;
 
             if (details != null)
-                AddDetails(details, null, loadBalancer.Offline ? "disabled" : string.Empty);
+                AddDetails(details, null, loadBalancer.Offline ? "offline" : string.Empty);
 
             if (loadBalancer.Offline)
                 Title.CssClass += " disabled";
@@ -76,7 +76,7 @@ namespace Gravity.Server.Ui.Nodes
                 {
                     var css = "connection_none";
 
-                    if (!outputNode.Disabled)
+                    if (!outputNode.Offline)
                     {
                         var requestsPerMinute = outputNode.TrafficAnalytics.RequestsPerMinute;
                         if (requestsPerMinute < _trafficIndicatorThresholds[0]) css = "connection_none";
@@ -104,7 +104,7 @@ namespace Gravity.Server.Ui.Nodes
                 bool showConnections,
                 bool showSessions,
                 bool showTraffic)
-                : base(drawing, title ?? "Output", cssClass, output == null || output.Disabled, 3, label)
+                : base(drawing, title ?? "Output", cssClass, output == null || output.Offline, 3, label)
             {
                 if (output != null)
                 {
@@ -124,7 +124,7 @@ namespace Gravity.Server.Ui.Nodes
                         details.Add(output.SessionCount + " sessions");
 
                     if (details.Count > 0)
-                        AddDetails(details, null, output.Disabled ? "disabled" : string.Empty);
+                        AddDetails(details, null, output.Offline ? "disabled" : string.Empty);
                 }
             }
         }

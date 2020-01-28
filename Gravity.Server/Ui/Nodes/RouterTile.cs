@@ -62,7 +62,7 @@ namespace Gravity.Server.Ui.Nodes
                 {
                     var css = "connection_none";
 
-                    if (!outputNode.Disabled)
+                    if (!outputNode.Offline)
                     {
                         var requestsPerMinute = outputNode.TrafficAnalytics.RequestsPerMinute;
                         if (requestsPerMinute < _trafficIndicatorThresholds[0]) css = "connection_none";

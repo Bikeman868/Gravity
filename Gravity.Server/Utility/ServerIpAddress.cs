@@ -8,15 +8,13 @@ namespace Gravity.Server.Utility
     {
         public IPAddress Address { get; set; }
         public TrafficAnalytics TrafficAnalytics { get; private set; }
+        public bool? Healthy { get; private set; }
+        public string UnhealthyReason { get; private set; }
+        public int HealthCheckFailCount { get; set; }
+        public int MaximumHealthCheckFailCount { get; set; }
 
-        private long _connectionCount;
-        public long ConnectionCount { get { return _connectionCount; } }
-
-        private bool? _healthy;
-        public bool? Healthy { get { return _healthy; } }
-
-        private string _unhealthyReason;
-        public string UnhealthyReason { get { return _unhealthyReason; } }
+        private int _connectionCount;
+        public int ConnectionCount => _connectionCount;
 
         public ServerIpAddress()
         {
@@ -26,25 +24,29 @@ namespace Gravity.Server.Utility
             };
         }
 
-        public void IncrementConnectionCount()
+        public int IncrementConnectionCount()
         {
-            Interlocked.Increment(ref _connectionCount);
+            return Interlocked.Increment(ref _connectionCount);
         }
 
-        public void DecrementConnectionCount()
+        public int DecrementConnectionCount()
         {
-            Interlocked.Decrement(ref _connectionCount);
+            return Interlocked.Decrement(ref _connectionCount);
         }
 
         public void SetHealthy()
         {
-            _healthy = true;
+            Healthy = true;
+            HealthCheckFailCount = 0;
         }
 
         public void SetUnhealthy(string reason)
         {
-            _unhealthyReason = reason;
-            _healthy = false;
+            if (HealthCheckFailCount++ >= MaximumHealthCheckFailCount)
+            {
+                UnhealthyReason = reason;
+                Healthy = false;
+            }
         }
     }
 }

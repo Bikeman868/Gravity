@@ -8,7 +8,7 @@ namespace Gravity.Server.Pipeline
     {
         public string Name { get; set; }
         public INode Node { get; set; }
-        public bool Disabled { get; set; }
+        public bool Offline { get; set; }
 
         public TrafficAnalytics TrafficAnalytics { get; private set; }
 

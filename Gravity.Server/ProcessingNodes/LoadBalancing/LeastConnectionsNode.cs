@@ -23,7 +23,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
             }
 
             var output = OutputNodes
-                .Where(o => !o.Disabled && o.Node != null)
+                .Where(o => !o.Offline && o.Node != null)
                 .OrderBy(o => o.ConnectionCount)
                 .FirstOrDefault();
 

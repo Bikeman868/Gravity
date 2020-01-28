@@ -33,9 +33,9 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
                     for (var i = 0; i < nodes.Length; i++)
                     {
                         var node = nodes[i];
-                        node.Disabled = node.Node == null || node.Node.Offline;
+                        node.Offline = node.Node == null || node.Node.Offline;
 
-                        if (!node.Disabled)
+                        if (!node.Offline)
                             offline = false;
                     }
                 }

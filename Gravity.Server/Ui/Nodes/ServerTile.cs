@@ -44,6 +44,7 @@ namespace Gravity.Server.Ui.Nodes
             details.Add("Host " + (server.DomainName ?? string.Empty));
             details.Add("Port " + (server.Port.HasValue ? server.Port.Value.ToString() :  "pass-through"));
             details.Add("Connection timeout " + server.ConnectionTimeout + (server.ReuseConnections ? " then reuse" : ""));
+            details.Add("Max connections " + server.MaximumConnectionCount);
             details.Add("Response timeout " + server.ResponseTimeout);
             details.Add("Read timeout " + server.ReadTimeoutMs + "ms");
             details.Add("Health check " + 

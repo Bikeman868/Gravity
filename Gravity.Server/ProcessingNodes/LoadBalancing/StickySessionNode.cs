@@ -115,7 +115,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
                 context.Log?.Log(LogType.Logic, LogLevel.Detailed, () => $"No session cookie in incoming request");
 
                 var output = OutputNodes
-                    .Where(o => !o.Disabled && o.Node != null)
+                    .Where(o => !o.Offline && o.Node != null)
                     .OrderBy(o => o.ConnectionCount)
                     .ThenBy(o => o.SessionCount)
                     .FirstOrDefault();
@@ -184,7 +184,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
                 context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"No session found for session id {sessionId}");
 
                 sessionOutput = OutputNodes
-                    .Where(o => !o.Disabled && o.Node != null)
+                    .Where(o => !o.Offline && o.Node != null)
                     .OrderBy(o => o.ConnectionCount)
                     .ThenBy(o => o.SessionCount)
                     .FirstOrDefault();
@@ -208,7 +208,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
                 lock (_sessionExpiry) _sessionExpiry.Add(new Tuple<string, DateTime>(sessionId, DateTime.UtcNow + SessionDuration));
             }
 
-            if (sessionOutput.Disabled)
+            if (sessionOutput.Offline)
             {
                 context.Log?.Log(LogType.Logic, LogLevel.Important, () => $"The sticky output '{sessionOutput.Name}' for load balancer '{Name}' for session id {sessionId} is disabled");
 

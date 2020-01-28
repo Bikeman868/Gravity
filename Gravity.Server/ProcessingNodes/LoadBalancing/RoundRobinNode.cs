@@ -39,7 +39,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
                 });
             }
 
-            var enabledOutputs = outputs.Where(o => !o.Disabled && o.Node != null).ToList();
+            var enabledOutputs = outputs.Where(o => !o.Offline && o.Node != null).ToList();
 
             if (enabledOutputs.Count == 0)
             {
