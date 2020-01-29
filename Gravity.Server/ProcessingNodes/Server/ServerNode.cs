@@ -228,6 +228,8 @@ namespace Gravity.Server.ProcessingNodes.Server
             var connectionCount = ipAddress.IncrementConnectionCount();
             if (connectionCount >= MaximumConnectionCount)
             {
+                ipAddress.DecrementConnectionCount();
+
                 context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Server '{Name}' has too many connections, returning 503");
 
                 return Task.Run(() =>
