@@ -15,9 +15,11 @@ namespace Gravity.Server.ProcessingNodes.Server
         private readonly TimeSpan _connectionTimeout;
         private readonly Queue<Connection> _pool;
         private readonly IBufferPool _bufferPool;
+        private readonly IConnectionThreadPool _connectionThreadPool;
 
         public ConnectionPool(
             IBufferPool bufferPool,
+            IConnectionThreadPool connectionThreadPool,
             IPEndPoint endpoint,
             string domainName,
             Scheme scheme,
@@ -28,6 +30,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             _scheme = scheme;
             _connectionTimeout = connectionTimeout;
             _bufferPool = bufferPool;
+            _connectionThreadPool = connectionThreadPool;
             _pool = new Queue<Connection>();
         }
 
@@ -40,7 +43,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
         }
 
-        public Task<Connection> GetConnection(ILog log, TimeSpan responseTimeout, int readTimeoutMs)
+        public Task<Connection> GetConnectionAsync(ILog log, TimeSpan responseTimeout, int readTimeoutMs)
         {
             while (true)
             {
@@ -90,8 +93,8 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
 
             log?.Log(LogType.Pooling, LogLevel.Detailed, () => "The connection pool has no available connection, creating a new connection");
-            var newConnection = new Connection(_bufferPool, _endpoint, _domainName, _scheme, _connectionTimeout);
-            return newConnection.Connect(log)
+            var newConnection = new Connection(_bufferPool, _connectionThreadPool, _endpoint, _domainName, _scheme, _connectionTimeout);
+            return newConnection.ConnectAsync(log)
                 .ContinueWith(connectTask => 
                 {
                     if (connectTask.IsFaulted)

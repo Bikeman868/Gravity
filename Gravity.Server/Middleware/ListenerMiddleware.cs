@@ -26,7 +26,7 @@ namespace Gravity.Server.Middleware
 
         public Task Invoke(IOwinContext context, Func<Task> next)
         {
-            return _requestListener.ProcessRequest(context, next);
+            return _requestListener.ProcessRequestAsync(context, next);
         }
 
     }

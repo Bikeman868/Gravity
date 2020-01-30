@@ -11,7 +11,7 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
             Offline = Disabled;
         }
 
-        public override Task ProcessRequest(IRequestContext context)
+        public override Task ProcessRequestAsync(IRequestContext context)
         {
             context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Internal node '{Name}' passing the request back to the Owin pipeline for other middleware to handle");
 

@@ -29,7 +29,7 @@ namespace Gravity.Server.ProcessingNodes
         public virtual void Bind(INodeGraph nodeGraph) { }
         public virtual void Dispose() { }
 
-        public abstract Task ProcessRequest(IRequestContext context);
+        public abstract Task ProcessRequestAsync(IRequestContext context);
         public abstract void UpdateStatus();
     }
 }

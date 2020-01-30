@@ -114,7 +114,7 @@ namespace Gravity.Server.ProcessingNodes.Transform
                 Offline = _nextNode.Offline;
         }
 
-        public override Task ProcessRequest(IRequestContext context)
+        public override Task ProcessRequestAsync(IRequestContext context)
         {
             if (_nextNode == null)
             {
@@ -149,7 +149,7 @@ namespace Gravity.Server.ProcessingNodes.Transform
 
             context.Log?.Log(LogType.Step, LogLevel.Standard, () => $"Transform node '{Name}' forwarding to '{_nextNode.Name}'");
 
-            return _nextNode.ProcessRequest(context);
+            return _nextNode.ProcessRequestAsync(context);
         }
     }
 }

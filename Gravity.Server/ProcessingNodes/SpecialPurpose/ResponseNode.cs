@@ -27,7 +27,7 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
             Offline = Disabled;
         }
 
-        public override Task ProcessRequest(IRequestContext context)
+        public override Task ProcessRequestAsync(IRequestContext context)
         {
             context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Response node '{Name}' returning static {StatusCode} response");
 

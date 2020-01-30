@@ -81,7 +81,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
             Offline = offline;
         }
 
-        public override Task ProcessRequest(IRequestContext context)
+        public override Task ProcessRequestAsync(IRequestContext context)
         {
             for (var i = 0; i < _outputRule.Length; i++)
             {
@@ -104,7 +104,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
 
                     var trafficAnalyticInfo = output.TrafficAnalytics.BeginRequest();
                     trafficAnalyticInfo.Method = context.Incoming.Method;
-                    var task = node.ProcessRequest(context);
+                    var task = node.ProcessRequestAsync(context);
 
                     if (task == null)
                     {

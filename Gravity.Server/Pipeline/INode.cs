@@ -38,6 +38,6 @@ namespace Gravity.Server.Pipeline
         /// <summary>
         /// Runtime request processing
         /// </summary>
-        Task ProcessRequest(IRequestContext context);
+        Task ProcessRequestAsync(IRequestContext context);
     }
 }

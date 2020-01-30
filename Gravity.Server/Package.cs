@@ -32,7 +32,8 @@ namespace Gravity.Server
                 new IocRegistration().Init<IFactory, Factory>(),
                 new IocRegistration().Init<IDrawingGenerator, DiagramGenerator>(),
                 new IocRegistration().Init<ILogFactory, LogFactory>(),
-                new IocRegistration().Init<IBufferPool, BufferPool>()
+                new IocRegistration().Init<IBufferPool, BufferPool>(),
+                new IocRegistration().Init<IConnectionThreadPool, ConnectionThreadPool>(),
             });
 
             _registrations.AddRange(new[]

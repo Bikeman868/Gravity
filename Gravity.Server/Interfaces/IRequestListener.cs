@@ -7,7 +7,7 @@ namespace Gravity.Server.Interfaces
 {
     internal interface IRequestListener
     {
-        Task ProcessRequest(IOwinContext context, Func<Task> next);
+        Task ProcessRequestAsync(IOwinContext context, Func<Task> next);
         ListenerEndpointConfiguration[] Endpoints { get; }
     }
 }

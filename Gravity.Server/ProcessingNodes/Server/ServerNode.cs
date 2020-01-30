@@ -51,18 +51,23 @@ namespace Gravity.Server.ProcessingNodes.Server
         public string UnhealthyReason { get; private set; }
 
         public ServerIpAddress[] IpAddresses;
+
         private readonly IDictionary<string, ConnectionPool> _connectionPools;
         private readonly IBufferPool _bufferPool;
+        private readonly ILogFactory _logFactory;
+        private readonly IConnectionThreadPool _connectionThreadPool;
+
         private Thread _backgroundThread;
         private int _lastIpAddressIndex;
-        private readonly ILogFactory _logFactory;
 
         public ServerNode(
             IBufferPool bufferPool,
-            ILogFactory logFactory)
+            ILogFactory logFactory,
+            IConnectionThreadPool connectionThreadPool)
         {
             _bufferPool = bufferPool;
             _logFactory = logFactory;
+            _connectionThreadPool = connectionThreadPool;
 
             ConnectionTimeout = TimeSpan.FromSeconds(20);
             ResponseTimeout = TimeSpan.FromSeconds(10);
@@ -179,7 +184,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             Offline = Healthy == false;
         }
 
-        public override Task ProcessRequest(IRequestContext context)
+        public override Task ProcessRequestAsync(IRequestContext context)
         {
             var allIpAddresses = IpAddresses;
 
@@ -246,7 +251,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             var trafficAnalyticInfo = ipAddress.TrafficAnalytics.BeginRequest();
             trafficAnalyticInfo.Method = serverRequestContext.Incoming.Method;
 
-            return Send(serverRequestContext)
+            return SendAsync(serverRequestContext)
                 .ContinueWith(sendTask =>
                 {
                     try
@@ -369,7 +374,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                         new QueryString());
 
                     tasks.Add(
-                        Send(requestContext)
+                        SendAsync(requestContext)
                             .ContinueWith(sendTask =>
                             {
                                 if (sendTask.IsFaulted)
@@ -417,7 +422,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
         }
 
-        private Task Send(IRequestContext context)
+        private Task SendAsync(IRequestContext context)
         {
             var endpoint = new IPEndPoint(context.Incoming.DestinationAddress, context.Incoming.DestinationPort);
             var key = context.Incoming.Scheme + "://" + context.Incoming.DomainName + ":" + context.Incoming.DestinationPort + " " + context.Incoming.DestinationAddress;
@@ -433,12 +438,12 @@ namespace Gravity.Server.ProcessingNodes.Server
                 else
                 {
                     context.Log?.Log(LogType.Pooling, LogLevel.Important, () => "Creating new connection pool " + key);
-                    connectionPool = new ConnectionPool(_bufferPool, endpoint, context.Incoming.DomainName, context.Incoming.Scheme, ConnectionTimeout);
+                    connectionPool = new ConnectionPool(_bufferPool, _connectionThreadPool, endpoint, context.Incoming.DomainName, context.Incoming.Scheme, ConnectionTimeout);
                     _connectionPools.Add(key, connectionPool);
                 }
             }
 
-            return connectionPool.GetConnection(context.Log, ResponseTimeout, ReadTimeoutMs)
+            return connectionPool.GetConnectionAsync(context.Log, ResponseTimeout, ReadTimeoutMs)
                 .ContinueWith(connectionTask =>
                 {
                     if (connectionTask.IsFaulted)
@@ -457,7 +462,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                     try
                     {
-                        connection.Send(context, ResponseTimeout, ReadTimeoutMs).Wait();
+                        connection.SendAsync(context, ResponseTimeout, ReadTimeoutMs).Wait();
                         connectionPool.ReuseConnection(context.Log, connection);
                     }
                     catch (Exception ex)

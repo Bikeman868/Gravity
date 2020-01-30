@@ -11,7 +11,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
     {
         private int _next;
 
-        public override Task ProcessRequest(IRequestContext context)
+        public override Task ProcessRequestAsync(IRequestContext context)
         {
             if (Disabled)
             {
@@ -59,7 +59,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
             context.Log?.Log(LogType.Step, LogLevel.Standard, () => $"Round-robbin load balancer '{Name}' routing request to '{output.Name}'");
 
             var trafficAnalyticInfo = output.TrafficAnalytics.BeginRequest();
-            var task = output.Node.ProcessRequest(context);
+            var task = output.Node.ProcessRequestAsync(context);
 
             if (task == null)
             {

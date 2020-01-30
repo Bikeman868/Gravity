@@ -94,6 +94,9 @@
     <Compile Include="Interfaces\IBufferPool.cs" />
     <Compile Include="Interfaces\ILogFactory.cs" />
     <Compile Include="Interfaces\IRequestListener.cs" />
+    <Compile Include="Pipeline\ActiveConnection.cs" />
+    <Compile Include="Pipeline\ConnectionThreadPool.cs" />
+    <Compile Include="Pipeline\IConnectionThreadPool.cs" />
     <Compile Include="Pipeline\IMessage.cs" />
     <Compile Include="Pipeline\IOutgoingMessage.cs" />
     <Compile Include="Pipeline\IIncomingMessage.cs" />

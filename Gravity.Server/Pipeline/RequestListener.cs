@@ -119,7 +119,7 @@ namespace Gravity.Server.Pipeline
 
         ListenerEndpointConfiguration[] IRequestListener.Endpoints { get { return _currentConfiguration.Endpoints; } }
 
-        Task IRequestListener.ProcessRequest(IOwinContext owinContext, Func<Task> next)
+        Task IRequestListener.ProcessRequestAsync(IOwinContext owinContext, Func<Task> next)
         {
             var configuration = _currentConfiguration;
             if (configuration.Disabled) return next();
@@ -171,7 +171,7 @@ namespace Gravity.Server.Pipeline
 
                     var trafficAnalyticInfo = output.TrafficAnalytics.BeginRequest();
 
-                    var task = output.Node.ProcessRequest(requestContext);
+                    var task = output.Node.ProcessRequestAsync(requestContext);
 
                     if (task == null)
                     {

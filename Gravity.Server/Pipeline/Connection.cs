@@ -33,8 +33,9 @@ namespace Gravity.Server.ProcessingNodes.Server
         Pending
     }
 
-    internal class Connection: IDisposable
+    internal class Connection : IDisposable
     {
+        private readonly IConnectionThreadPool _connectionThreadPool;
         private readonly TimeSpan _maximumIdleTime = TimeSpan.FromMinutes(5);
         private readonly IBufferPool _bufferPool;
         private readonly IPEndPoint _endpoint;
@@ -45,20 +46,31 @@ namespace Gravity.Server.ProcessingNodes.Server
         private TcpClient _tcpClient;
         private Stream _stream;
         private DateTime _lastUsedUtc;
+
         private Task _pendingTask;
+        private Func<bool> _incomingNextStep;
+        private Func<bool> _outgoingNextStep;
+        private TimeSpan _responseTimeout;
+        private int _readTimeoutMs;
+        private IRequestContext _context;
+        private IAsyncResult _sendResult;
 
         public Connection(
             IBufferPool bufferPool,
+            IConnectionThreadPool connectionThreadPool,
             IPEndPoint endpoint,
             string domainName,
             Scheme scheme,
             TimeSpan connectionTimeout)
         {
             _bufferPool = bufferPool;
+            _connectionThreadPool = connectionThreadPool;
+
             _endpoint = endpoint;
             _domainName = domainName;
             _scheme = scheme;
             _connectionTimeout = connectionTimeout;
+
             State = ConnectionState.New;
         }
 
@@ -69,10 +81,11 @@ namespace Gravity.Server.ProcessingNodes.Server
             State = ConnectionState.Disconnected;
         }
 
-        public Task Connect(ILog log)
+        public Task ConnectAsync(ILog log)
         {
-            log?.Log(LogType.TcpIp, LogLevel.Standard, 
-                () => $"Opening a new Tcp connection to {_scheme.ToString().ToLower()}://{_domainName}:{_endpoint.Port} at {_endpoint.Address}");
+            log?.Log(LogType.TcpIp, LogLevel.Standard,
+                () =>
+                    $"Opening a new Tcp connection to {_scheme.ToString().ToLower()}://{_domainName}:{_endpoint.Port} at {_endpoint.Address}");
 
             _tcpClient = new TcpClient
             {
@@ -81,17 +94,19 @@ namespace Gravity.Server.ProcessingNodes.Server
             };
 
             return _tcpClient.ConnectAsync(_endpoint.Address, _endpoint.Port)
-                .ContinueWith(connectTask => 
-                { 
+                .ContinueWith(connectTask =>
+                {
                     if (connectTask.IsFaulted)
                     {
-                        log?.Log(LogType.Exception, LogLevel.Important, () => $"Failed to connect. {connectTask.Exception?.Message}");
+                        log?.Log(LogType.Exception, LogLevel.Important,
+                            () => $"Failed to connect. {connectTask.Exception?.Message}");
                         throw new ConnectionException(this, "Exception in TcpClient", connectTask.Exception);
                     }
 
                     if (connectTask.IsCanceled)
                     {
-                        log?.Log(LogType.Exception, LogLevel.Important, () => $"Failed to connect within {_connectionTimeout}");
+                        log?.Log(LogType.Exception, LogLevel.Important,
+                            () => $"Failed to connect within {_connectionTimeout}");
                         throw new ConnectionException(this, "TcpClient connection was cancelled");
                     }
 
@@ -106,9 +121,11 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                         _stream = sslStream;
 
-                        log?.Log(LogType.TcpIp, LogLevel.Standard, () => $"Authenticating server's SSL certificate for {_domainName}");
+                        log?.Log(LogType.TcpIp, LogLevel.Standard,
+                            () => $"Authenticating server's SSL certificate for {_domainName}");
                         sslStream.AuthenticateAsClient(_domainName);
-                        log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"The server's SSL certificate is valid for {_domainName}");
+                        log?.Log(LogType.TcpIp, LogLevel.Detailed,
+                            () => $"The server's SSL certificate is valid for {_domainName}");
                     }
 
                     _lastUsedUtc = DateTime.UtcNow;
@@ -137,6 +154,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                             _pendingTask = null;
                             return true;
                         }
+
                         return false;
                     default:
                         return false;
@@ -144,19 +162,36 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
         }
 
-        public Task Send(IRequestContext context, TimeSpan responseTimeout, int readTimeoutMs)
+        public Task SendAsync(IRequestContext context, TimeSpan responseTimeout, int readTimeoutMs)
         {
             State = ConnectionState.Busy;
-            _tcpClient.ReceiveTimeout = (int)responseTimeout.TotalMilliseconds;
+            _responseTimeout = responseTimeout;
+            _readTimeoutMs = readTimeoutMs;
 
-            return Task.WhenAll(SendHttp(context), ReceiveHttp(context, readTimeoutMs))
-                .ContinueWith(t => _lastUsedUtc = DateTime.UtcNow);
+            _incomingNextStep = IncomingStartStep;
+            _outgoingNextStep = OutgoingStartStep;
+
+            return _connectionThreadPool.AddConnection(
+                () => _incomingNextStep(), 
+                () => _outgoingNextStep());
         }
 
-        private Task SendHttp(IRequestContext context)
+        #region Incoming direction steps
+
+        private bool IncomingStartStep()
         {
-            var incoming = context.Incoming;
-            incoming.SendHeaders(context);
+            _tcpClient.ReceiveTimeout = (int) _responseTimeout.TotalMilliseconds;
+
+            _incomingNextStep = IncomingSendHeadStep;
+
+            _lastUsedUtc = DateTime.UtcNow;
+            return true;
+        }
+
+        private bool IncomingSendHeadStep()
+        {
+            var incoming = _context.Incoming;
+            incoming.SendHeaders(_context);
 
             var head = new StringBuilder();
 
@@ -206,27 +241,67 @@ namespace Gravity.Server.ProcessingNodes.Server
 
             head.Append("Connection: Keep-Alive\r\n");
             head.Append("Keep-Alive: timeout=");
-            head.Append((int)(_maximumIdleTime.TotalSeconds + 5));
+            head.Append((int) (_maximumIdleTime.TotalSeconds + 5));
             head.Append("\r\n\r\n");
 
             var headBytes = Encoding.ASCII.GetBytes(head.ToString());
 
-            context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"Writing {headBytes.Length} bytes of header to the connection stream");
+            _context.Log?.Log(LogType.TcpIp, LogLevel.Detailed,
+                () => $"Writing {headBytes.Length} bytes of header to the connection stream");
 
-            if (context.Log != null && context.Log.WillLog(LogType.TcpIp, LogLevel.VeryDetailed))
+            if (_context.Log != null && _context.Log.WillLog(LogType.TcpIp, LogLevel.VeryDetailed))
             {
                 var headLines = head.ToString().Replace("\r", "").Split('\n');
                 foreach (var headLine in headLines.Where(h => !string.IsNullOrEmpty(h)))
-                    context.Log.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"> {headLine}");
+                    _context.Log.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"> {headLine}");
             }
 
-            _stream.Write(headBytes, 0, headBytes.Length);
+            _sendResult = _stream.BeginWrite(headBytes, 0, headBytes.Length, null, null);
+
+            _incomingNextStep = IncomingWaitForSendHeadStep;
+            _lastUsedUtc = DateTime.UtcNow;
+            return true;
+        }
+
+        private bool IncomingWaitForSendHeadStep()
+        {
+            if (!_sendResult.IsCompleted) return false;
+
+            _sendResult = null;
+            _incomingNextStep = IncomingContentStep;
+
+            return false;
+        }
+
+        private bool IncomingContentStep()
+        {
+            // Finished, ignore incoming content;
+            return false;
+        }
+
+        #endregion
+
+        #region Outgoing direction steps
+
+        private bool OutgoingStartStep()
+        {
+            return false;
+        }
+
+        #endregion
+        /*
+        private Task SendHttpAsync(IRequestContext context)
+        {
+            var incoming = context.Incoming;
+            incoming.SendHeaders(context);
 
             return Task.Run(() =>
             {
                 if (incoming.Content != null && incoming.Content.CanRead)
                 {
-                    var buffer = incoming.ContentLength.HasValue ? _bufferPool.Get(incoming.ContentLength.Value) : _bufferPool.Get();
+                    var buffer = incoming.ContentLength.HasValue
+                        ? _bufferPool.Get(incoming.ContentLength.Value)
+                        : _bufferPool.Get();
                     try
                     {
                         int Read()
@@ -236,19 +311,23 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                             if (readTask.IsFaulted)
                             {
-                                context.Log?.Log(LogType.Exception, LogLevel.Important, () => $"Connection failed to read from the incoming stream. {readTask.Exception.Message}");
+                                context.Log?.Log(LogType.Exception, LogLevel.Important,
+                                    () =>
+                                        $"Connection failed to read from the incoming stream. {readTask.Exception.Message}");
                                 throw new ConnectionException(this, "incoming read task faulted", readTask.Exception);
                             }
 
                             if (readTask.IsCanceled)
                             {
-                                context.Log?.Log(LogType.TcpIp, LogLevel.Important, () => $"Timeout reading from the incoming stream");
+                                context.Log?.Log(LogType.TcpIp, LogLevel.Important,
+                                    () => $"Timeout reading from the incoming stream");
                                 throw new ConnectionException(this, "read task timed out");
                             }
 
                             var bytesRead = readTask.Result;
 
-                            context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"Read {bytesRead} bytes from the incoming stream");
+                            context.Log?.Log(LogType.TcpIp, LogLevel.Detailed,
+                                () => $"Read {bytesRead} bytes from the incoming stream");
 
                             return bytesRead;
                         }
@@ -260,13 +339,15 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                             if (writeTask.IsFaulted)
                             {
-                                context.Log?.Log(LogType.Exception, LogLevel.Important, () => $"Connection failed to write to Tcp stream. {writeTask.Exception.Message}");
+                                context.Log?.Log(LogType.Exception, LogLevel.Important,
+                                    () => $"Connection failed to write to Tcp stream. {writeTask.Exception.Message}");
                                 throw new ConnectionException(this, "Tcp write task faulted", writeTask.Exception);
                             }
 
                             if (writeTask.IsCanceled)
                             {
-                                context.Log?.Log(LogType.TcpIp, LogLevel.Important, () => $"Timeout writing to Tcp stream");
+                                context.Log?.Log(LogType.TcpIp, LogLevel.Important,
+                                    () => $"Timeout writing to Tcp stream");
                                 throw new ConnectionException(this, "Tcp write task timed out");
                             }
                         }
@@ -276,11 +357,13 @@ namespace Gravity.Server.ProcessingNodes.Server
                             var bytesRead = Read();
                             if (bytesRead == 0) break;
 
-                            context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"Read {bytesRead} bytes of content from the incomming stream");
+                            context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed,
+                                () => $"Read {bytesRead} bytes of content from the incomming stream");
 
                             Write(bytesRead);
 
-                            context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"Wrote {bytesRead} bytes to the Tcp connection");
+                            context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed,
+                                () => $"Wrote {bytesRead} bytes to the Tcp connection");
                         }
                     }
                     finally
@@ -291,9 +374,9 @@ namespace Gravity.Server.ProcessingNodes.Server
             });
         }
 
-        private Task ReceiveHttp(IRequestContext context, int readTimeoutMs)
+        private Task ReceiveHttpAsync(IRequestContext context, int readTimeoutMs)
         {
-            var canHaveContent = 
+            var canHaveContent =
                 !string.Equals(context.Incoming.Method, "HEAD", StringComparison.OrdinalIgnoreCase) &&
                 !string.Equals(context.Incoming.Method, "OPTIONS", StringComparison.OrdinalIgnoreCase);
 
@@ -310,7 +393,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             {
                 for (var i = 0; i < bytesRead; i++)
                 {
-                    var c = (char)buffer[i];
+                    var c = (char) buffer[i];
 
                     if (beginning && c != 'H') continue;
                     if (c == '\r') continue;
@@ -323,7 +406,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                         {
                             header = false;
                             ParseHeaders();
-                            return i+1;
+                            return i + 1;
                         }
 
                         headerLines.Add(line.ToString());
@@ -334,27 +417,32 @@ namespace Gravity.Server.ProcessingNodes.Server
                     line.Append(c);
                     beginning = false;
                 }
+
                 return 0;
             }
 
             void ParseHeaders()
             {
-                context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"First blank line received, parsing headers");
+                context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed,
+                    () => $"First blank line received, parsing headers");
                 for (var j = 0; j < headerLines.Count; j++)
                     context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"> {headerLines[j]}");
-                
+
                 var firstSpaceIndex = headerLines[0].IndexOf(' ');
-                context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"First space in first header line at {firstSpaceIndex}");
+                context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed,
+                    () => $"First space in first header line at {firstSpaceIndex}");
 
                 if (firstSpaceIndex < 1)
                     throw new ConnectionException(this, "response first line contains no spaces");
 
                 var secondSpaceIndex = headerLines[0].IndexOf(' ', firstSpaceIndex + 1);
-                context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"Second space in first header line at {secondSpaceIndex}");
+                context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed,
+                    () => $"Second space in first header line at {secondSpaceIndex}");
 
                 if (secondSpaceIndex < 3)
                 {
-                    context.Log?.Log(LogType.TcpIp, LogLevel.Standard, () => "Response first line contains only 1 space");
+                    context.Log?.Log(LogType.TcpIp, LogLevel.Standard,
+                        () => "Response first line contains only 1 space");
                     throw new ConnectionException(this, "response first line contains only 1 space");
                 }
 
@@ -366,12 +454,14 @@ namespace Gravity.Server.ProcessingNodes.Server
                 }
                 else
                 {
-                    context.Log?.Log(LogType.TcpIp, LogLevel.Standard, () => $"Response status code '{statusString}' can not be parsed as ushort");
+                    context.Log?.Log(LogType.TcpIp, LogLevel.Standard,
+                        () => $"Response status code '{statusString}' can not be parsed as ushort");
                     throw new ConnectionException(this, "response status code can not be parsed as an integer");
                 }
 
                 context.Outgoing.ReasonPhrase = headerLines[0].Substring(secondSpaceIndex + 1);
-                context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"Response reason phrase '{context.Outgoing.ReasonPhrase}'");
+                context.Log?.Log(LogType.TcpIp, LogLevel.Detailed,
+                    () => $"Response reason phrase '{context.Outgoing.ReasonPhrase}'");
 
                 for (var j = 1; j < headerLines.Count; j++)
                 {
@@ -393,26 +483,30 @@ namespace Gravity.Server.ProcessingNodes.Server
                         }
                         else
                         {
-                            context.Outgoing.Headers[name] = new[] { value };
+                            context.Outgoing.Headers[name] = new[] {value};
                         }
 
                         if (string.Equals(name, "Content-Length", StringComparison.OrdinalIgnoreCase))
                         {
-                            context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"Content length header = {value}");
+                            context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed,
+                                () => $"Content length header = {value}");
                             if (int.TryParse(value, out var i))
                                 contentLength = i;
                             else
-                                context.Log?.Log(LogType.TcpIp, LogLevel.Standard, () => $"Content length header '{value}' is not an integer");
+                                context.Log?.Log(LogType.TcpIp, LogLevel.Standard,
+                                    () => $"Content length header '{value}' is not an integer");
                         }
                     }
                     else
                     {
-                        context.Log?.Log(LogType.TcpIp, LogLevel.Standard, () => $"Invalid header line '{headerLine}' does not contain a colon");
+                        context.Log?.Log(LogType.TcpIp, LogLevel.Standard,
+                            () => $"Invalid header line '{headerLine}' does not contain a colon");
                         throw new ConnectionException(this, "header line does not contain a colon");
                     }
                 }
 
-                context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"Sending {headerLines.Count} headers in outgoing message");
+                context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed,
+                    () => $"Sending {headerLines.Count} headers in outgoing message");
                 context.Outgoing.SendHeaders(context);
             }
 
@@ -429,10 +523,12 @@ namespace Gravity.Server.ProcessingNodes.Server
                 {
                     if (header || contentLength.HasValue)
                     {
-                        context.Log?.Log(LogType.TcpIp, LogLevel.Standard, () => $"Server did not respond within {_tcpClient.ReceiveTimeout}ms");
+                        context.Log?.Log(LogType.TcpIp, LogLevel.Standard,
+                            () => $"Server did not respond within {_tcpClient.ReceiveTimeout}ms");
 
                         context.Outgoing.StatusCode = 504;
-                        context.Outgoing.ReasonPhrase = "Server did not respond within " + _tcpClient.ReceiveTimeout + "ms";
+                        context.Outgoing.ReasonPhrase =
+                            "Server did not respond within " + _tcpClient.ReceiveTimeout + "ms";
                         Dispose();
                     }
 
@@ -444,7 +540,8 @@ namespace Gravity.Server.ProcessingNodes.Server
 
             void Write(byte[] buffer, int start, int count)
             {
-                context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"Writing {count} bytes to the outgoing message");
+                context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed,
+                    () => $"Writing {count} bytes to the outgoing message");
 
                 contentBytesReceived += count;
 
@@ -453,7 +550,8 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                 if (writeTask.IsFaulted)
                 {
-                    context.Log?.Log(LogType.TcpIp, LogLevel.Important, () => $"Outgoing write task faulted '{writeTask.Exception}'");
+                    context.Log?.Log(LogType.TcpIp, LogLevel.Important,
+                        () => $"Outgoing write task faulted '{writeTask.Exception}'");
                     throw new ConnectionException(this, "Outgoing write task faulted", writeTask.Exception);
                 }
 
@@ -464,18 +562,21 @@ namespace Gravity.Server.ProcessingNodes.Server
                 }
             }
 
-            context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => "Starting http receive. Expecting " + (canHaveContent ? "possible content" : "no content"));
+            context.Log?.Log(LogType.TcpIp, LogLevel.Detailed,
+                () => "Starting http receive. Expecting " + (canHaveContent ? "possible content" : "no content"));
 
             return Task.Run(() =>
             {
                 var buffer = _bufferPool.Get();
                 try
                 {
-                    while (header || (canHaveContent && (!contentLength.HasValue || contentBytesReceived < contentLength.Value)))
+                    while (header || (canHaveContent &&
+                                      (!contentLength.HasValue || contentBytesReceived < contentLength.Value)))
                     {
                         var bytesRead = Read(buffer);
 
-                        context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"Read {bytesRead} bytes from connection stream");
+                        context.Log?.Log(LogType.TcpIp, LogLevel.Detailed,
+                            () => $"Read {bytesRead} bytes from connection stream");
 
                         if (bytesRead == 0)
                         {
@@ -495,7 +596,8 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                                 if (!contentLength.HasValue)
                                 {
-                                    context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"Setting receive timeout to {readTimeoutMs}ms");
+                                    context.Log?.Log(LogType.TcpIp, LogLevel.Detailed,
+                                        () => $"Setting receive timeout to {readTimeoutMs}ms");
                                     _tcpClient.ReceiveTimeout = readTimeoutMs;
                                 }
                             }
@@ -505,6 +607,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                             Write(buffer, 0, bytesRead);
                         }
                     }
+
                     context.Log?.Log(LogType.TcpIp, LogLevel.Standard, () => "Finished http receive");
                 }
 
@@ -514,5 +617,6 @@ namespace Gravity.Server.ProcessingNodes.Server
                 }
             });
         }
+        */
     }
 }

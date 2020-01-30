@@ -27,7 +27,7 @@ namespace Gravity.Server.ProcessingNodes.Logging
                 : string.Join(", ", LogTypes);
         }
 
-        public override Task ProcessRequest(IRequestContext context)
+        public override Task ProcessRequestAsync(IRequestContext context)
         {
             if (Disabled)
             {
@@ -42,7 +42,7 @@ namespace Gravity.Server.ProcessingNodes.Logging
                 context.Log?.SetFilter(LogTypes, MaximumLogLevel);
             }
 
-            return _nextNode.ProcessRequest(context);
+            return _nextNode.ProcessRequestAsync(context);
         }
     }
 }

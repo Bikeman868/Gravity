@@ -26,6 +26,7 @@ namespace Gravity.Server.Pipeline
         private readonly IBufferPool _bufferPool;
         private readonly ILogFactory _logFactory;
         private readonly IDisposable _configuration;
+        private readonly IConnectionThreadPool _connectionThreadPool;
         private readonly Queue<DisposeQueueItem> _disposeQueue;
 
         private INodeGraph _currentInstance;
@@ -38,13 +39,15 @@ namespace Gravity.Server.Pipeline
             IHostingEnvironment hostingEnvironment,
             IFactory factory,
             IBufferPool bufferPool,
-            ILogFactory logFactory)
+            ILogFactory logFactory,
+            IConnectionThreadPool connectionThreadPool)
         {
             _expressionParser = expressionParser;
             _hostingEnvironment = hostingEnvironment;
             _factory = factory;
             _bufferPool = bufferPool;
             _logFactory = logFactory;
+            _connectionThreadPool = connectionThreadPool;
             _disposeQueue = new Queue<DisposeQueueItem>();
 
             _configuration = configuration.Register<NodeGraphConfiguration>("/gravity/nodeGraph", Configure);
@@ -354,7 +357,7 @@ namespace Gravity.Server.Pipeline
             {
                 foreach (var serverNodeConfiguration in configuration.ServerNodes)
                 {
-                    var node = new ServerNode(_bufferPool, _logFactory)
+                    var node = new ServerNode(_bufferPool, _logFactory, _connectionThreadPool)
                     {
                         Name = serverNodeConfiguration.Name,
                         Disabled = serverNodeConfiguration.Disabled,

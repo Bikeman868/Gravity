@@ -80,7 +80,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
             _cleanupThread.Join(TimeSpan.FromSeconds(10));
         }
 
-        public override Task ProcessRequest(IRequestContext context)
+        public override Task ProcessRequestAsync(IRequestContext context)
         {
             if (Disabled)
             {
@@ -160,7 +160,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
 
                 context.Log?.Log(LogType.Step, LogLevel.Standard, () => $"Sticky session load balancer '{Name}' routing request to '{output.Name}'");
 
-                var task = output.Node.ProcessRequest(context);
+                var task = output.Node.ProcessRequestAsync(context);
 
                 if (task == null)
                 {
@@ -225,7 +225,7 @@ namespace Gravity.Server.ProcessingNodes.LoadBalancing
             trafficAnalyticInfo = sessionOutput.TrafficAnalytics.BeginRequest();
             sessionOutput.IncrementConnectionCount();
 
-            var sessionTask = sessionOutput.Node.ProcessRequest(context);
+            var sessionTask = sessionOutput.Node.ProcessRequestAsync(context);
 
             if (sessionTask == null)
             {

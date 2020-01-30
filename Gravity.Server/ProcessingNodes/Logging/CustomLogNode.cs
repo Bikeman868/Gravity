@@ -53,14 +53,14 @@ namespace Gravity.Server.ProcessingNodes.Logging
                 true);
         }
 
-        public override Task ProcessRequest(IRequestContext context)
+        public override Task ProcessRequestAsync(IRequestContext context)
         {
             if (Disabled)
             {
                 context.Log?.Log(LogType.Step, LogLevel.Detailed, () =>
                     $"Custom log '{Name}' is disabled and will not log this request");
 
-                return _nextNode.ProcessRequest(context);
+                return _nextNode.ProcessRequestAsync(context);
             }
 
             if (Methods != null && Methods.Length > 0 && !Methods.Any(m =>string.Equals(m, context.Incoming.Method, StringComparison.OrdinalIgnoreCase)))
@@ -68,10 +68,10 @@ namespace Gravity.Server.ProcessingNodes.Logging
                 context.Log?.Log(LogType.Step, LogLevel.Detailed, () =>
                     $"Custom log '{Name}' is not logging this request because {context.Incoming.Method} methods are not logged");
 
-                return _nextNode.ProcessRequest(context);
+                return _nextNode.ProcessRequestAsync(context);
             }
 
-            return _nextNode.ProcessRequest(context)
+            return _nextNode.ProcessRequestAsync(context)
                 .ContinueWith(t =>
                 {
                     if (StatusCodes != null && StatusCodes.Length > 0 && StatusCodes.All(s => s != context.Outgoing.StatusCode))

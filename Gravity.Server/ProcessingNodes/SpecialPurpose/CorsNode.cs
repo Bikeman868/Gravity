@@ -36,7 +36,7 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
                 Offline = _nextNode.Offline;
         }
 
-        public override Task ProcessRequest(IRequestContext context)
+        public override Task ProcessRequestAsync(IRequestContext context)
         {
             if (_nextNode == null)
             {
@@ -130,7 +130,7 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
                 }
             }
 
-            return _nextNode.ProcessRequest(context);
+            return _nextNode.ProcessRequestAsync(context);
         }
     }
 }
