@@ -444,7 +444,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
 
             return connectionPool.GetConnectionAsync(context.Log, ResponseTimeout, ReadTimeoutMs)
-                .ContinueWith(connectionTask =>
+                .ContinueWith(async connectionTask =>
                 {
                     if (connectionTask.IsFaulted)
                     {
@@ -460,19 +460,23 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                     var connection = connectionTask.Result;
 
-                    try
+                    context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => "Scheduling a transaction in the connection thread pool");
+
+                    var transactionTask = _connectionThreadPool.ProcessTransaction(connection, context, ResponseTimeout, ReadTimeoutMs);
+                    await transactionTask;
+
+                    if (transactionTask.Result)
+                        context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => "Connection pool sucessfully processed the transaction");
+                    else
                     {
-                        connection.SendAsync(context, ResponseTimeout, ReadTimeoutMs).Wait();
-                        connectionPool.ReuseConnection(context.Log, connection);
-                    }
-                    catch (Exception ex)
-                    {
-                        context.Log?.Log(LogType.Exception, LogLevel.Important, () => "Returning 503 response because " + ex.Message);
+                        context.Log?.Log(LogType.TcpIp, LogLevel.Important, () => "Connection pool failed to process the transaction");
 
                         context.Outgoing.StatusCode = 503;
                         context.Outgoing.ReasonPhrase = "Exception forwarding request to real server";
                         context.Outgoing.SendHeaders(context);
                     }
+
+                    connectionPool.ReuseConnection(context.Log, connection);
                 });
         }
 

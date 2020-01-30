@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Gravity.Server.Interfaces;
 using Gravity.Server.Pipeline;
 
-namespace Gravity.Server.ProcessingNodes.Server
+namespace Gravity.Server.Pipeline
 {
     internal class ConnectionPool: IDisposable
     {

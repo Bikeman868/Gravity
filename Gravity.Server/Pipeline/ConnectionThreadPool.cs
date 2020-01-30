@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Gravity.Server.Interfaces;
 using Gravity.Server.ProcessingNodes.Server;
 using Newtonsoft.Json;
 using OwinFramework.Utility.Containers;
@@ -12,15 +13,18 @@ namespace Gravity.Server.Pipeline
     internal class ConnectionThreadPool: IConnectionThreadPool
     {
         private readonly IDisposable _configRegistration;
-        private readonly LinkedList<ActiveConnection> _activeConnections;
+        private readonly LinkedList<RequestStream> _requestStreams;
+        private readonly IBufferPool _bufferPool;
 
         private Thread[] _threads;
         private int _threadVersion;
 
         public ConnectionThreadPool(
-            IConfigurationStore configurationStore)
+            IConfigurationStore configurationStore,
+            IBufferPool bufferPool)
         {
-            _activeConnections = new LinkedList<ActiveConnection>();
+            _bufferPool = bufferPool;
+            _requestStreams = new LinkedList<RequestStream>();
 
             _configRegistration = configurationStore.Register(
                 "/gravity/connectionThreadPool", 
@@ -28,11 +32,15 @@ namespace Gravity.Server.Pipeline
                 new Configuration());
         }
 
-        Task IConnectionThreadPool.AddConnection(Func<bool> processIncoming, Func<bool> processOutgoing)
+        Task<bool> IConnectionThreadPool.ProcessTransaction(
+            Connection connection,
+            IRequestContext context, 
+            TimeSpan responseTimeout, 
+            int readTimeoutMs)
         {
-            var activeConnection = new ActiveConnection(processIncoming, processOutgoing);
-            _activeConnections.Append(activeConnection);
-            return activeConnection.Task;
+            var stream = new RequestStream(_bufferPool).Start(connection, context, responseTimeout, readTimeoutMs);
+            _requestStreams.Append(stream);
+            return stream.Task;
         }
 
         private void ConfigurationChanged(Configuration configuration)
@@ -92,22 +100,23 @@ namespace Gravity.Server.Pipeline
 
         private void ThreadLoop()
         {
-            var connection = _activeConnections.FirstElementOrDefault();
-            if (connection == null)
+            var streamListElement = _requestStreams.FirstElementOrDefault();
+            if (streamListElement == null)
             {
                 Thread.Sleep(50);
                 return;
             }
 
-            while (connection != null)
+            while (streamListElement != null)
             {
-                if (connection.Data.Continue())
+                var stream = streamListElement.Data;
+                if (!stream.NextStep())
                 {
-                    connection.Data.Dispose();
-                    _activeConnections.Delete(connection);
+                    _requestStreams.Delete(streamListElement);
+                    stream.Dispose();
                 }
 
-                connection = connection.Next;
+                streamListElement = streamListElement.Next;
             }
         }
 

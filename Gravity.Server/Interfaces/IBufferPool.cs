@@ -13,7 +13,7 @@ namespace Gravity.Server.Interfaces
         /// <summary>
         /// Gets a byte array of the specified size
         /// </summary>
-        byte[] Get(int size = 50000);
+        byte[] Get(int? size = null);
 
         /// <summary>
         /// Puts a byte array into the pool for reuse. Make sure not to

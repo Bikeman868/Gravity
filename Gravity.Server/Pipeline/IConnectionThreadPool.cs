@@ -1,10 +1,15 @@
-﻿using System;
+﻿using Gravity.Server.ProcessingNodes.Server;
+using System;
 using System.Threading.Tasks;
 
 namespace Gravity.Server.Pipeline
 {
     internal interface IConnectionThreadPool
     {
-        Task AddConnection(Func<bool> processIncoming, Func<bool> processOutgoing);
+        Task<bool> ProcessTransaction(Connection connection,
+            IRequestContext context,
+            TimeSpan responseTimeout,
+            int readTimeoutMs);
+
     }
 }
