@@ -53,11 +53,18 @@ namespace Gravity.Server.Pipeline
             for (var i = 0; i < configuration.ThreadCount; i++)
             {
                 var threadId = i + 1;
+                var counter = 0;
+
                 threads[i] = new Thread(() =>
                 {
                     var version = _threadVersion;
                     while (true)
                     {
+                        // If we always Sleep(1) then we can never execute more than 1000 iterations/sec
+                        // If we always Sleep(0) then the CPU graph sits at 100%
+                        counter = (counter + 1) % 50;
+                        Thread.Sleep(counter == 0 ? 1 : 0);
+
                         try
                         {
                             if (version != _threadVersion)
