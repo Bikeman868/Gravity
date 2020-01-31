@@ -258,16 +258,13 @@ namespace Gravity.Server.ProcessingNodes.Server
                     {
                         if (sendTask.IsFaulted)
                         {
-                            context.Log?.Log(LogType.Exception, LogLevel.Important,
-                                () =>
-                                    $"Server node '{Name}' failed to send the request. {sendTask.Exception?.Message}");
+                            context.Log?.Log(LogType.Exception, LogLevel.Important, () => $"Server node '{Name}' failed to send the request. {sendTask.Exception?.Message}");
                             throw new ServerNodeException(this, "failed to send to server", sendTask.Exception);
                         }
 
                         if (sendTask.IsCanceled)
                         {
-                            context.Log?.Log(LogType.Exception, LogLevel.Important,
-                                () => $"Server node '{Name}' timeout sending to server");
+                            context.Log?.Log(LogType.Exception, LogLevel.Important, () => $"Server node '{Name}' timeout sending to server");
                             throw new ServerNodeException(this, "timeout sending to server");
                         }
                     }

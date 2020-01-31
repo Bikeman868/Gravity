@@ -88,7 +88,7 @@ namespace Gravity.Server.Pipeline
                 });
                 threads[i].Name = $"Connection pool #{i+1}";
                 threads[i].IsBackground = true;
-                threads[i].Priority = ThreadPriority.AboveNormal;
+                threads[i].Priority = ThreadPriority.Normal;
             }
 
             _threadVersion++;

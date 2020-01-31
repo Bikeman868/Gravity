@@ -238,7 +238,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         private void IncomingReadContentStep()
         {
-            if (_incomingRead.IsIdle)
+            if (_incomingRead.Result == null)
             {
                 _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_outgoingRead.Name} waiting for incoming content");
 
@@ -252,6 +252,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                 return;
 
             var bytesRead = _context.Incoming.Content.EndRead(_incomingRead.Result);
+            _incomingRead.Ended();
             _incomingRead.Buffer.Length = bytesRead;
 
             _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_incomingRead.Name} received {bytesRead} bytes of content");
@@ -278,8 +279,11 @@ namespace Gravity.Server.ProcessingNodes.Server
         {
             if (_incomingWrite.IsComplete)
             {
-                if (!_incomingWrite.IsIdle)
+                if (_incomingWrite.Result != null)
+                {
                     _connection.Stream.EndWrite(_incomingWrite.Result);
+                    _incomingWrite.Ended();
+                }
 
                 if (_incomingWrite.Buffer != null)
                     _bufferPool.Reuse(_incomingWrite.Buffer.Data);
@@ -290,8 +294,6 @@ namespace Gravity.Server.ProcessingNodes.Server
                 {
                     if (_incomingRead.NextStep == null)
                         _incomingWrite.Clear();
-                    else
-                        _incomingWrite.Result = null;
                 }
                 else
                 {
@@ -307,7 +309,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         private void OutgoingReadHeaderStep()
         {
-            if (_outgoingRead.IsIdle)
+            if (_outgoingRead.Result == null)
             {
                 var buffer = _bufferPool.Get();
                 _outgoingRead.Buffer = new Buffer { Data = buffer };
@@ -320,6 +322,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                 return;
 
             var bytesRead = _connection.Stream.EndRead(_outgoingRead.Result);
+            _outgoingRead.Ended();
             _outgoingRead.Buffer.Length = bytesRead;
 
             _context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"{_outgoingRead.Name} received {bytesRead} bytes of header");
@@ -377,6 +380,14 @@ namespace Gravity.Server.ProcessingNodes.Server
                 _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_outgoingWrite.Name} finalizing headers in outgoing message");
                 _context.Outgoing.SendHeaders(_context);
 
+                if (!_outgoingRead.CanHaveContent)
+                {
+                    _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_outgoingRead.Name} finished because no content is expected");
+                    _outgoingRead.Clear();
+                    _outgoingWrite.Clear();
+                    return;
+                }
+
                 _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_outgoingRead.Name} setting Tcp client receive timeout to {_readTimeoutMs}ms");
                 _connection.ReceiveTimeoutMs = _readTimeoutMs;
                 _outgoingRead.Timeout = TimeSpan.FromMilliseconds(_readTimeoutMs);
@@ -389,7 +400,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         private void OutgoingReadContentStep()
         {
-            if (!_outgoingRead.IsIdle)
+            if (_outgoingRead.Result != null)
             {
                 try
                 {
@@ -408,6 +419,8 @@ namespace Gravity.Server.ProcessingNodes.Server
                 }
 
                 var bytesRead = _connection.Stream.EndRead(_outgoingRead.Result);
+                _outgoingRead.Ended();
+
                 if (bytesRead == 0)
                 {
                     _context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"{_outgoingRead.Name} no more bytes in the stream");
@@ -432,8 +445,11 @@ namespace Gravity.Server.ProcessingNodes.Server
         {
             if (!_outgoingWrite.IsComplete) return;
 
-            if (!_outgoingWrite.IsIdle)
+            if (_outgoingWrite.Result != null)
+            {
                 _context.Outgoing.Content.EndWrite(_outgoingWrite.Result);
+                _outgoingWrite.Ended();
+            }
 
             if (_outgoingWrite.Buffer != null)
                 _bufferPool.Reuse(_outgoingWrite.Buffer.Data);
@@ -446,10 +462,6 @@ namespace Gravity.Server.ProcessingNodes.Server
                 {
                     _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_outgoingWrite.Name} has no more data to write");
                     _outgoingWrite.Clear();
-                }
-                else
-                {
-                    _outgoingWrite.Result = null;
                 }
             }
             else
@@ -498,9 +510,14 @@ namespace Gravity.Server.ProcessingNodes.Server
             {
                 Result = result;
                 Start = DateTime.UtcNow;
+                if (nextStep != null) NextStep = nextStep;
             }
 
-            public bool IsIdle => Result == null;
+            public void Ended(Action nextStep = null)
+            {
+                Result = null;
+                if (nextStep != null) NextStep = nextStep;
+            }
 
             public bool IsComplete
             {
@@ -539,6 +556,8 @@ namespace Gravity.Server.ProcessingNodes.Server
                 HeaderLines = new System.Collections.Generic.List<string>();
                 Line = new StringBuilder();
                 _beginning = true;
+
+                log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => canHaveContent ? $"{name} might have content" : $"{name} not expecting any content");
             }
 
             public int AppendHeader(Buffer buffer)
