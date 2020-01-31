@@ -26,9 +26,10 @@ them to be handled differently from regular traffic.
 
 ## Honey pot
 
-Server a static version of the website directly from within the load
+Serve a static version of the website directly from within the load
 balancer. Bad actors can be routed to a honey pot so that they think
-their bot is working but it is not impacting the back-end servers.
+their bot is working but the load that they are creating is not 
+impacting the back-end servers.
 
 ## Caching
 
