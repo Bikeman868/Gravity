@@ -18,7 +18,7 @@ namespace Gravity.Server.Utility
                 return ((int)y) - ((int)x);
             }
 
-            public bool Equals(object x, object y)
+            public new bool Equals(object x, object y)
             {
                 return ((int)y) == ((int)x);
             }
@@ -51,7 +51,7 @@ namespace Gravity.Server.Utility
                 return ((ushort) y) - ((ushort) x);
             }
 
-            public bool Equals(object x, object y)
+            public new bool Equals(object x, object y)
             {
                 return ((ushort)y) == ((ushort)x);
             }

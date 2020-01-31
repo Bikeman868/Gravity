@@ -8,8 +8,6 @@ namespace Gravity.Server.Ui.Shapes
 {
     internal class LegendDrawing: DrawingElement
     {
-        private readonly Tuple<string, float>[] _data;
-
         public LegendDrawing(string units, string numberFormat, Tuple<string, float>[] data, string chartCss)
         {
             CssClass = chartCss + " legend";

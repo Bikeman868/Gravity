@@ -14,7 +14,7 @@ namespace Gravity.Server.ProcessingNodes.SpecialPurpose
         public string[] HeaderNames { get; set; }
         public string[] HeaderValues { get; set; }
 
-        void Bind(INodeGraph nodeGraph)
+        public override void Bind(INodeGraph nodeGraph)
         {
             if (!string.IsNullOrWhiteSpace(ContentFile))
             {

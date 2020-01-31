@@ -380,8 +380,6 @@ namespace Gravity.Server.ProcessingNodes.Transform.UrlRewriteRules
 
         public string GetOriginalServerVariable(string name)
         {
-            name = name;
-
             if (ReferenceEquals(_originalServerVraiables, null))
                 return GetServerVariable(name);
 
