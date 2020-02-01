@@ -1,9 +1,21 @@
 ﻿{
   "gravity": {
+    "log": {
+      "enabled": true,
+      "method": "File",
+      "directory": "c:\\Logs",
+      "maxLogLevel": "Important",
+      "maxLogFileAge": "00:05:00",
+      "maxLogFileSize": 200000
+    },
+    "connectionThreadPool": {
+      "threadCount": 2,
+      "iterationsPerSleep": 1
+    },
     "listener": {
       "endpoints": [
         {
-          "name": "3" ,
+          "name": "3",
           "title": "Everything else",
           "ipAddress": "*",
           "port": 0,
@@ -99,7 +111,7 @@
           "port": 443,
           "host": "stockhouse.com",
           "connectionTimeout": "00:00:20",
-          "responseTimeout": "00:00:05",
+          "responseTimeout": "00:00:20",
           "readTimeoutMs": "500",
           "reuseConnections": true,
           "healthCheckPort": 443,
@@ -262,7 +274,7 @@
           "name": "Q",
           "output": "I",
           "detailed": false,
-          "statusCodes": [503]
+          "statusCodes": [ 503 ]
         }
       ]
     },
@@ -273,15 +285,24 @@
           "listeners": [
             {
               "name": "1",
-              "x": 0, "y": 50, "width": 200, "height": 100
+              "x": 0,
+              "y": 50,
+              "width": 200,
+              "height": 100
             },
             {
               "name": "2",
-              "x": 0, "y": 250, "width": 200, "height": 100
+              "x": 0,
+              "y": 250,
+              "width": 200,
+              "height": 100
             },
             {
               "name": "3",
-              "x": 0, "y": 450, "width": 200, "height": 100
+              "x": 0,
+              "y": 450,
+              "width": 200,
+              "height": 100
             }
           ],
           "trafficIndicator": {
@@ -292,83 +313,101 @@
             {
               "name": "A",
               "title": "Incoming transform",
-              "x": 200, "y": 50
+              "x": 200,
+              "y": 50
             },
             {
               "name": "B",
               "title": "Gravity UI",
-              "x": 700, "y": 20
+              "x": 700,
+              "y": 20
             },
             {
               "name": "C",
               "title": "Round robbin",
-              "x": 700, "y": 270
+              "x": 700,
+              "y": 270
             },
             {
               "name": "D",
               "title": "Server D",
-              "x": 950, "y": 220
+              "x": 950,
+              "y": 220
             },
             {
               "name": "E",
               "title": "Server E",
-              "x": 950, "y": 300
+              "x": 950,
+              "y": 300
             },
             {
               "name": "F",
               "title": "Server F",
-              "x": 950, "y": 380
+              "x": 950,
+              "y": 380
             },
             {
               "name": "G",
               "title": "Not found response",
-              "x": 700, "y": 200
+              "x": 700,
+              "y": 200
             },
             {
               "name": "H",
               "title": "Sticky sessions",
-              "x": 550, "y": 800
+              "x": 550,
+              "y": 800
             },
             {
               "name": "I",
               "title": "stockhouse.com",
-              "x": 1450, "y": 650
+              "x": 1450,
+              "y": 650
             },
             {
               "name": "J",
-              "x": 300, "y": 800
+              "x": 300,
+              "y": 800
             },
             {
               "name": "K",
               "title": "Least connected",
-              "x": 550, "y": 550
+              "x": 550,
+              "y": 550
             },
             {
               "name": "L",
               "title": "CORS",
-              "x": 300, "y": 550
+              "x": 300,
+              "y": 550
             },
             {
               "name": "M",
               "title": "localhost",
-              "x": 800, "y": 830
+              "x": 800,
+              "y": 830
             },
             {
               "name": "N",
-              "x": 450, "y": 0
+              "x": 450,
+              "y": 0
             },
             {
               "name": "O",
               "title": "Stockhouse transform",
-              "x": 980, "y": 500
+              "x": 980,
+              "y": 500
             },
             {
               "name": "P",
-              "x": 850, "y": 500
+              "x": 850,
+              "y": 500
             },
             {
-              "name": "Q", "title": "Log 503",
-              "x": 1200, "y": 500
+              "name": "Q",
+              "title": "Log 503",
+              "x": 1200,
+              "y": 500
             }
           ]
         },
@@ -382,40 +421,48 @@
             {
               "name": "C",
               "title": "Round robbin",
-              "x": 0, "y": 30
+              "x": 0,
+              "y": 30
             },
             {
               "name": "D",
               "title": "Server D",
-              "x": 250, "y": 20
+              "x": 250,
+              "y": 20
             },
             {
               "name": "E",
               "title": "Server E",
-              "x": 250, "y": 100
+              "x": 250,
+              "y": 100
             },
             {
               "name": "F",
               "title": "Server F",
-              "x": 250, "y": 180
+              "x": 250,
+              "y": 180
             },
             {
               "name": "I",
               "title": "stockhouse.com",
-              "x": 700, "y": 300
+              "x": 700,
+              "y": 300
             },
             {
               "name": "O",
               "title": "Stockhouse transform",
-              "x": 300, "y": 300
+              "x": 300,
+              "y": 300
             },
             {
               "name": "P",
-              "x": 150, "y": 300
+              "x": 150,
+              "y": 300
             },
             {
               "name": "Q",
-              "x": 520, "y": 300
+              "x": 520,
+              "y": 300
             }
           ]
         }
@@ -428,14 +475,6 @@
       },
       "debugInfo": {
       }
-    },
-    "log": {
-      "enabled": true,
-      "method": "File",
-      "directory": "c:\\Logs",
-      "maxLogLevel": "Important",
-      "maxLogFileAge": "00:05:00",
-      "maxLogFileSize": 200000
     }
   },
   "owinFramework": {
