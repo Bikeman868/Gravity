@@ -43,7 +43,7 @@ namespace Gravity.Server.Pipeline
             }
         }
 
-        public Task<Connection> GetConnectionAsync(ILog log, TimeSpan responseTimeout, int readTimeoutMs)
+        public Task<Connection> GetConnectionAsync(ILog log, TimeSpan responseTimeout, TimeSpan readTimeout)
         {
             while (true)
             {

@@ -365,7 +365,7 @@ namespace Gravity.Server.Pipeline
                         Port = serverNodeConfiguration.Port,
                         ConnectionTimeout = serverNodeConfiguration.ConnectionTimeout,
                         ResponseTimeout = serverNodeConfiguration.ResponseTimeout,
-                        ReadTimeoutMs = serverNodeConfiguration.ReadTimeoutMs,
+                        ReadTimeout = TimeSpan.FromMilliseconds(serverNodeConfiguration.ReadTimeoutMs),
                         ReuseConnections = serverNodeConfiguration.ReuseConnections,
                         MaximumConnectionCount = serverNodeConfiguration.MaximumConnectionCount,
                         DnsLookupInterval = serverNodeConfiguration.DnsLookupInterval,

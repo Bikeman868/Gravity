@@ -170,12 +170,6 @@ namespace Gravity.Server.Pipeline
             }
         }
 
-        public int ReceiveTimeoutMs
-        {
-            get => _tcpClient.ReceiveTimeout;
-            set => _tcpClient.ReceiveTimeout = value;
-        }
-
         public bool HasPendingRead(out IAsyncResult result, out byte[] buffer)
         {
             result = _pendingRead;

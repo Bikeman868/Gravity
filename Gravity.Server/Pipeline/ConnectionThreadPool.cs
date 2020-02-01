@@ -36,10 +36,10 @@ namespace Gravity.Server.Pipeline
             Connection connection,
             IRequestContext context, 
             TimeSpan responseTimeout, 
-            int readTimeoutMs,
+            TimeSpan readTimeout,
             bool reuseConnection)
         {
-            var stream = new RequestStream(_bufferPool).Start(connection, context, responseTimeout, readTimeoutMs, reuseConnection);
+            var stream = new RequestStream(_bufferPool).Start(connection, context, responseTimeout, readTimeout, reuseConnection);
             _requestStreams.Append(stream);
             return stream.Task;
         }

@@ -30,7 +30,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         public TimeSpan ConnectionTimeout { get; set; }
         public TimeSpan ResponseTimeout { get; set; }
-        public int ReadTimeoutMs { get; set; }
+        public TimeSpan ReadTimeout { get; set; }
         public bool ReuseConnections { get; set; }
         public int MaximumConnectionCount { get; set; }
 
@@ -71,7 +71,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
             ConnectionTimeout = TimeSpan.FromSeconds(20);
             ResponseTimeout = TimeSpan.FromSeconds(10);
-            ReadTimeoutMs = 200;
+            ReadTimeout = TimeSpan.FromMilliseconds(200);
             ReuseConnections = true;
             MaximumConnectionCount = 5000;
             DnsLookupInterval = TimeSpan.FromMinutes(5);
@@ -440,7 +440,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                 }
             }
 
-            return connectionPool.GetConnectionAsync(context.Log, ResponseTimeout, ReadTimeoutMs)
+            return connectionPool.GetConnectionAsync(context.Log, ResponseTimeout, ReadTimeout)
                 .ContinueWith(connectionTask =>
                 {
                     if (connectionTask.IsFaulted)
@@ -459,7 +459,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                     context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => "Scheduling a transaction in the connection thread pool");
 
-                    var transactionTask = _connectionThreadPool.ProcessTransaction(connection, context, ResponseTimeout, ReadTimeoutMs, ReuseConnections);
+                    var transactionTask = _connectionThreadPool.ProcessTransaction(connection, context, ResponseTimeout, ReadTimeout, ReuseConnections);
                     transactionTask.Wait();
 
                     if (transactionTask.Result)

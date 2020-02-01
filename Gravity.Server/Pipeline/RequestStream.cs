@@ -43,7 +43,7 @@ namespace Gravity.Server.ProcessingNodes.Server
         private bool _reuseConnection;
         private IRequestContext _context;
         private TimeSpan _responseTimeout;
-        private int _readTimeoutMs;
+        private TimeSpan _readTimeout;
         private bool _isCompleted;
 
         /// <summary>
@@ -87,13 +87,13 @@ namespace Gravity.Server.ProcessingNodes.Server
             Connection connection,
             IRequestContext context, 
             TimeSpan responseTimeout, 
-            int readTimeoutMs,
+            TimeSpan readTimeout,
             bool reuseConnection)
         {
             _connection = connection;
             _context = context;
             _responseTimeout = responseTimeout;
-            _readTimeoutMs = readTimeoutMs;
+            _readTimeout = readTimeout;
             _reuseConnection = reuseConnection;
 
             var incomingCanHaveContent =
@@ -260,7 +260,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
 
             _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_outgoingRead.Name} setting receive timeout to {_responseTimeout}");
-            _connection.ReceiveTimeoutMs = (int)_responseTimeout.TotalMilliseconds;
+            _outgoingRead.Timeout = _responseTimeout;
 
             _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_outgoingRead.Name} next step is reading header");
             _outgoingRead.NextStep = OutgoingReadHeaderStep;
@@ -441,9 +441,8 @@ namespace Gravity.Server.ProcessingNodes.Server
                     return;
                 }
 
-                _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_outgoingRead.Name} setting Tcp client receive timeout to {_readTimeoutMs}ms");
-                _connection.ReceiveTimeoutMs = _readTimeoutMs;
-                _outgoingRead.Timeout = TimeSpan.FromMilliseconds(_readTimeoutMs);
+                _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_outgoingRead.Name} setting Tcp client receive timeout to {_readTimeout}ms");
+                _outgoingRead.Timeout = _readTimeout;
 
                 _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_outgoingRead.Name} next outgoing step is reading and writing content");
                 _outgoingRead.NextStep = OutgoingReadContentStep;

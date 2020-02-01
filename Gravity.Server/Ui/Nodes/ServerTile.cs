@@ -46,7 +46,7 @@ namespace Gravity.Server.Ui.Nodes
             details.Add("Connection timeout " + server.ConnectionTimeout + (server.ReuseConnections ? " then reuse" : ""));
             details.Add("Max connections " + server.MaximumConnectionCount);
             details.Add("Response timeout " + server.ResponseTimeout);
-            details.Add("Read timeout " + server.ReadTimeoutMs + "ms");
+            details.Add("Read timeout " + server.ReadTimeout + "ms");
             details.Add("Health check " + 
                 server.HealthCheckMethod + (server.HealthCheckPort == 443 ? " https": " http") +"://" + 
                 (server.HealthCheckHost ?? server.DomainName) + 
