@@ -44,6 +44,9 @@ namespace Gravity.Server.Pipeline
         private Stream _stream;
         private DateTime _lastUsedUtc;
 
+        private IAsyncResult _pendingRead;
+        private byte[] _readBuffer;
+
         public Connection(
             IBufferPool bufferPool,
             IConnectionThreadPool connectionThreadPool,
@@ -171,6 +174,30 @@ namespace Gravity.Server.Pipeline
         {
             get => _tcpClient.ReceiveTimeout;
             set => _tcpClient.ReceiveTimeout = value;
+        }
+
+        public bool HasPendingRead(out IAsyncResult result, out byte[] buffer)
+        {
+            result = _pendingRead;
+            buffer = _readBuffer;
+            return _pendingRead != null;
+        }
+
+        public IAsyncResult BeginRead(byte[] buffer)
+        {
+            _readBuffer = buffer;
+            _pendingRead = _stream.BeginRead(buffer, 0, buffer.Length, null, null);
+            return _pendingRead;
+        }
+
+        public int EndRead()
+        {
+            var bytesRead = _stream.EndRead(_pendingRead);
+
+            _pendingRead = null;
+            _readBuffer = null;
+
+            return bytesRead;
         }
     }
 }

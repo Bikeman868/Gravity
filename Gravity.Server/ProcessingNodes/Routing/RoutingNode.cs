@@ -87,7 +87,7 @@ namespace Gravity.Server.ProcessingNodes.Routing
             {
                 if (!_outputRule[i].IsMatch(context))
                 {
-                    context.Log?.Log(LogType.Step, LogLevel.VeryDetailed, () => $"Router '{Name}' matches the request but has no output node");
+                    context.Log?.Log(LogType.Step, LogLevel.VeryDetailed, () => $"Router '{Name}' output {i+1} matches the request but has no output node");
                     continue;
                 }
 

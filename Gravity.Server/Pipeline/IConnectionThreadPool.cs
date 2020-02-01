@@ -9,7 +9,8 @@ namespace Gravity.Server.Pipeline
         Task<bool> ProcessTransaction(Connection connection,
             IRequestContext context,
             TimeSpan responseTimeout,
-            int readTimeoutMs);
+            int readTimeoutMs,
+            bool reuseConnections);
 
     }
 }

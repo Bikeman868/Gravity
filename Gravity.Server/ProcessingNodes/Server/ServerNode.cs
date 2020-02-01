@@ -441,7 +441,7 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
 
             return connectionPool.GetConnectionAsync(context.Log, ResponseTimeout, ReadTimeoutMs)
-                .ContinueWith(async connectionTask =>
+                .ContinueWith(connectionTask =>
                 {
                     if (connectionTask.IsFaulted)
                     {
@@ -459,8 +459,8 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                     context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => "Scheduling a transaction in the connection thread pool");
 
-                    var transactionTask = _connectionThreadPool.ProcessTransaction(connection, context, ResponseTimeout, ReadTimeoutMs);
-                    await transactionTask;
+                    var transactionTask = _connectionThreadPool.ProcessTransaction(connection, context, ResponseTimeout, ReadTimeoutMs, ReuseConnections);
+                    transactionTask.Wait();
 
                     if (transactionTask.Result)
                         context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => "Connection pool sucessfully processed the transaction");

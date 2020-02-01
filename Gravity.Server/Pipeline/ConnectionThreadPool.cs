@@ -36,9 +36,10 @@ namespace Gravity.Server.Pipeline
             Connection connection,
             IRequestContext context, 
             TimeSpan responseTimeout, 
-            int readTimeoutMs)
+            int readTimeoutMs,
+            bool reuseConnection)
         {
-            var stream = new RequestStream(_bufferPool).Start(connection, context, responseTimeout, readTimeoutMs);
+            var stream = new RequestStream(_bufferPool).Start(connection, context, responseTimeout, readTimeoutMs, reuseConnection);
             _requestStreams.Append(stream);
             return stream.Task;
         }
@@ -53,7 +54,8 @@ namespace Gravity.Server.Pipeline
             for (var i = 0; i < configuration.ThreadCount; i++)
             {
                 var threadId = i + 1;
-                var counter = 0;
+                var sleepCounter = 0;
+                var iterationsPerSleep = configuration.IterationsPerSleep;
 
                 threads[i] = new Thread(() =>
                 {
@@ -62,8 +64,8 @@ namespace Gravity.Server.Pipeline
                     {
                         // If we always Sleep(1) then we can never execute more than 1000 iterations/sec
                         // If we always Sleep(0) then the CPU graph sits at 100%
-                        counter = (counter + 1) % 50;
-                        Thread.Sleep(counter == 0 ? 1 : 0);
+                        sleepCounter = (sleepCounter + 1) % iterationsPerSleep;
+                        Thread.Sleep(sleepCounter == 0 ? 1 : 0);
 
                         try
                         {
@@ -86,7 +88,7 @@ namespace Gravity.Server.Pipeline
                         }
                     }
                 });
-                threads[i].Name = $"Connection pool #{i+1}";
+                threads[i].Name = $"Connection pool #{threadId}";
                 threads[i].IsBackground = true;
                 threads[i].Priority = ThreadPriority.Normal;
             }
@@ -118,10 +120,7 @@ namespace Gravity.Server.Pipeline
             {
                 var stream = streamListElement.Data;
                 if (!stream.NextStep())
-                {
                     _requestStreams.Delete(streamListElement);
-                    stream.Dispose();
-                }
 
                 streamListElement = streamListElement.Next;
             }
@@ -129,12 +128,28 @@ namespace Gravity.Server.Pipeline
 
         private class Configuration
         {
+            /// <summary>
+            /// The number of threads that will service the pool of state machines
+            /// for all of the active request streams. A good valuw would be 2x the
+            /// number of vCPU in the machine. Note that each thread has a 1MB stack
+            /// so 1000 threads consumes 1GB of memory just for stacks.
+            /// </summary>
             [JsonProperty("threadCount")]
             public int ThreadCount { get; set; }
+
+            /// <summary>
+            /// When set to 1, the threads sleep on every iteration of the
+            /// state machine meaning that the connection pool can never execute
+            /// more than 1000 iterations/sec on each thread. Setting this value 
+            /// to 2 doubles this to 2000/sec etc.
+            /// </summary>
+            [JsonProperty("iterationsPerSleep")]
+            public int IterationsPerSleep { get; set; }
 
             public Configuration()
             {
                 ThreadCount = 8;
+                IterationsPerSleep = 10;
             }
         }
     }

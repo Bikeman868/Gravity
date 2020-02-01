@@ -98,13 +98,13 @@
           "disabled": false,
           "port": 443,
           "host": "stockhouse.com",
-          "connectionTimeout": "00:00:30",
-          "responseTimeout": "00:00:20",
+          "connectionTimeout": "00:00:20",
+          "responseTimeout": "00:00:05",
           "readTimeoutMs": "500",
           "reuseConnections": true,
           "healthCheckPort": 443,
           "healthCheckMethod": "HEAD",
-          "healthCheckLog": true,
+          "healthCheckLog": false,
           "healthCheckInterval": "00:00:10"
         },
         {
@@ -112,11 +112,11 @@
           "disabled": true,
           "host": "localhost",
           "connectionTimeout": "00:00:20",
-          "responseTimeout": "00:00:10",
+          "responseTimeout": "00:00:05",
           "healthCheckHost": "somecompany.com",
           "healthCheckMethod": "GET",
           "healthCheckPort": 80,
-          "reuseConnections": true,
+          "reuseConnections": false,
           "healthCheckPath": "/"
         }
       ],
@@ -252,8 +252,9 @@
       "changeLogFilters": [
         {
           "name": "P",
+          "disabled": false,
           "output": "O",
-          "logLevel":  "Important"
+          "maxLogLevel": "VeryDetailed"
         }
       ],
       "customLogs": [
@@ -430,7 +431,7 @@
     },
     "log": {
       "enabled": true,
-      "method": "Trace",
+      "method": "File",
       "directory": "c:\\Logs",
       "maxLogLevel": "Important",
       "maxLogFileAge": "00:05:00",

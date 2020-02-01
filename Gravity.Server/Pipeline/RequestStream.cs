@@ -34,20 +34,37 @@ namespace Gravity.Server.ProcessingNodes.Server
     internal class RequestStream: IDisposable
     {
         private readonly IBufferPool _bufferPool;
-        private readonly AutoResetEvent _event;
         private readonly TaskCompletionSource<bool> _taskCompletionSource;
         private readonly LinkedList<Buffer> _outgoingBuffers;
         private readonly LinkedList<Buffer> _incomingBuffers;
+        private readonly AutoResetEvent _event;
 
         private Connection _connection;
+        private bool _reuseConnection;
         private IRequestContext _context;
         private TimeSpan _responseTimeout;
         private int _readTimeoutMs;
+        private bool _isCompleted;
 
-        private HttpReceiveEndpoint _outgoingRead;
-        private Endpoint _outgoingWrite;
-        private Endpoint _incomingRead;
-        private Endpoint _incomingWrite;
+        /// <summary>
+        /// Maintains state for reading responses from the back-end server connection
+        /// </summary>
+        private ConnectionReceiveEndpoint _outgoingRead;
+
+        /// <summary>
+        /// Maintains state for writng responses back to the outside world
+        /// </summary>
+        private ContextSendEndpoint _outgoingWrite;
+
+        /// <summary>
+        /// Maintains state for reading requests from the outside world
+        /// </summary>
+        private ContextReceiveEndpoint _incomingRead;
+
+        /// <summary>
+        /// Maintains state for writing requests to the back-end server connection
+        /// </summary>
+        private ConnectionSendEndpoint _incomingWrite;
 
         public Task<bool> Task => _taskCompletionSource.Task;
 
@@ -61,36 +78,38 @@ namespace Gravity.Server.ProcessingNodes.Server
             _taskCompletionSource = new TaskCompletionSource<bool>();
         }
 
+        public void Dispose()
+        {
+            _event.Dispose();
+        }
+
         public RequestStream Start(
             Connection connection,
             IRequestContext context, 
             TimeSpan responseTimeout, 
-            int readTimeoutMs)
+            int readTimeoutMs,
+            bool reuseConnection)
         {
             _connection = connection;
             _context = context;
             _responseTimeout = responseTimeout;
             _readTimeoutMs = readTimeoutMs;
+            _reuseConnection = reuseConnection;
 
             var incomingCanHaveContent =
                 !string.Equals(context.Incoming.Method, "HEAD", StringComparison.OrdinalIgnoreCase) &&
                 !string.Equals(context.Incoming.Method, "OPTIONS", StringComparison.OrdinalIgnoreCase);
 
-            _incomingRead = new Endpoint(context.Log, "Incoming read", TimeSpan.FromSeconds(5));
-            _incomingWrite = new Endpoint(context.Log, "Incoming write", TimeSpan.FromSeconds(5));
-            _outgoingRead = new HttpReceiveEndpoint(context.Log, "Outgoing read", responseTimeout, incomingCanHaveContent);
-            _outgoingWrite = new Endpoint(context.Log, "Outgoing write", TimeSpan.FromSeconds(5));
+            _incomingRead = new ContextReceiveEndpoint(context.Log, "Incoming read", TimeSpan.FromSeconds(5));
+            _incomingWrite = new ConnectionSendEndpoint(context.Log, "Incoming write", TimeSpan.FromSeconds(5));
+            _outgoingRead = new ConnectionReceiveEndpoint(context.Log, "Outgoing read", responseTimeout, incomingCanHaveContent);
+            _outgoingWrite = new ContextSendEndpoint(context.Log, "Outgoing write", TimeSpan.FromSeconds(5));
 
             _incomingWrite.NextStep = IncomingWriteHeaderStep;
 
             _connection.BeginTransaction(context.Log);
 
             return this;
-        }
-
-        public void Dispose()
-        {
-            _event.Dispose();
         }
 
         /// <summary>
@@ -100,8 +119,15 @@ namespace Gravity.Server.ProcessingNodes.Server
         /// <returns>Returns true if there are more steps to complete</returns>
         public bool NextStep()
         {
+            var keepRunning = true;
+            var success = true;
+
             // Return immediately if another thread is already servicing this request
-            if (!_event.WaitOne(0)) return true;
+            if (!_event.WaitOne(0))
+                return keepRunning;
+
+            if (_isCompleted)
+                return keepRunning;
 
             try
             {
@@ -121,30 +147,35 @@ namespace Gravity.Server.ProcessingNodes.Server
                     _incomingRead.NextStep == null &&
                     _incomingWrite.NextStep == null)
                 {
-                    _taskCompletionSource.SetResult(true);
-                    return false;
+                    keepRunning = false;
+                    _isCompleted = true;
+                _connection.EndTransaction(_context.Log, _reuseConnection);
                 }
             }
             catch
             {
-                _outgoingRead.Clear();
-                _outgoingWrite.Clear();
-                _incomingRead.Clear();
-                _incomingWrite.Clear();
+                success = false;
+                _isCompleted = true;
+
+                _outgoingRead.Stop();
+                _outgoingWrite.Stop();
+                _incomingRead.Stop();
+                _incomingWrite.Stop();
 
                 _connection.EndTransaction(_context.Log, false);
-
-                _taskCompletionSource.SetResult(false);
-
-                return false;
             }
             finally
             {
-                // Allow other threads to service this connection
+                if (_isCompleted)
+                {
+                    // Release tasks waiting for this request stream
+                    _taskCompletionSource.SetResult(success);
+                }
+
+                // Allow other thread pool threads to service this connection
                 _event.Set();
             }
-
-            return true;
+            return keepRunning;
         }
 
         #region Incoming steps
@@ -212,13 +243,12 @@ namespace Gravity.Server.ProcessingNodes.Server
                     _context.Log.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"  > {headLine}");
             }
 
-            _incomingWrite.Started(_connection.Stream.BeginWrite(headBytes, 0, headBytes.Length, null, null), IncomingWriteContentStep);
+            _incomingWrite.AsyncStart(_connection.Stream.BeginWrite(headBytes, 0, headBytes.Length, null, null), IncomingWriteContentStep);
 
             if (_context.Incoming.Content == null || !_context.Incoming.Content.CanRead)
             {
                 _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_incomingRead.Name} there is no incoming content");
-                _incomingRead.Clear();
-                _incomingWrite.Clear();
+                _incomingRead.Stop();
             }
             else
             {
@@ -240,19 +270,24 @@ namespace Gravity.Server.ProcessingNodes.Server
         {
             if (_incomingRead.Result == null)
             {
-                _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_outgoingRead.Name} waiting for incoming content");
+                _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_incomingRead.Name} waiting for incoming content");
 
                 var buffer = _bufferPool.Get();
                 _incomingRead.Buffer = new Buffer { Data = buffer };
-                _incomingRead.Started(_context.Incoming.Content.BeginRead(buffer, 0, buffer.Length, null, null));
+                _incomingRead.AsyncStart(_context.Incoming.Content.BeginRead(buffer, 0, buffer.Length, null, null));
                 return;
             }
 
-            if (!_incomingRead.IsComplete)
+            var isComplete = _incomingRead.IsComplete;
+            
+            if (!isComplete.HasValue)
+                throw new RequestStreamTimeoutException($"{_incomingRead.Name} timeout waiting for content");
+
+            if (!isComplete.Value)
                 return;
 
             var bytesRead = _context.Incoming.Content.EndRead(_incomingRead.Result);
-            _incomingRead.Ended();
+            _incomingRead.AsyncEnd();
             _incomingRead.Buffer.Length = bytesRead;
 
             _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_incomingRead.Name} received {bytesRead} bytes of content");
@@ -265,7 +300,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                 _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_incomingRead.Name} waiting for more incoming content");
                 var buffer = _bufferPool.Get();
                 _incomingRead.Buffer = new Buffer { Data = buffer };
-                _incomingRead.Started(_context.Incoming.Content.BeginRead(buffer, 0, buffer.Length, null, null));
+                _incomingRead.AsyncStart(_context.Incoming.Content.BeginRead(buffer, 0, buffer.Length, null, null));
             }
             else
             {
@@ -277,29 +312,34 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         private void IncomingWriteContentStep()
         {
-            if (_incomingWrite.IsComplete)
+            var isComplete = _incomingWrite.IsComplete;
+            
+            if (!isComplete.HasValue)
+                throw new RequestStreamTimeoutException($"{_incomingWrite.Name} timeout sending content");
+
+            if (!isComplete.Value)
+                return;
+
+            if (_incomingWrite.Result != null)
             {
-                if (_incomingWrite.Result != null)
-                {
-                    _connection.Stream.EndWrite(_incomingWrite.Result);
-                    _incomingWrite.Ended();
-                }
+                _connection.Stream.EndWrite(_incomingWrite.Result);
+                _incomingWrite.AsyncEnd();
+            }
 
-                if (_incomingWrite.Buffer != null)
-                    _bufferPool.Reuse(_incomingWrite.Buffer.Data);
+            if (_incomingWrite.Buffer != null)
+                _bufferPool.Reuse(_incomingWrite.Buffer.Data);
 
-                _incomingWrite.Buffer = _incomingBuffers.PopLast();
+            _incomingWrite.Buffer = _incomingBuffers.PopLast();
 
-                if (_incomingWrite.Buffer == null)
-                {
-                    if (_incomingRead.NextStep == null)
-                        _incomingWrite.Clear();
-                }
-                else
-                {
-                    _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_incomingWrite.Name} writing {_incomingWrite.Buffer.Length} bytes");
-                    _incomingWrite.Started(_connection.Stream.BeginWrite(_incomingWrite.Buffer.Data, 0, _incomingWrite.Buffer.Length, null, null));
-                }
+            if (_incomingWrite.Buffer == null)
+            {
+                if (_incomingRead.NextStep == null)
+                    _incomingWrite.Stop();
+            }
+            else
+            {
+                _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_incomingWrite.Name} writing {_incomingWrite.Buffer.Length} bytes");
+                _incomingWrite.AsyncStart(_connection.Stream.BeginWrite(_incomingWrite.Buffer.Data, 0, _incomingWrite.Buffer.Length, null, null));
             }
         }
 
@@ -311,18 +351,31 @@ namespace Gravity.Server.ProcessingNodes.Server
         {
             if (_outgoingRead.Result == null)
             {
-                var buffer = _bufferPool.Get();
-                _outgoingRead.Buffer = new Buffer { Data = buffer };
-                _outgoingRead.Started(_connection.Stream.BeginRead(buffer, 0, buffer.Length, null, null));
+                if (_connection.HasPendingRead(out var result, out var buffer))
+                {
+                    _outgoingRead.Buffer = new Buffer { Data = buffer };
+                    _outgoingRead.AsyncStart(result);
+                }
+                else
+                {
+                    buffer = _bufferPool.Get();
+                    _outgoingRead.Buffer = new Buffer { Data = buffer };
+                    _outgoingRead.AsyncStart(_connection.BeginRead(buffer));
+                }
                 _context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"{_outgoingRead.Name} waiting for headers");
                 return;
             }
 
-            if (!_outgoingRead.IsComplete)
+            var isComplete = _outgoingRead.IsComplete;
+            
+            if (!isComplete.HasValue)
+                throw new RequestStreamTimeoutException($"{_outgoingRead.Name} timeout reading header");
+
+            if (!isComplete.Value)
                 return;
 
-            var bytesRead = _connection.Stream.EndRead(_outgoingRead.Result);
-            _outgoingRead.Ended();
+            var bytesRead = _connection.EndRead();
+            _outgoingRead.AsyncEnd();
             _outgoingRead.Buffer.Length = bytesRead;
 
             _context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"{_outgoingRead.Name} received {bytesRead} bytes of header");
@@ -375,7 +428,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                         }
                     });
 
-                _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_outgoingRead.Name} set {_outgoingRead.HeaderLines.Count} headers in incoming message");
+                _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_outgoingRead.Name} set {_outgoingRead.HeaderLines.Count} headers in outgoing message");
 
                 _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_outgoingWrite.Name} finalizing headers in outgoing message");
                 _context.Outgoing.SendHeaders(_context);
@@ -383,8 +436,8 @@ namespace Gravity.Server.ProcessingNodes.Server
                 if (!_outgoingRead.CanHaveContent)
                 {
                     _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_outgoingRead.Name} finished because no content is expected");
-                    _outgoingRead.Clear();
-                    _outgoingWrite.Clear();
+                    _outgoingRead.Stop();
+                    _outgoingWrite.Stop();
                     return;
                 }
 
@@ -402,53 +455,69 @@ namespace Gravity.Server.ProcessingNodes.Server
         {
             if (_outgoingRead.Result != null)
             {
-                try
-                {
-                    if (!_outgoingRead.IsComplete)
-                        return;
-                }
-                catch (RequestStreamTimeoutException)
+                var readCompleted = _outgoingRead.IsComplete;
+
+                if (!readCompleted.HasValue)
                 {
                     if (_outgoingRead.ContentLength.HasValue && _outgoingRead.ContentBytesReceived < _outgoingRead.ContentLength.Value)
                         throw new RequestStreamException($"{_outgoingRead.Name} was expecting {_outgoingRead.ContentLength.Value} bytes of content but only received {_outgoingRead.ContentBytesReceived}");
-
+                    
                     _context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"{_outgoingRead.Name} no more bytes received after {_outgoingRead.Timeout} assuming end of stream");
+                    _outgoingRead.AsyncEnd();
                     _bufferPool.Reuse(_outgoingRead.Buffer.Data);
-                    _outgoingRead.Clear();
+                    _outgoingRead.Stop();
                     return;
                 }
 
-                var bytesRead = _connection.Stream.EndRead(_outgoingRead.Result);
-                _outgoingRead.Ended();
+                if (readCompleted == false)
+                    return;
+
+                var bytesRead = _connection.EndRead();
+                _outgoingRead.AsyncEnd();
 
                 if (bytesRead == 0)
                 {
                     _context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"{_outgoingRead.Name} no more bytes in the stream");
                     _bufferPool.Reuse(_outgoingRead.Buffer.Data);
-                    _outgoingRead.Clear();
+                    _outgoingRead.Stop();
                     return;
                 }
+
+                _context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"{_outgoingRead.Name} received {bytesRead} bytes and is queuing them for output");
+
                 _outgoingRead.Buffer.Length = bytesRead;
                 _outgoingRead.ContentBytesReceived += bytesRead;
-                _incomingBuffers.Prepend(_outgoingRead.Buffer);
-
-                _context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"{_outgoingRead.Name} received {bytesRead} bytes");
+                _outgoingBuffers.Prepend(_outgoingRead.Buffer);
             }
 
-            var buffer = _bufferPool.Get();
-            _outgoingRead.Buffer = new Buffer { Data = buffer };
-            _outgoingRead.Started(_connection.Stream.BeginRead(buffer, 0, buffer.Length, null, null));
+            if (_connection.HasPendingRead(out var result, out var buffer))
+            {
+                _outgoingRead.Buffer = new Buffer { Data = buffer };
+                _outgoingRead.AsyncStart(result);
+            }
+            else
+            {
+                buffer = _bufferPool.Get();
+                _outgoingRead.Buffer = new Buffer { Data = buffer };
+                _outgoingRead.AsyncStart(_connection.BeginRead(buffer));
+            }
             _context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => $"{_outgoingRead.Name} waiting for content");
         }
 
         private void OutgoingWriteContentStep()
         {
-            if (!_outgoingWrite.IsComplete) return;
+            var isComplete = _outgoingWrite.IsComplete;
+            
+            if (!isComplete.HasValue)
+                throw new RequestStreamTimeoutException($"{_outgoingWrite.Name} timeout writing content");
+
+            if (!isComplete.Value)
+                return;
 
             if (_outgoingWrite.Result != null)
             {
                 _context.Outgoing.Content.EndWrite(_outgoingWrite.Result);
-                _outgoingWrite.Ended();
+                _outgoingWrite.AsyncEnd();
             }
 
             if (_outgoingWrite.Buffer != null)
@@ -461,13 +530,13 @@ namespace Gravity.Server.ProcessingNodes.Server
                 if (_outgoingRead.NextStep == null)
                 {
                     _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_outgoingWrite.Name} has no more data to write");
-                    _outgoingWrite.Clear();
+                    _outgoingWrite.Stop();
                 }
             }
             else
             {
                 _context.Log?.Log(LogType.TcpIp, LogLevel.VeryDetailed, () => $"{_outgoingWrite.Name} writing {_outgoingWrite.Buffer.Length} bytes");
-                _outgoingWrite.Started(_context.Outgoing.Content.BeginWrite(_outgoingWrite.Buffer.Data, 0, _outgoingWrite.Buffer.Length, null, null));
+                _outgoingWrite.AsyncStart(_context.Outgoing.Content.BeginWrite(_outgoingWrite.Buffer.Data, 0, _outgoingWrite.Buffer.Length, null, null));
             }
         }
 
@@ -498,28 +567,25 @@ namespace Gravity.Server.ProcessingNodes.Server
             public TimeSpan Timeout;
             public Buffer Buffer;
 
-            public void Clear()
+            public void Stop()
             {
                 NextStep = null;
-                Result = null;
-                Start = DateTime.UtcNow;
-                Buffer = null;
             }
 
-            public void Started(IAsyncResult result, Action nextStep = null)
+            public void AsyncStart(IAsyncResult result, Action nextStep = null)
             {
                 Result = result;
                 Start = DateTime.UtcNow;
                 if (nextStep != null) NextStep = nextStep;
             }
 
-            public void Ended(Action nextStep = null)
+            public void AsyncEnd(Action nextStep = null)
             {
                 Result = null;
                 if (nextStep != null) NextStep = nextStep;
             }
 
-            public bool IsComplete
+            public bool? IsComplete
             {
                 get
                 {
@@ -527,9 +593,9 @@ namespace Gravity.Server.ProcessingNodes.Server
 
                     if (Start + Timeout < DateTime.UtcNow)
                     {
-                        var msg = $"{Name} did not complete within {Timeout}";
-                        _log?.Log(LogType.TcpIp, LogLevel.Important, () => msg);
-                        throw new RequestStreamTimeoutException(msg);
+                        var msg = $"{Name} waited for {DateTime.UtcNow - Start} and the timeout is {Timeout}";
+                        _log?.Log(LogType.TcpIp, LogLevel.Detailed, () => msg);
+                        return null;
                     }
 
                     return Result.IsCompleted;
@@ -537,7 +603,31 @@ namespace Gravity.Server.ProcessingNodes.Server
             }
         }
 
-        private class HttpReceiveEndpoint: Endpoint
+        private class ContextSendEndpoint : Endpoint
+        {
+            public ContextSendEndpoint(ILog log, string name, TimeSpan timeout)
+                : base(log, name, timeout)
+            {
+            }
+        }
+
+        private class ContextReceiveEndpoint : Endpoint
+        {
+            public ContextReceiveEndpoint(ILog log, string name, TimeSpan timeout)
+                : base(log, name, timeout)
+            {
+            }
+        }
+
+        private class ConnectionSendEndpoint : Endpoint
+        {
+            public ConnectionSendEndpoint(ILog log, string name, TimeSpan timeout)
+                : base(log, name, timeout)
+            {
+            }
+        }
+
+        private class ConnectionReceiveEndpoint: Endpoint
         {
             public bool CanHaveContent;
             public int? ContentLength;
@@ -548,7 +638,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
             private bool _beginning;
 
-            public HttpReceiveEndpoint(ILog log, string name, TimeSpan timeout, bool canHaveContent)
+            public ConnectionReceiveEndpoint(ILog log, string name, TimeSpan timeout, bool canHaveContent)
                 : base(log, name, timeout)
             {
                 CanHaveContent = canHaveContent;
