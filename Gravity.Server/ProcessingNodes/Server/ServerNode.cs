@@ -440,6 +440,8 @@ namespace Gravity.Server.ProcessingNodes.Server
                 }
             }
 
+            Connection connection = null;
+
             return connectionPool.GetConnectionAsync(context.Log, ResponseTimeout, ReadTimeout)
                 .ContinueWith(connectionTask =>
                 {
@@ -455,13 +457,15 @@ namespace Gravity.Server.ProcessingNodes.Server
                         throw new ServerNodeException(this, "Connection task timed out");
                     }
 
-                    var connection = connectionTask.Result;
+                    connection = connectionTask.Result;
 
                     context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => "Scheduling a transaction in the connection thread pool");
 
-                    var transactionTask = _connectionThreadPool.ProcessTransaction(connection, context, ResponseTimeout, ReadTimeout, ReuseConnections);
-                    transactionTask.Wait();
-
+                    return _connectionThreadPool.ProcessTransaction(connection, context, ResponseTimeout, ReadTimeout, ReuseConnections);
+                })
+                .Unwrap()
+                .ContinueWith(transactionTask => 
+                {
                     if (transactionTask.Result)
                         context.Log?.Log(LogType.TcpIp, LogLevel.Detailed, () => "Connection pool sucessfully processed the transaction");
                     else
