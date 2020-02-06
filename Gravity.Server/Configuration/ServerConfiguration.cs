@@ -123,6 +123,13 @@ namespace Gravity.Server.Configuration
         [JsonProperty("healthCheckUnhealthyInterval")]
         public TimeSpan HealthCheckUnhealthyInterval { get; set; }
 
+        /// <summary>
+        /// How frequently to check the health of the server
+        /// when the server has become unhealthy
+        /// </summary>
+        [JsonProperty("healthCheckLogDirectory")]
+        public string HealthCheckLogDirectory { get; set; }
+
         public ServerConfiguration()
         {
             ConnectionTimeout = TimeSpan.FromSeconds(5);
@@ -143,6 +150,43 @@ namespace Gravity.Server.Configuration
 
         public override void Sanitize()
         {
+            if (HealthCheckInterval.TotalSeconds < 1) HealthCheckInterval = TimeSpan.FromSeconds(1);
+            if (HealthCheckInterval.TotalMinutes > 5) HealthCheckInterval = TimeSpan.FromMinutes(5);
+
+            if (HealthCheckUnhealthyInterval.TotalSeconds < 1) HealthCheckUnhealthyInterval = TimeSpan.FromSeconds(1);
+            if (HealthCheckUnhealthyInterval.TotalMinutes > 5) HealthCheckUnhealthyInterval = TimeSpan.FromMinutes(5);
+
+            if (HealthCheckMaximumFailCount < 1) HealthCheckMaximumFailCount = 1;
+
+            if (string.IsNullOrWhiteSpace(Host)) Host = "localhost";
+
+            if (ConnectionTimeout.TotalMilliseconds < 20) ConnectionTimeout = TimeSpan.FromMilliseconds(20);
+            if (ConnectionTimeout.TotalSeconds > 30) ConnectionTimeout = TimeSpan.FromSeconds(30);
+
+            if (ResponseTimeout.TotalMilliseconds < 5) ResponseTimeout = TimeSpan.FromMilliseconds(5);
+            if (ResponseTimeout.TotalSeconds > 30) ResponseTimeout = TimeSpan.FromSeconds(30);
+
+            if (ReadTimeoutMs < 1) ReadTimeoutMs = 1;
+            if (ReadTimeoutMs > 5000) ReadTimeoutMs = 5000;
+
+            if (MaximumConnectionCount < 5) MaximumConnectionCount = 5;
+            if (MaximumConnectionCount > 20000) MaximumConnectionCount = 20000;
+
+            if (DnsLookupInterval.TotalSeconds < 1) DnsLookupInterval = TimeSpan.FromSeconds(1);
+            if (DnsLookupInterval.TotalHours > 6) DnsLookupInterval = TimeSpan.FromHours(6);
+
+            if (RecalculateInterval.TotalSeconds < 2) RecalculateInterval = TimeSpan.FromSeconds(2);
+            if (RecalculateInterval.TotalMinutes > 1) RecalculateInterval = TimeSpan.FromMinutes(1);
+
+            if (string.IsNullOrWhiteSpace(HealthCheckLogDirectory))
+            {
+                HealthCheckLogDirectory = null;
+            }
+            else
+            {
+                if (!HealthCheckLogDirectory.EndsWith("\\"))
+                    HealthCheckLogDirectory += "\\";
+            }
         }
     }
 }

@@ -378,7 +378,8 @@ namespace Gravity.Server.Pipeline
                         HealthCheckLog = serverNodeConfiguration.HealthCheckLog,
                         HealthCheckInterval = serverNodeConfiguration.HealthCheckInterval,
                         HealthCheckUnhealthyInterval = serverNodeConfiguration.HealthCheckUnhealthyInterval,
-                        HealthCheckMaximumFailCount = serverNodeConfiguration.HealthCheckMaximumFailCount
+                        HealthCheckMaximumFailCount = serverNodeConfiguration.HealthCheckMaximumFailCount,
+                        HealthCheckLogDirectory = serverNodeConfiguration.HealthCheckLogDirectory
                     };
                     node.Initialize();
                     serverNodeConfiguration.Node = node;

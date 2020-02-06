@@ -56,7 +56,7 @@ namespace Gravity.Server.Utility
             CloseFile();
         }
 
-        public void WriteLog(long key, List<string> logEntries)
+        public void WriteLog(long key, IList<string> logEntries)
         {
             if (logEntries == null || logEntries.Count == 0)
                 return;

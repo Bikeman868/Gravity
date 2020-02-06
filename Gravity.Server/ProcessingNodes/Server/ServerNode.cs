@@ -9,6 +9,7 @@ using Gravity.Server.Interfaces;
 using Gravity.Server.Utility;
 using Gravity.Server.Pipeline;
 using Microsoft.Owin;
+using System.IO;
 
 namespace Gravity.Server.ProcessingNodes.Server
 {
@@ -43,6 +44,7 @@ namespace Gravity.Server.ProcessingNodes.Server
         public TimeSpan HealthCheckInterval { get; set; }
         public TimeSpan HealthCheckUnhealthyInterval { get; set; }
         public int HealthCheckMaximumFailCount { get; set; }
+        public string HealthCheckLogDirectory { get; set; }
 
         public TimeSpan DnsLookupInterval { get; set; }
         public TimeSpan RecalculateInterval { get; set; }
@@ -59,6 +61,7 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         private Thread _backgroundThread;
         private int _lastIpAddressIndex;
+        private HealthCheckHistory _healthCheckHistory;
 
         public ServerNode(
             IBufferPool bufferPool,
@@ -88,6 +91,8 @@ namespace Gravity.Server.ProcessingNodes.Server
 
         public void Initialize()
         {
+            _healthCheckHistory = new HealthCheckHistory(this);
+
             _backgroundThread = new Thread(() =>
             {
                 var nextDnsLookup = DateTime.UtcNow;
@@ -354,8 +359,9 @@ namespace Gravity.Server.ProcessingNodes.Server
             var healthy = false;
             var tasks = new List<Task>();
 
-            foreach (var ipAddress in IpAddresses)
+            foreach (var currentIpAddress in IpAddresses)
             {
+                var ipAddress = currentIpAddress;
                 try
                 {
                     log?.Log(LogType.Health, LogLevel.Important, () => $"Checking health of endpoint {ipAddress.Address}");
@@ -399,6 +405,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                                         ipAddress.SetUnhealthy(requestContext.Outgoing.StatusCode + " " + requestContext.Outgoing.ReasonPhrase);
                                     }
                                 }
+                                _healthCheckHistory.Record(ipAddress, requestContext.Outgoing.StatusCode);
                             }));
                 }
                 catch (Exception ex)
@@ -515,6 +522,73 @@ namespace Gravity.Server.ProcessingNodes.Server
                     var elapsed = (int) (DateTime.UtcNow - _startTime).TotalMilliseconds;
                     Trace.WriteLine($"[HEALTH-CHECK] {_id,6} {elapsed,6}ms {type,-10} {messageFunc()}");
                 }
+            }
+        }
+
+        private class HealthCheckHistory
+        {
+            public class HealthCheckEvent
+            {
+                public string Host;
+                public ushort Port;
+                public PathString Path;
+                public IPAddress Address;
+                public int HealthCheckFailCount;
+                public bool? Healthy;
+                public ushort StatusCode;
+                public string UnhealthyReason;
+            }
+
+            public List<HealthCheckEvent> Events = new List<HealthCheckEvent>();
+
+            private ServerNode _server;
+            private LogFileWriter _logFileWriter;
+
+            public HealthCheckHistory(ServerNode server)
+            {
+                _server = server;
+
+                if (!string.IsNullOrEmpty(server.HealthCheckLogDirectory))
+                    _logFileWriter = new LogFileWriter(
+                        new DirectoryInfo(server.HealthCheckLogDirectory), 
+                        server.Name + "_", 
+                        TimeSpan.FromDays(90), 
+                        1000000, 
+                        true);
+            }
+
+            public void Record(ServerIpAddress ipAddress, ushort statusCode)
+            {
+                var healthCheckEvent = new HealthCheckEvent
+                {
+                    Host = _server.HealthCheckHost,
+                    Port = _server.HealthCheckPort,
+                    Path = _server.HealthCheckPath,
+                    Address = ipAddress.Address,
+                    Healthy = ipAddress.Healthy,
+                    HealthCheckFailCount = ipAddress.HealthCheckFailCount,
+                    UnhealthyReason = ipAddress.UnhealthyReason,
+                    StatusCode = statusCode
+                };
+
+                lock (Events)
+                {
+                    Events.Add(healthCheckEvent);
+                }
+
+                if (_logFileWriter != null)
+                {
+                    var line = $"{DateTime.Now.ToString("HH:mm:ssK")} {healthCheckEvent.Host}{healthCheckEvent.Path} [{healthCheckEvent.Address}] {healthCheckEvent.StatusCode}";
+                    if (healthCheckEvent.Healthy.HasValue)
+                    {
+                        if (healthCheckEvent.Healthy.Value)
+                            line += " healthy";
+                        else
+                            line += healthCheckEvent.UnhealthyReason;
+                    }
+                    _logFileWriter.WriteLog(0, new List<string> { line });
+                }
+
             }
         }
     }
