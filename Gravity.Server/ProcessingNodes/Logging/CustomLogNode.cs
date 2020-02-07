@@ -13,7 +13,8 @@ namespace Gravity.Server.ProcessingNodes.Logging
     {
         public string OutputNode { get; set; }
         public string[] Methods { get; set; }
-        public ushort[] StatusCodes { get; set; }
+        public ushort[] IncludeStatusCodes { get; set; }
+        public ushort[] ExcludeStatusCodes { get; set; }
         public string Directory { get; set; }
         public string FileNamePrefix { get; set; }
         public TimeSpan MaximumLogFileAge { get; set; }
@@ -74,7 +75,8 @@ namespace Gravity.Server.ProcessingNodes.Logging
             return _nextNode.ProcessRequestAsync(context)
                 .ContinueWith(t =>
                 {
-                    if (StatusCodes != null && StatusCodes.Length > 0 && StatusCodes.All(s => s != context.Outgoing.StatusCode))
+                    if ((IncludeStatusCodes != null && IncludeStatusCodes.Length > 0 && IncludeStatusCodes.All(s => s != context.Outgoing.StatusCode)) ||
+                        (ExcludeStatusCodes != null && ExcludeStatusCodes.Length > 0 && ExcludeStatusCodes.Any(s => s == context.Outgoing.StatusCode)))
                     {
                         context.Log?.Log(LogType.Step, LogLevel.Detailed, () =>
                             $"Custom log '{Name}' is not logging this request because {context.Outgoing.StatusCode} statuses are not logged");

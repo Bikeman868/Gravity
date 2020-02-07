@@ -44,8 +44,10 @@ namespace Gravity.Server.Ui.Nodes
             else
                 details.Add("Log all requests");
 
-            if (customLog.StatusCodes != null && customLog.StatusCodes.Length > 0)
-                details.AddRange(customLog.StatusCodes.Select(s => "Log " + s + " responses"));
+            if (customLog.IncludeStatusCodes != null && customLog.IncludeStatusCodes.Length > 0)
+                details.AddRange(customLog.IncludeStatusCodes.Select(s => "Log " + s + " responses"));
+            else if (customLog.ExcludeStatusCodes != null && customLog.ExcludeStatusCodes.Length > 0)
+                details.AddRange(customLog.ExcludeStatusCodes.Select(s => "Do not log " + s + " responses"));
             else
                 details.Add("Log all responses");
 

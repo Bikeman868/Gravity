@@ -18,12 +18,21 @@ namespace Gravity.Server.Utility
 
         private FileInfo _fileInfo;
         private TextWriter _fileWriter;
+        private DateTime _lastWriteTime;
 
         private bool CanWrite
         {
             get
             {
-                if (_fileInfo == null || !_fileInfo.Exists) return false;
+                if (_fileInfo == null || !_fileInfo.Exists)
+                    return false;
+
+                var lastWriteTime = _lastWriteTime;
+                _lastWriteTime = DateTime.Now;
+
+                if (DateTime.Now.Date != lastWriteTime.Date)
+                    return false;
+
                 _fileInfo.Refresh();
                 return _fileInfo.Length < _maximumLogFileSize;
             }
@@ -41,8 +50,6 @@ namespace Gravity.Server.Utility
             _maximumLogFileSize = maximumLogFileSize;
             _fileNamePrefix = fileNamePrefix;
             _bare = bare;
-
-            CreateFile();
         }
 
         ~LogFileWriter()
@@ -64,6 +71,9 @@ namespace Gravity.Server.Utility
             lock (_lock)
             {
                 if (_fileWriter == null)
+                    CreateFile();
+
+                if (_fileWriter == null)
                 {
                     if (logEntries.Count == 1)
                     {
@@ -78,10 +88,21 @@ namespace Gravity.Server.Utility
 
                         Trace.WriteLine($"{_fileNamePrefix} {key,6}");
                     }
-                    CreateFile();
                 }
                 else
                 {
+                    if (!CanWrite)
+                    {
+                        try
+                        {
+                            CloseFile();
+                        }
+                        finally
+                        {
+                            CreateFile();
+                        }
+                    }
+
                     if (logEntries.Count == 1)
                     {
                         if (_bare)
@@ -107,18 +128,6 @@ namespace Gravity.Server.Utility
                         }
                     }
                     _fileWriter.Flush();
-
-                    if (!CanWrite)
-                    {
-                        try
-                        {
-                            CloseFile();
-                        }
-                        finally
-                        {
-                            CreateFile();
-                        }
-                    }
                 }
             }
         }
@@ -135,6 +144,7 @@ namespace Gravity.Server.Utility
                 _fileWriter = new StreamWriter(File.Open(_fileInfo.FullName, FileMode.Create, FileAccess.ReadWrite, FileShare.Read), Encoding.UTF8);
                 _fileWriter.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ssK"));
                 _fileWriter.Flush();
+                _lastWriteTime = DateTime.Now;
             }
             catch (Exception ex)
             {

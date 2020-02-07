@@ -24,9 +24,17 @@ namespace Gravity.Server.Configuration
 
         /// <summary>
         /// Only log these status codes, blank for all status codes
+        /// Note that it does not make sense to have both an include and an exclude list
         /// </summary>
         [JsonProperty("statusCodes")]
-        public ushort[] StatusCodes { get; set; }
+        public ushort[] IncludeStatusCodes { get; set; }
+
+        /// <summary>
+        /// Do not log these status codes, blank for all status codes
+        /// Note that it does not make sense to have both an include and an exclude list
+        /// </summary>
+        [JsonProperty("excludeStatusCodes")]
+        public ushort[] ExcludeStatusCodes { get; set; }
 
         /// <summary>
         /// Only folder to write log files to
