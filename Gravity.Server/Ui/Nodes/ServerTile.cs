@@ -40,6 +40,10 @@ namespace Gravity.Server.Ui.Nodes
                     AddUnhealthyReason(server.UnhealthyReason, details);
                 }
             }
+            else
+            {
+                details.Add("Initializing");
+            }
 
             details.Add("Host " + (server.DomainName ?? string.Empty));
             details.Add("Port " + (server.Port.HasValue ? server.Port.Value.ToString() :  "pass-through"));

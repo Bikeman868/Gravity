@@ -93,6 +93,8 @@ namespace Gravity.Server.ProcessingNodes.Server
         {
             _healthCheckHistory = new HealthCheckHistory(this);
 
+            UnhealthyReason = "Initializing after restart";
+
             _backgroundThread = new Thread(() =>
             {
                 var nextDnsLookup = DateTime.UtcNow;
@@ -186,12 +188,24 @@ namespace Gravity.Server.ProcessingNodes.Server
                 return;
             }
 
-            Offline = Healthy == false;
+            Offline = Healthy != true;
         }
 
         public override Task ProcessRequestAsync(IRequestContext context)
         {
             var allIpAddresses = IpAddresses;
+
+            if (Healthy != true)
+            {
+                context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Server '{Name}' returning 503. {UnhealthyReason}");
+
+                return Task.Run(() =>
+                {
+                    context.Outgoing.StatusCode = 503;
+                    context.Outgoing.ReasonPhrase = UnhealthyReason;
+                    context.Outgoing.SendHeaders(context);
+                });
+            }
 
             if (allIpAddresses == null || allIpAddresses.Length == 0)
             {
@@ -200,14 +214,14 @@ namespace Gravity.Server.ProcessingNodes.Server
                 return Task.Run(() =>
                 {
                     context.Outgoing.StatusCode = 503;
-                    context.Outgoing.ReasonPhrase = "No servers found with this host name";
+                    context.Outgoing.ReasonPhrase = "No known IP addresses for this server";
                     context.Outgoing.SendHeaders(context);
                 });
             }
 
             var ipAddresses = allIpAddresses.Where(i => i.Healthy == true).ToList();
 
-            if (ipAddresses.Count == 0 || Healthy != true)
+            if (ipAddresses.Count == 0)
             {
                 context.Log?.Log(LogType.Logic, LogLevel.Standard, () => $"Server '{Name}' has no healthy instances, returning 503");
 
@@ -421,7 +435,7 @@ namespace Gravity.Server.ProcessingNodes.Server
                 Healthy = true;
             else
             {
-                UnhealthyReason = "No healthy IP addresses";
+                UnhealthyReason = "Health checks failed for all server IP addresses";
                 Healthy = false;
             }
         }

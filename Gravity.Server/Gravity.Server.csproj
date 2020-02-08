@@ -207,7 +207,7 @@
     <Compile Include="Ui\Shapes\PieChartDrawing.cs" />
     <Compile Include="Ui\Shapes\LegendDrawing.cs" />
     <Compile Include="Ui\Shapes\PieDrawing.cs" />
-    <Compile Include="Utility\BufferedTextStream.cs" />
+    <Compile Include="Utility\BufferedStream.cs" />
     <Compile Include="Utility\BufferPool.cs" />
     <Compile Include="Utility\DefaultDictionary.cs" />
     <Compile Include="Utility\Factory.cs" />
