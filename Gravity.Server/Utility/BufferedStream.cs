@@ -303,13 +303,13 @@ namespace Gravity.Server.Utility
 
         private void GetBufferedBytes(LinkedList<byte[]> buffers, int start, int count, byte[] buffer, int offset)
         {
-            var bytesCopied = 0;
-            var writeBuffer = buffers.FirstElement();
-            do
-            {
+            //var bytesCopied = 0;
+            //var writeBuffer = buffers.FirstElement();
+            //do
+            //{
 
-                writeBuffer = writeBuffer.Next;
-            } while (writeBuffer != null && bytesCopied < count);
+            //    writeBuffer = writeBuffer.Next;
+            //} while (writeBuffer != null && bytesCopied < count);
         }
     }
 }
