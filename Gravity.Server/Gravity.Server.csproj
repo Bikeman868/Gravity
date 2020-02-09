@@ -8,6 +8,10 @@
     <Copyright>Copyright Martin Halliday 2019-2020</Copyright>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <OutDir>$(ProjectDir)bin\</OutDir>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="DotlessClientOnly" Version="1.5.2" />
     <PackageReference Include="Ioc.Modules.Ninject" Version="1.4.1" />
@@ -20,6 +24,7 @@
     <PackageReference Include="Ioc.Modules.Contract">
       <Version>1.4.1</Version>
     </PackageReference>
+    <PackageReference Include="Owin.Framework" Version="2.8.1" />
     <PackageReference Include="Owin.Framework.Pages.DebugMiddleware" Version="1.2.11" />
     <PackageReference Include="Owin.Framework.Pages.Framework" Version="1.2.11" />
     <PackageReference Include="Owin.Framework.Pages.Html" Version="1.2.11" />
@@ -60,5 +65,9 @@
   <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
-
+  
+  <ItemGroup>
+    <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.0" />
+  </ItemGroup>
+  
 </Project>
