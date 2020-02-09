@@ -199,13 +199,7 @@ namespace Gravity.Server.Utility
         /// <param name="offset">The offset to start copying into buffer</param>
         public void GetReadBytes(long streamOffset, int count, byte[] buffer, int offset)
         {
-            //var bytesCopied = 0;
-            //var readBuffer = _readBuffers.FirstElement();
-            //do
-            //{
-
-            //    readBuffer = readBuffer.Next;
-            //} while (readBuffer != null && bytesCopied < count);
+            GetBufferedBytes(_readBuffers, (int)(streamOffset - BufferedReadStart) + _readHeadPosition, count, buffer, offset);
         }
 
         /// <summary>
@@ -269,13 +263,7 @@ namespace Gravity.Server.Utility
         /// <param name="offset">The offset to start copying into buffer</param>
         public void GetWrittenBytes(long streamOffset, int count, byte[] buffer, int offset)
         {
-            //var bytesCopied = 0;
-            //var writeBuffer = _writeBuffers.FirstElement();
-            //do
-            //{
-
-            //    writeBuffer = writeBuffer.Next;
-            //} while (writeBuffer != null && bytesCopied < count);
+            GetBufferedBytes(_writeBuffers, (int)(streamOffset - BufferedWriteStart), count, buffer, offset);
         }
 
         /// <summary>
@@ -304,12 +292,28 @@ namespace Gravity.Server.Utility
         private void GetBufferedBytes(LinkedList<byte[]> buffers, int start, int count, byte[] buffer, int offset)
         {
             var bytesCopied = 0;
-            var writeBuffer = buffers.FirstElement();
-            do
-            {
 
-                writeBuffer = writeBuffer.Next;
-            } while (writeBuffer != null && bytesCopied < count);
+            foreach (var streamBuffer in buffers)
+            {
+                if (start >= streamBuffer.Length)
+                {
+                    start -= streamBuffer.Length;
+                    continue;
+                }
+
+                var bytesToCopy = count;
+                if (start + bytesToCopy > streamBuffer.Length)
+                    bytesToCopy = streamBuffer.Length - start;
+
+                Array.Copy(streamBuffer, start, buffer, offset, bytesToCopy);
+
+                offset += bytesToCopy;
+                bytesCopied += bytesToCopy;
+
+                if (bytesCopied >= count) return;
+
+                start = 0;
+            }
         }
     }
 }
