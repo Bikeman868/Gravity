@@ -24,7 +24,7 @@ nuget Owin = 1.0
 nuget Microsoft.Owin = 3.1
 nuget Microsoft.Owin.Host.SystemWeb = 3.0.1
 
-nuget Owin.Framework = 2.8.0
+nuget Owin.Framework = 2.8.1
 nuget Owin.Framework.Mocks
 nuget Owin.Framework.DefaultDocument
 nuget Owin.Framework.Documenter
