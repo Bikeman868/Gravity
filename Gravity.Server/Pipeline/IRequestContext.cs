@@ -7,7 +7,7 @@ namespace Gravity.Server.Pipeline
     /// <summary>
     /// Represents an HTTP request and the corresponding HTTP response
     /// </summary>
-    internal interface IRequestContext: IDisposable
+    public interface IRequestContext: IDisposable
     {
         /// <summary>
         /// Logging is specific to the reqest context

@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace Gravity.Server.Configuration
 {
-    internal class CustomLogConfiguration: NodeConfiguration
+    public class CustomLogConfiguration: NodeConfiguration
     {
         /// <summary>
         /// The node to send thr request to next

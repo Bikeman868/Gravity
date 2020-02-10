@@ -3,7 +3,7 @@ using System;
 
 namespace Gravity.Server.Interfaces
 {
-    internal interface IExpression<T>
+    public interface IExpression<T>
     {
         Type BaseType { get; }
         bool IsLiteral { get; }

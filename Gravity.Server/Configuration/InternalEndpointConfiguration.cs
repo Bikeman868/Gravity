@@ -1,6 +1,6 @@
 ﻿namespace Gravity.Server.Configuration
 {
-    internal class InternalEndpointConfiguration: NodeConfiguration
+    public class InternalEndpointConfiguration: NodeConfiguration
     {
     }
 }

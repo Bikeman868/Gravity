@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace Gravity.Server.Configuration
 {
-    internal class ChangeLogFilterConfiguration: NodeConfiguration
+    public class ChangeLogFilterConfiguration: NodeConfiguration
     {
         /// <summary>
         /// The node to send thr request to next

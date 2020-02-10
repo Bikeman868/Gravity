@@ -2,7 +2,7 @@
 
 namespace Gravity.Server.Configuration
 {
-    internal class CorsConfiguration: NodeConfiguration
+    public class CorsConfiguration: NodeConfiguration
     {
         /// <summary>
         /// The node to send thr request to after CORS logic

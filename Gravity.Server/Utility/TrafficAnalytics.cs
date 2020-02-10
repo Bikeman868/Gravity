@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace Gravity.Server.Utility
 {
-    internal class TrafficAnalytics
+    public class TrafficAnalytics
     {
         private readonly object _lock;
         private List<IntervalStats> _intervals;

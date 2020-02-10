@@ -109,6 +109,7 @@
     <Compile Include="ProcessingNodes\Logging\CustomLogNode.cs" />
     <Compile Include="ProcessingNodes\Logging\ChangeLogFilterNode.cs" />
     <Compile Include="ProcessingNodes\ProcessingNode.cs" />
+    <Compile Include="ProcessingNodes\Transform\RegexReplace\ScriptJson.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Actions\AbortRequest.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Actions\Action.cs" />
     <Compile Include="ProcessingNodes\Transform\UrlRewriteRules\Actions\ActionList.cs" />

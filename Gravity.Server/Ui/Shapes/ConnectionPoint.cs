@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Gravity.Server.Ui.Shapes
 {
-    internal class ConnectionPoint
+    public class ConnectionPoint
     {
         private readonly List<Action<float, float>> _subscribers;
         private readonly Func<Tuple<float, float>> _getAbsolutePoistion;

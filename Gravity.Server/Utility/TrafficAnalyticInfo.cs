@@ -1,6 +1,6 @@
 ﻿namespace Gravity.Server.Utility
 {
-    internal struct TrafficAnalyticInfo
+    public struct TrafficAnalyticInfo
     {
         public long StartTicks;
         public long EndTicks;

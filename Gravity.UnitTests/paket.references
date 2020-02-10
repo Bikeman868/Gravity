@@ -1,0 +1,8 @@
+Ioc.Modules
+Ioc.Modules.Ninject
+Newtonsoft.Json
+Moq
+Moq.Modules
+NUnit
+NUnit.Console
+NUnit3TestAdapter

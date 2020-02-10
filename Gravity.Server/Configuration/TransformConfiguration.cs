@@ -2,7 +2,7 @@
 
 namespace Gravity.Server.Configuration
 {
-    internal class TransformConfiguration: NodeConfiguration
+    public class TransformConfiguration: NodeConfiguration
     {
         /// <summary>
         /// The node to send thr request to after transformation
@@ -43,7 +43,7 @@ namespace Gravity.Server.Configuration
         public string RequestScriptFile { get; set; }
 
         /// <summary>
-        /// Defines response transfoormation logic contained in a file
+        /// Defines response transformation logic contained in a file
         /// </summary>
         [JsonProperty("responseScriptFile")]
         public string ResponseScriptFile { get; set; }

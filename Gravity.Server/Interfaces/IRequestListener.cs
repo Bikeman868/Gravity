@@ -5,7 +5,7 @@ using Microsoft.Owin;
 
 namespace Gravity.Server.Interfaces
 {
-    internal interface IRequestListener
+    public interface IRequestListener
     {
         Task ProcessRequestAsync(IOwinContext context, Func<Task> next);
         ListenerEndpointConfiguration[] Endpoints { get; }

@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace Gravity.Server.Configuration
 {
-    internal class StickySessionConfiguration: NodeConfiguration
+    public class StickySessionConfiguration: NodeConfiguration
     {
         [JsonProperty("outputs")]
         public string[] Outputs { get; set; }

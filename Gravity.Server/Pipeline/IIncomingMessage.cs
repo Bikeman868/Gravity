@@ -7,7 +7,7 @@ namespace Gravity.Server.Pipeline
     /// Represents a stream of HTTP data comming into the load balancer from
     /// the outside world and being sent to a back-end server. This is an HTTP request
     /// </summary>
-    internal interface IIncomingMessage : IMessage
+    public interface IIncomingMessage : IMessage
     {
         /// <summary>
         /// For example "GET"

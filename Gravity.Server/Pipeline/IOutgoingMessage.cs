@@ -4,7 +4,7 @@
     /// Represents a stream of HTTP data coming from a back-end server and
     /// being sent to the outside world as an HTTP reply
     /// </summary>
-    internal interface IOutgoingMessage: IMessage
+    public interface IOutgoingMessage: IMessage
     {
         /// <summary>
         /// For example 404 for not found

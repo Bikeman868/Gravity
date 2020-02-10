@@ -3,7 +3,7 @@ using Svg;
 
 namespace Gravity.Server.Interfaces
 {
-    internal interface IDrawingGenerator
+    public interface IDrawingGenerator
     {
         DrawingElement GenerateDashboardDrawing(string dasboardName);
         DrawingElement GenerateNodeDrawing(string nodeName);

@@ -2,7 +2,7 @@
 
 namespace Gravity.Server.Interfaces
 {
-    internal interface IFactory
+    public interface IFactory
     {
         T Create<T>();
         object Create(Type t);

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Gravity.Server.Pipeline
 {
-    internal interface INode: IDisposable
+    public interface INode: IDisposable
     {
         /// <summary>
         /// Allows nodes to be named

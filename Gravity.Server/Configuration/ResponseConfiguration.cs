@@ -2,7 +2,7 @@
 
 namespace Gravity.Server.Configuration
 {
-    internal class ResponseConfiguration: NodeConfiguration
+    public class ResponseConfiguration: NodeConfiguration
     {
         [JsonProperty("statusCode")]
         public ushort StatusCode { get; set; }

@@ -5,7 +5,7 @@ using Svg.Transforms;
 
 namespace Gravity.Server.Ui.Shapes
 {
-    internal class DrawingElement
+    public class DrawingElement
     {
         public float Left;
         public float Top;

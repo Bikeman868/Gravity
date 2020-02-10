@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace Gravity.Server.Configuration
 {
-    internal class DashboardConfiguration
+    public class DashboardConfiguration
     {
         [JsonProperty("name")]
         public string Name { get; set; }
@@ -90,7 +90,7 @@ namespace Gravity.Server.Configuration
             return this;
         }
 
-        internal class NodeConfiguration
+        public class NodeConfiguration
         {
             [JsonProperty("name")]
             public string NodeName { get; set; }

@@ -2,25 +2,24 @@ framework: net45
 storage: packages
 source https://nuget.org/api/v2
 
-nuget Ioc.Modules.Contract = 1.4.1
-nuget Ioc.Modules = 1.4.1
 nuget Svg = 2.3.0
 nuget Urchin.Client = 1.3.2
-nuget Moq = 4.2.1507.0118
-nuget Moq.Modules = 1.0.2
 nuget Newtonsoft.Json = 7.0.1
 nuget DotlessClientOnly
 
+nuget Moq = 4.2.1507.0118
+nuget Moq.Modules = 1.0.2
 nuget NUnit ~> 3
+nuget NUnit.Console ~> 3
+nuget NUnit3TestAdapter ~> 3
 
+nuget Ioc.Modules.Contract = 1.4.1
+nuget Ioc.Modules = 1.4.1
 nuget Ioc.Modules.Ninject = 1.4.1
-nuget Microsoft.Web.Infrastructure = 1.0.0.0
 nuget Ninject = 3.2.2.0
 
-nuget Moq = 4.2.1507.0118
-nuget Newtonsoft.Json = 7.0.1
-
 nuget Owin = 1.0
+nuget Microsoft.Web.Infrastructure = 1.0.0.0
 nuget Microsoft.Owin = 3.1
 nuget Microsoft.Owin.Host.SystemWeb = 3.0.1
 

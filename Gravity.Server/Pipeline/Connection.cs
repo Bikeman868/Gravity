@@ -9,7 +9,7 @@ using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.Pipeline
 {
-    internal class ConnectionException: ApplicationException
+    public class ConnectionException: ApplicationException
     {
         public Connection Connection;
 
@@ -20,7 +20,7 @@ namespace Gravity.Server.Pipeline
         }
     }
 
-    internal enum ConnectionState
+    public enum ConnectionState
     {
         New,
         Connected,
@@ -30,7 +30,7 @@ namespace Gravity.Server.Pipeline
         Pending
     }
 
-    internal class Connection : IDisposable
+    public class Connection : IDisposable
     {
         private readonly IConnectionThreadPool _connectionThreadPool;
         private readonly TimeSpan _maximumIdleTime = TimeSpan.FromMinutes(5);

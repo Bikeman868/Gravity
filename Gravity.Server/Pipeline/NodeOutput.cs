@@ -4,7 +4,7 @@ using Gravity.Server.Utility;
 
 namespace Gravity.Server.Pipeline
 {
-    internal class NodeOutput: IComparable
+    public class NodeOutput: IComparable
     {
         public string Name { get; set; }
         public INode Node { get; set; }

@@ -2,7 +2,7 @@
 
 namespace Gravity.Server.Configuration
 {
-    internal class ResponseHeaderConfiguration
+    public class ResponseHeaderConfiguration
     {
         [JsonProperty("name")]
         public string HeaderName { get; set; }

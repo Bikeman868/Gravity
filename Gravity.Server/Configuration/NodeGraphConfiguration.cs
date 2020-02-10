@@ -2,7 +2,7 @@
 
 namespace Gravity.Server.Configuration
 {
-    internal class NodeGraphConfiguration
+    public class NodeGraphConfiguration
     {
         [JsonProperty("cors")]
         public CorsConfiguration[] CorsNodes { get; set; }

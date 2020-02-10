@@ -4,7 +4,7 @@ using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.Interfaces
 {
-    internal interface INodeGraph
+    public interface INodeGraph
     {
         /// <summary>
         /// Reconfigures the node tree

@@ -5,7 +5,7 @@ using System.IO;
 
 namespace Gravity.Server.Pipeline
 {
-    internal interface IMessage
+    public interface IMessage
     {
         /// <summary>
         /// For example

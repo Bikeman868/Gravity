@@ -8,12 +8,17 @@ namespace Gravity.Server.Interfaces
     /// <summary>
     /// Defines a mechanism for reusing byte arrays to avoid excessive garbage collection thrash
     /// </summary>
-    internal interface IBufferPool
+    public interface IBufferPool
     {
         /// <summary>
         /// Gets a byte array of the specified size
         /// </summary>
         byte[] Get(int? size = null);
+
+        /// <summary>
+        /// Gets a byte array of the specified minimum size
+        /// </summary>
+        byte[] GetAtLeast(int minimumSize);
 
         /// <summary>
         /// Puts a byte array into the pool for reuse. Make sure not to

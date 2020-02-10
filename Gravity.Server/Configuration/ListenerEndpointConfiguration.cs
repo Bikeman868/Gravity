@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace Gravity.Server.Configuration
 {
-    internal class ListenerEndpointConfiguration
+    public class ListenerEndpointConfiguration
     {
         [JsonProperty("name")]
         public string Name { get; set; }

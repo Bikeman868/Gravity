@@ -2,7 +2,7 @@
 
 namespace Gravity.Server.Configuration
 {
-    internal class RouterConditionConfiguration
+    public class RouterConditionConfiguration
     {
         [JsonProperty("disabled")]
         public bool Disabled { get; set; }

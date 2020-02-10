@@ -1,10 +1,7 @@
 ﻿using Gravity.Server.Interfaces;
-using OwinFramework.Pages.Core.Collections;
+using OwinFramework.Utility.Containers;
 using System;
 using System.IO;
-using System.Linq;
-using System.Net.Sockets;
-using System.Web;
 
 namespace Gravity.Server.Utility
 {
@@ -289,30 +286,160 @@ namespace Gravity.Server.Utility
             throw new NotImplementedException($"{GetType().Name} does not support setting the stream length");
         }
 
-        private void GetBufferedBytes(LinkedList<byte[]> buffers, int start, int count, byte[] buffer, int offset)
+        /// <summary>
+        /// Extracts bytes from the buffered data
+        /// </summary>
+        /// <param name="bufferList">A list of data buffers</param>
+        /// <param name="start">The byte offset where reading should start</param>
+        /// <param name="length">The number of bytes to read</param>
+        /// <param name="buffer">The buffer to return read bytes into</param>
+        /// <param name="offset">The offset within buffer to start writing bytes</param>
+        private void GetBufferedBytes(
+            LinkedList<byte[]> bufferList, 
+            int start, int length, 
+            byte[] buffer, int offset)
         {
-            var bytesCopied = 0;
+            var bufferListElement = bufferList.FirstElement();
+            var bufferedData = bufferListElement?.Data;
 
-            foreach (var streamBuffer in buffers)
+            while (bufferedData != null && start >= bufferedData.Length)
             {
-                if (start >= streamBuffer.Length)
-                {
-                    start -= streamBuffer.Length;
-                    continue;
-                }
+                start -= bufferedData.Length;
+                bufferListElement = bufferListElement.Next;
+                bufferedData = bufferListElement?.Data;
+            }
 
-                var bytesToCopy = count;
-                if (start + bytesToCopy > streamBuffer.Length)
-                    bytesToCopy = streamBuffer.Length - start;
+            do
+            {
+                if (bufferedData == null)
+                    throw new Exception("Attempt to read more data than there is in the buffer");
 
-                Array.Copy(streamBuffer, start, buffer, offset, bytesToCopy);
+                var bytesToCopy = length;
+                if (start + bytesToCopy > bufferedData.Length)
+                    bytesToCopy = bufferedData.Length - start;
+
+                Array.Copy(bufferedData, start, buffer, offset, bytesToCopy);
 
                 offset += bytesToCopy;
-                bytesCopied += bytesToCopy;
+                length -= bytesToCopy;
 
-                if (bytesCopied >= count) return;
+                if (length == 0) return;
 
+                bufferListElement = bufferListElement.Next;
+                bufferedData = bufferListElement?.Data;
                 start = 0;
+            } while (bufferListElement != null);
+        }
+
+        /// <summary>
+        /// Replaces a section of buffered data with some new bytes
+        /// </summary>
+        /// <param name="bufferList">A list of data buffers</param>
+        /// <param name="start">The byte offset to overwrite in the buffered data</param>
+        /// <param name="length">How many bytes to delete from the buffers</param>
+        /// <param name="replacementBytes">The new bytes to insert into the buffer</param>
+        /// <param name="replacementOffset">An offset into replacementBytes to copy from</param>
+        /// <param name="replacementLength">The number of bytes to copy from replacementBytes into the buffer</param>
+        private void ReplaceBufferedBytes(
+            LinkedList<byte[]> bufferList, 
+            int start, int length, 
+            byte[] replacementBytes, int replacementOffset, int replacementLength)
+        {
+            var bufferListElement = bufferList.FirstElement();
+            var bufferedData = bufferListElement?.Data;
+
+            while (bufferedData != null && start >= bufferedData.Length)
+            {
+                start -= bufferedData.Length;
+                bufferListElement = bufferListElement.Next;
+                bufferedData = bufferListElement?.Data;
+            }
+
+            // Overwrite the overalpping bytes
+            do
+            {
+                if (bufferedData == null)
+                    throw new Exception("Attempt to overwrite past the end of the buffer");
+
+                var bytesToCopy = length;
+                if (bytesToCopy > replacementLength) bytesToCopy = replacementLength;
+                if (start + bytesToCopy > bufferedData.Length) bytesToCopy = bufferedData.Length - start;
+
+                Array.Copy(replacementBytes, replacementOffset, bufferedData, start, bytesToCopy);
+
+                length -= bytesToCopy;
+                replacementOffset += bytesToCopy;
+                replacementLength -= bytesToCopy;
+
+                if (length > 0 && replacementLength > 0)
+                {
+                    bufferListElement = bufferListElement.Next;
+                    bufferedData = bufferListElement.Data;
+                    start = 0;
+                }
+                else
+                {
+                    start += bytesToCopy;
+                    break;
+                }
+            } while (true);
+
+            // Delete extra bytes if the replacement is shorter
+            while (length > 0)
+            {
+                var bytesToDelete = length;
+
+                if (start + bytesToDelete > bufferedData.Length)
+                {
+                    bytesToDelete = bufferedData.Length - start;
+                    if (start == 0)
+                    {
+                        var bufferListElementToDelete = bufferListElement;
+                        bufferListElement = bufferListElement.Prior;
+                        bufferList.Delete(bufferListElementToDelete);
+                        _bufferPool.Reuse(bufferedData);
+                    }
+                    else
+                    {
+                        var dataToKeep = _bufferPool.Get(bufferedData.Length - bytesToDelete);
+                        Array.Copy(bufferedData, 0, dataToKeep, 0, dataToKeep.Length);
+                        bufferListElement.Data = dataToKeep;
+                        _bufferPool.Reuse(bufferedData);
+                    }
+                }
+                else
+                {
+                    if (start == 0)
+                    {
+                        var dataToKeep = _bufferPool.Get(bufferedData.Length - bytesToDelete);
+                        Array.Copy(bufferedData, length, dataToKeep, 0, dataToKeep.Length);
+                        bufferListElement.Data = dataToKeep;
+                        _bufferPool.Reuse(bufferedData);
+                    }
+                    else
+                    {
+                        var dataBefore = _bufferPool.Get(start);
+                        var dataAfter = _bufferPool.Get(bufferedData.Length - start - length);
+                        Array.Copy(bufferedData, 0, dataBefore, 0, dataBefore.Length);
+                        Array.Copy(bufferedData, start + length, dataAfter, 0, dataAfter.Length);
+                        bufferListElement.Data = dataBefore;
+                        bufferListElement = bufferList.InsertAfter(bufferListElement, dataAfter);
+                        _bufferPool.Reuse(bufferedData);
+                    }
+                }
+
+                length -= bytesToDelete;
+                bufferListElement = bufferListElement?.Next ?? bufferList.FirstElementOrDefault();
+                bufferedData = bufferListElement?.Data;
+                start = 0;
+            }
+
+            // Append extra bytes if the replacement is longer
+            if (replacementLength > 0)
+            {
+                var additionalData = _bufferPool.Get(replacementLength);
+                Array.Copy(replacementBytes, replacementOffset, additionalData, 0, replacementLength);
+                bufferList.InsertAfter(bufferListElement, additionalData);
             }
         }
     }

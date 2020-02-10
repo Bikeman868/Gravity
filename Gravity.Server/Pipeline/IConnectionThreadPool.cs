@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Gravity.Server.Pipeline
 {
-    internal interface IConnectionThreadPool
+    public interface IConnectionThreadPool
     {
         Task<bool> ProcessTransaction(Connection connection,
             IRequestContext context,

@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace Gravity.Server.Configuration
 {
-    internal class RouterOutputConfiguration: RouterGroupConfiguration
+    public class RouterOutputConfiguration: RouterGroupConfiguration
     {
         [JsonProperty("to")]
         public string RouteTo { get; set; }

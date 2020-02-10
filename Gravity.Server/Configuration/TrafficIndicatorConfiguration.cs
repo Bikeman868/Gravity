@@ -2,7 +2,7 @@
 
 namespace Gravity.Server.Configuration
 {
-    internal class TrafficIndicatorConfiguration
+    public class TrafficIndicatorConfiguration
     {
         /// <summary>
         /// The requests/min at which the lines go the next thickness

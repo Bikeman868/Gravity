@@ -3,7 +3,7 @@ using Gravity.Server.Pipeline;
 
 namespace Gravity.Server.Interfaces
 {
-    internal interface ILogFactory
+    public interface ILogFactory
     {
         /// <summary>
         /// Creates a new logger
@@ -79,7 +79,7 @@ namespace Gravity.Server.Interfaces
         Dns = 1024
     }
 
-    internal interface ILog: IDisposable
+    public interface ILog: IDisposable
     {
         bool WillLog(LogType type, LogLevel level);
         void SetFilter(LogType[] logTypes, LogLevel maximumLogLevel);

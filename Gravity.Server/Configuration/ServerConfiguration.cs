@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace Gravity.Server.Configuration
 {
-    internal class ServerConfiguration: NodeConfiguration
+    public class ServerConfiguration: NodeConfiguration
     {
         /// <summary>
         /// Host name or IP address of the server
