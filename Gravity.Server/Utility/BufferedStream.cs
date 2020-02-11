@@ -15,8 +15,8 @@ namespace Gravity.Server.Utility
     {
         private readonly Stream _stream;
         private readonly IBufferPool _bufferPool;
-        private readonly int _readBufferLength;
-        private readonly int _writeBufferLength;
+        private readonly int _readBytesToKeepInMemory;
+        private readonly int _writeBytesToKeepInMemory;
         private readonly LinkedList<byte[]> _readBuffers;
         private readonly LinkedList<byte[]> _writeBuffers;
         private readonly object _readLock = new object();
@@ -28,24 +28,24 @@ namespace Gravity.Server.Utility
         private bool _endOfReadStream;
 
         /// <summary>
-        /// The number of bytes currently in _readBuffers
+        /// The sum of the lengths of the byte arrays in _readBuffers
         /// </summary>
-        private int _readCount;
+        private int _bytesInReadBuffers;
 
         /// <summary>
-        /// The number of bytes currently in _writeBuffers
+        /// The sum of the lengths of the byte arrays in _writeBuffers
         /// </summary>
-        private int _writeCount;
+        private int _bytesInWriteBuffers;
 
         /// <summary>
         /// The number of bytes at the front of the _readBuffers that have already been read
         /// </summary>
-        private int _readHeadPosition;
+        private int _bytesReadFromOldestBuffer;
 
         /// <summary>
-        /// The number of bytes at the back of the _readBuffers that have nt yet been filled with data
+        /// The number of bytes at the back of the _readBuffers that have not yet been filled with data
         /// </summary>
-        private int _readTailPosition;
+        private int _unusedBytesInNewestBuffer;
 
         /// <summary>
         /// Constructs a wrapper around a source stream
@@ -62,8 +62,8 @@ namespace Gravity.Server.Utility
         {
             _stream = stream;
             _bufferPool = bufferPool;
-            _readBufferLength = readBufferLength;
-            _writeBufferLength = writeBufferLength;
+            _readBytesToKeepInMemory = readBufferLength;
+            _writeBytesToKeepInMemory = writeBufferLength;
 
             if (readBufferLength > 0)
                 _readBuffers = new LinkedList<byte[]>();
@@ -111,7 +111,7 @@ namespace Gravity.Server.Utility
         /// <summary>
         /// The number of bytes that are currently buffered in the read stream
         /// </summary>
-        public int BufferedReadLength => _readCount - _readHeadPosition - _readTailPosition;
+        public int BufferedReadLength => _bytesInReadBuffers - _bytesReadFromOldestBuffer - _unusedBytesInNewestBuffer;
 
 
         /// <summary>
@@ -122,7 +122,7 @@ namespace Gravity.Server.Utility
         /// <summary>
         /// The number of bytes that are currently buffered in the write stream
         /// </summary>
-        public int BufferedWriteLength => _writeCount;
+        public int BufferedWriteLength => _bytesInWriteBuffers;
 
         public override long Position
         {
@@ -141,48 +141,81 @@ namespace Gravity.Server.Utility
             if (_readBuffers == null)
                 return _stream.Read(buffer, offset, count);
 
-            var firstReadBuffer = _readBuffers.FirstOrDefault();
+            var oldestBuffer = _readBuffers.FirstOrDefault();
+            var newestBuffer = _readBuffers.LastOrDefault();
 
             if (_endOfReadStream)
             {
-                if (firstReadBuffer == null) return 0;
+                if (oldestBuffer == null) return 0;
             }
             else
             {
-                while (!_endOfReadStream && BufferedReadLength <= _readBufferLength)
+                while (!_endOfReadStream && BufferedReadLength < _readBytesToKeepInMemory)
                 {
-                    var readBuffer = _bufferPool.Get();
-                    var bytesRead = _stream.Read(readBuffer, 0, readBuffer.Length);
-                    if (bytesRead == 0)
+                    byte[] readBuffer;
+                    int readBufferOffset;
+
+                    var allocateNewBuffer = newestBuffer == null || _unusedBytesInNewestBuffer == 0;
+
+                    if (allocateNewBuffer)
                     {
-                        _endOfReadStream = true;
-                        if (firstReadBuffer == null) return 0;
+                        readBuffer = _bufferPool.Get();
+                        readBufferOffset = 0;
                     }
                     else
                     {
-                        _readBuffers.Append(readBuffer);
-                        _readCount += readBuffer.Length;
-                        if (firstReadBuffer == null) firstReadBuffer = readBuffer;
+                        readBuffer = newestBuffer;
+                        readBufferOffset = newestBuffer.Length - _unusedBytesInNewestBuffer;
+                    }
+
+                    var bytesRead = _stream.Read(readBuffer, readBufferOffset, readBuffer.Length - readBufferOffset);
+
+                    if (bytesRead == 0)
+                    {
+                        _endOfReadStream = true;
+                        if (allocateNewBuffer) _bufferPool.Reuse(readBuffer);
+                        if (oldestBuffer == null) return 0;
+                    }
+                    else
+                    {
+                        if (allocateNewBuffer)
+                        {
+                            _readBuffers.Append(readBuffer);
+                            _bytesInReadBuffers += readBuffer.Length;
+                            newestBuffer = readBuffer;
+                            _unusedBytesInNewestBuffer = readBuffer.Length - bytesRead;
+
+                            if (oldestBuffer == null) oldestBuffer = readBuffer;
+                        }
+                        else
+                        {
+                            _unusedBytesInNewestBuffer -= bytesRead;
+                        }
                     }
                 }
             }
 
-            if (firstReadBuffer.Length - _readHeadPosition <= count)
+            var isLastBuffer = ReferenceEquals(oldestBuffer, newestBuffer);
+
+            var bytesAvailable = isLastBuffer
+                ? oldestBuffer.Length - _bytesReadFromOldestBuffer - _unusedBytesInNewestBuffer
+                : oldestBuffer.Length - _bytesReadFromOldestBuffer;
+
+            if (bytesAvailable <= count)
             {
-                firstReadBuffer = _readBuffers.PopFirst();
-                _readCount -= firstReadBuffer.Length;
+                oldestBuffer = _readBuffers.PopFirst();
+                _bytesInReadBuffers -= oldestBuffer.Length;
 
-                var length = firstReadBuffer.Length - _readHeadPosition;
-                Array.Copy(firstReadBuffer, _readHeadPosition, buffer, offset, length);
-                _readHeadPosition = 0;
+                Array.Copy(oldestBuffer, _bytesReadFromOldestBuffer, buffer, offset, bytesAvailable);
+                _bytesReadFromOldestBuffer = 0;
 
-                _bufferPool.Reuse(firstReadBuffer);
+                _bufferPool.Reuse(oldestBuffer);
 
-                return length;
+                return bytesAvailable;
             }
 
-            Array.Copy(firstReadBuffer, _readHeadPosition, buffer, offset, count);
-            _readHeadPosition += count;
+            Array.Copy(oldestBuffer, _bytesReadFromOldestBuffer, buffer, offset, count);
+            _bytesReadFromOldestBuffer += count;
             return count;
         }
 
@@ -196,7 +229,7 @@ namespace Gravity.Server.Utility
         /// <param name="offset">The offset to start copying into buffer</param>
         public void GetReadBytes(long streamOffset, int count, byte[] buffer, int offset)
         {
-            GetBufferedBytes(_readBuffers, (int)(streamOffset - BufferedReadStart) + _readHeadPosition, count, buffer, offset);
+            GetBufferedBytes(_readBuffers, (int)(streamOffset - BufferedReadStart) + _bytesReadFromOldestBuffer, count, buffer, offset);
         }
 
         /// <summary>
@@ -228,19 +261,19 @@ namespace Gravity.Server.Utility
             lock (_writeLock)
             {
                 _writeBuffers.Append(newBuffer);
-                _writeCount += count;
+                _bytesInWriteBuffers += count;
             }
 
-            while (BufferedWriteLength > _writeBufferLength) // We are buffering more bytes than we need to
+            while (BufferedWriteLength > _writeBytesToKeepInMemory) // We are buffering more bytes than we need to
             {
                 var first = _writeBuffers.FirstOrDefault();
-                if (first == null || _writeCount - first.Length < _writeBufferLength)
+                if (first == null || _bytesInWriteBuffers - first.Length < _writeBytesToKeepInMemory)
                     return; // Writing this buffer would leave us with not enough bytes in the buffer
 
                 lock (_writeLock)
                 {
                     first = _writeBuffers.PopFirst();
-                    _writeCount -= first.Length;
+                    _bytesInWriteBuffers -= first.Length;
                     BufferedWriteStart += first.Length;
                 }
 
