@@ -74,10 +74,21 @@ namespace Gravity.Server.Utility
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing) _stream.Dispose();
+            if (disposing)
+            {
+                _stream.Close();
+                _stream.Dispose();
+            }
             base.Dispose(disposing);
         }
 
+        /// <summary>
+        /// Note that the implementation of Close() in the base Stream
+        /// class calls the dispose method which disposes of the wrapped stream.
+        /// This implementation does not call the base.Close() method, so you
+        /// must call Dispose() or have a using statement to close the wrapped
+        /// stream.
+        /// </summary>
         public override void Close()
         {
             if (_writeBuffers != null)
@@ -93,9 +104,6 @@ namespace Gravity.Server.Utility
 
                 _stream.Flush();
             }
-
-            _stream.Close();
-            base.Close();
         }
 
         public override bool CanRead => _stream.CanRead;

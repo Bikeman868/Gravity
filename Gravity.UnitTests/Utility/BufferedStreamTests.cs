@@ -48,8 +48,25 @@ namespace Gravity.UnitTests.Utility
         }
 
         [Test]
-        public void Should_stream_writes()
+        [TestCase(1)]
+        [TestCase(10)]
+        [TestCase(20)]
+        [TestCase(55)]
+        [TestCase(406)]
+        [TestCase(3217)]
+        public void Should_stream_writes(int iterations)
         {
+            foreach (var bufferLength in _bufferSizes)
+            {
+                var stream = new System.IO.MemoryStream();
+                using (var bufferedStream = new BufferedStream(stream, SetupMock<IBufferPool>(), 0, bufferLength))
+                {
+                    FillStream(bufferedStream, iterations);
+                    bufferedStream.Close();
+                    stream.Position = 0;
+                    Assert.AreEqual(iterations, TestUnmodifiedStream(stream, (int)stream.Length));
+                }
+            }
         }
 
         private void FillStream(System.IO.Stream stream, int iterations)
