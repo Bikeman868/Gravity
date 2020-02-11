@@ -124,12 +124,12 @@ namespace Gravity.Server.ProcessingNodes.Logging
                             {
                                 if (outgoingHeader.Value == null || outgoingHeader.Value.Length == 0)
                                 {
-                                    entries.Add($"  <  {outgoingHeader.Key}");
+                                    entries.Add($"  >  {outgoingHeader.Key}");
                                 }
                                 else
                                 {
                                     foreach (var headerValue in outgoingHeader.Value)
-                                        entries.Add($"  <  {outgoingHeader.Key}: {headerValue}");
+                                        entries.Add($"  >  {outgoingHeader.Key}: {headerValue}");
                                 }
                             }
                         }
