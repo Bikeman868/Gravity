@@ -9,7 +9,11 @@ namespace Gravity.Server.Utility
     /// Objects of this type can wrap a stream to provide random 
     /// access to some small part of the stream so that the stream content
     /// can be transformed in some way as the data flows through the
-    /// stream without keeping the whole stream in memory
+    /// stream without keeping the whole stream in memory.
+    /// 
+    /// Note that objects of this type are not thread-safe and can not
+    /// be accessed by two threads at the same time. In general streams need
+    /// to be processed sequentially so making this thread-safe is pointless
     /// </summary>
     internal class BufferedStream : Stream
     {
@@ -19,8 +23,8 @@ namespace Gravity.Server.Utility
         private readonly int _writeBytesToKeepInMemory;
         private readonly LinkedList<byte[]> _readBuffers;
         private readonly LinkedList<byte[]> _writeBuffers;
-        private readonly object _readLock = new object();
-        private readonly object _writeLock = new object();
+        private Action<BufferedStream> _onBytesRead;
+        private Action<BufferedStream> _onBytesWritten;
 
         /// <summary>
         /// True after we read 0 bytes from the stream
@@ -58,18 +62,30 @@ namespace Gravity.Server.Utility
             Stream stream, 
             IBufferPool bufferPool, 
             int readBufferLength, 
-            int writeBufferLength)
+            Action<BufferedStream> onBytesRead,
+            int writeBufferLength,
+            Action<BufferedStream> onBytesWritten)
         {
             _stream = stream;
             _bufferPool = bufferPool;
             _readBytesToKeepInMemory = readBufferLength;
+            _onBytesRead = onBytesRead;
             _writeBytesToKeepInMemory = writeBufferLength;
+            _onBytesWritten = onBytesWritten;
 
             if (readBufferLength > 0)
+            {
+                if (onBytesRead == null)
+                    throw new ArgumentException("There is no point to buffer reads if there is no processing action");
                 _readBuffers = new LinkedList<byte[]>();
+            }
 
             if (writeBufferLength > 0)
+            {
+                if (onBytesWritten == null)
+                    throw new ArgumentException("There is no point to buffer writes if there is no processing action");
                 _writeBuffers = new LinkedList<byte[]>();
+            }
         }
 
         protected override void Dispose(bool disposing)
@@ -93,6 +109,8 @@ namespace Gravity.Server.Utility
         {
             if (_writeBuffers != null)
             {
+                _onBytesWritten(this);
+
                 var writeBuffer = _writeBuffers.PopFirst();
 
                 while (writeBuffer != null)
@@ -203,6 +221,14 @@ namespace Gravity.Server.Utility
                 }
             }
 
+            if (BufferedReadLength >= _readBytesToKeepInMemory)
+            {
+                _onBytesRead(this);
+
+                oldestBuffer = _readBuffers.FirstOrDefault();
+                newestBuffer = _readBuffers.LastOrDefault();
+            }
+
             var isLastBuffer = ReferenceEquals(oldestBuffer, newestBuffer);
 
             var bytesAvailable = isLastBuffer
@@ -216,6 +242,7 @@ namespace Gravity.Server.Utility
 
                 Array.Copy(oldestBuffer, _bytesReadFromOldestBuffer, buffer, offset, bytesAvailable);
                 _bytesReadFromOldestBuffer = 0;
+                BufferedReadStart += bytesAvailable;
 
                 _bufferPool.Reuse(oldestBuffer);
 
@@ -223,7 +250,10 @@ namespace Gravity.Server.Utility
             }
 
             Array.Copy(oldestBuffer, _bytesReadFromOldestBuffer, buffer, offset, count);
+
             _bytesReadFromOldestBuffer += count;
+            BufferedReadStart += count;
+
             return count;
         }
 
@@ -251,6 +281,7 @@ namespace Gravity.Server.Utility
         /// <param name="replacementCount">The number of bytes to copy from replacementBytes</param>
         public void ReplaceReadBytes(long streamOffset, int bytesToReplace, byte[] replacementBytes, int replacementOffset, int replacementCount)
         {
+            ReplaceBufferedBytes(_readBuffers, (int)(streamOffset - BufferedReadStart) + _bytesReadFromOldestBuffer, bytesToReplace, replacementBytes, replacementOffset, replacementCount);
         }
 
         public override void Write(byte[] buffer, int offset, int count)
@@ -266,28 +297,26 @@ namespace Gravity.Server.Utility
             var newBuffer = _bufferPool.Get(count);
             Array.Copy(buffer, offset, newBuffer, 0, count);
 
-            lock (_writeLock)
-            {
-                _writeBuffers.Append(newBuffer);
-                _bytesInWriteBuffers += count;
-            }
+            _writeBuffers.Append(newBuffer);
+            _bytesInWriteBuffers += count;
+
+            if (BufferedWriteLength > _writeBytesToKeepInMemory)
+                _onBytesWritten(this);
 
             while (BufferedWriteLength > _writeBytesToKeepInMemory) // We are buffering more bytes than we need to
             {
-                var first = _writeBuffers.FirstOrDefault();
-                if (first == null || _bytesInWriteBuffers - first.Length < _writeBytesToKeepInMemory)
+                var oldestBuffer = _writeBuffers.FirstOrDefault();
+
+                if (oldestBuffer == null || _bytesInWriteBuffers - oldestBuffer.Length < _writeBytesToKeepInMemory)
                     return; // Writing this buffer would leave us with not enough bytes in the buffer
 
-                lock (_writeLock)
-                {
-                    first = _writeBuffers.PopFirst();
-                    _bytesInWriteBuffers -= first.Length;
-                    BufferedWriteStart += first.Length;
-                }
+                oldestBuffer = _writeBuffers.PopFirst();
+                _bytesInWriteBuffers -= oldestBuffer.Length;
+                BufferedWriteStart += oldestBuffer.Length;
 
-                _stream.Write(first, 0, first.Length);
+                _stream.Write(oldestBuffer, 0, oldestBuffer.Length);
 
-                _bufferPool.Reuse(first);
+                _bufferPool.Reuse(oldestBuffer);
             }
         }
 
@@ -315,6 +344,7 @@ namespace Gravity.Server.Utility
         /// <param name="replacementCount">The number of bytes to copy from replacementBytes</param>
         public void ReplaceWrittenBytes(long streamOffset, int bytesToReplace, byte[] replacementBytes, int replacementOffset, int replacementCount)
         {
+            ReplaceBufferedBytes(_writeBuffers, (int)(streamOffset - BufferedWriteStart), bytesToReplace, replacementBytes, replacementOffset, replacementCount);
         }
 
         public override long Seek(long offset, SeekOrigin origin)
