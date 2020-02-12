@@ -221,7 +221,7 @@ namespace Gravity.Server.Utility
                 }
             }
 
-            if (BufferedReadLength >= _readBytesToKeepInMemory)
+            if (_endOfReadStream || BufferedReadLength >= _readBytesToKeepInMemory)
             {
                 _onBytesRead(this);
 

@@ -1,6 +1,7 @@
 ﻿using Gravity.Server.Interfaces;
 using Gravity.Server.Utility;
 using NUnit.Framework;
+using System.Diagnostics;
 using System.Text;
 
 namespace Gravity.UnitTests.Utility
@@ -70,8 +71,12 @@ namespace Gravity.UnitTests.Utility
         {
             foreach (var readLength in _bufferSizes)
             {
+                TestContext.Out.WriteLine($"Read length {readLength}");
+
                 foreach (var bufferLength in _bufferSizes)
                 {
+                    TestContext.Out.WriteLine($"Buffer length {bufferLength}");
+
                     var stream = new System.IO.MemoryStream();
                     FillStream(stream, iterations);
                     stream.Position = 0;
@@ -104,6 +109,28 @@ namespace Gravity.UnitTests.Utility
                     }
                 }
             }
+        }
+
+        [Test]
+        [TestCase(1)]
+        [TestCase(6)]
+        [TestCase(23)]
+        [TestCase(71)]
+        [TestCase(512)]
+        [TestCase(1745)]
+        public void Should_insert_bytes_in_stream_reads(int iterations)
+        {
+        }
+
+        [Test]
+        [TestCase(1)]
+        [TestCase(6)]
+        [TestCase(23)]
+        [TestCase(71)]
+        [TestCase(512)]
+        [TestCase(1745)]
+        public void Should_delete_bytes_in_stream_reads(int iterations)
+        {
         }
 
         [Test]
@@ -180,6 +207,28 @@ namespace Gravity.UnitTests.Utility
                     Assert.AreEqual(iterations, TestIncrementedStream(stream, (int)stream.Length));
                 }
             }
+        }
+
+        [Test]
+        [TestCase(1)]
+        [TestCase(6)]
+        [TestCase(23)]
+        [TestCase(71)]
+        [TestCase(512)]
+        [TestCase(1745)]
+        public void Should_insert_bytes_in_stream_writes(int iterations)
+        {
+        }
+
+        [Test]
+        [TestCase(1)]
+        [TestCase(6)]
+        [TestCase(23)]
+        [TestCase(71)]
+        [TestCase(512)]
+        [TestCase(1745)]
+        public void Should_delete_bytes_in_stream_writes(int iterations)
+        {
         }
 
         private void FillStream(System.IO.Stream stream, int iterations)
