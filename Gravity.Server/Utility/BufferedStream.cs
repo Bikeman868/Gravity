@@ -370,6 +370,8 @@ namespace Gravity.Server.Utility
             int start, int length, 
             byte[] buffer, int offset)
         {
+            if (length < 1) return;
+
             var bufferListElement = bufferList.FirstElement();
             var bufferedData = bufferListElement?.Data;
 
@@ -416,6 +418,8 @@ namespace Gravity.Server.Utility
             int start, int length, 
             byte[] replacementBytes, int replacementOffset, int replacementLength)
         {
+            if (length < 1) return;
+
             var bufferListElement = bufferList.FirstElement();
             var bufferedData = bufferListElement?.Data;
 

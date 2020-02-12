@@ -60,12 +60,12 @@ namespace Gravity.UnitTests.Utility
         }
 
         [Test]
-        [TestCase(1)]
-        [TestCase(10)]
-        [TestCase(20)]
-        [TestCase(55)]
-        [TestCase(406)]
-        [TestCase(3217)]
+        [TestCase(2)]
+        [TestCase(9)]
+        [TestCase(23)]
+        [TestCase(71)]
+        [TestCase(399)]
+        [TestCase(1754)]
         public void Should_replace_bytes_in_stream_reads(int iterations)
         {
             foreach (var readLength in _bufferSizes)
@@ -85,14 +85,17 @@ namespace Gravity.UnitTests.Utility
                         bs => 
                         {
                             var count = bs.BufferedReadLength - (int)(streamPos - bs.BufferedReadStart);
-                            var buffer = new byte[count];
-                            bs.GetReadBytes(streamPos, count, buffer, 0);
+                            if (count > 0)
+                            {
+                                var buffer = new byte[count];
+                                bs.GetReadBytes(streamPos, count, buffer, 0);
 
-                            for (var i = 0; i < count; i++) buffer[i] += 1;
+                                for (var i = 0; i < count; i++) buffer[i] += 1;
 
-                            bs.ReplaceReadBytes(streamPos, count, buffer, 0, count);
+                                bs.ReplaceReadBytes(streamPos, count, buffer, 0, count);
 
-                            streamPos += count;
+                                streamPos += count;
+                            }
                         }, 
                         0, 
                         null))
@@ -137,12 +140,12 @@ namespace Gravity.UnitTests.Utility
         }
 
         [Test]
-        [TestCase(1)]
-        [TestCase(10)]
-        [TestCase(20)]
-        [TestCase(55)]
-        [TestCase(406)]
-        [TestCase(3217)]
+        [TestCase(2)]
+        [TestCase(9)]
+        [TestCase(23)]
+        [TestCase(71)]
+        [TestCase(399)]
+        [TestCase(1754)]
         public void Should_replace_bytes_in_stream_writes(int iterations)
         {
             foreach (var bufferLength in _bufferSizes)
@@ -158,14 +161,17 @@ namespace Gravity.UnitTests.Utility
                     bs => 
                     { 
                         var count = bs.BufferedWriteLength - (int)(streamPos - bs.BufferedWriteStart);
-                        var buffer = new byte[count];
-                        bs.GetWrittenBytes(streamPos, count, buffer, 0);
+                        if (count > 0)
+                        {
+                            var buffer = new byte[count];
+                            bs.GetWrittenBytes(streamPos, count, buffer, 0);
 
-                        for (var i = 0; i < count; i++) buffer[i] += 1;
+                            for (var i = 0; i < count; i++) buffer[i] += 1;
 
-                        bs.ReplaceWrittenBytes(streamPos, count, buffer, 0, count);
+                            bs.ReplaceWrittenBytes(streamPos, count, buffer, 0, count);
 
-                        streamPos += count;
+                            streamPos += count;
+                        }
                     }))
                 {
                     FillStream(bufferedStream, iterations);
