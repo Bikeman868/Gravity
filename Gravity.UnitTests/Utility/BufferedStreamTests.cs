@@ -34,8 +34,12 @@ namespace Gravity.UnitTests.Utility
         {
             foreach (var readLength in _bufferSizes)
             {
+                TestContext.Out.WriteLine($"Read length {readLength}");
+
                 foreach (var bufferLength in _bufferSizes)
                 {
+                    TestContext.Out.WriteLine($"Buffer length {bufferLength}");
+
                     var stream = new System.IO.MemoryStream();
                     FillStream(stream, iterations);
                     stream.Position = 0;
@@ -144,6 +148,8 @@ namespace Gravity.UnitTests.Utility
         {
             foreach (var bufferLength in _bufferSizes)
             {
+                TestContext.Out.WriteLine($"Buffer length {bufferLength}");
+
                 var stream = new System.IO.MemoryStream();
                 var streamPos = 0L;
                 using (var bufferedStream = new BufferedStream(
@@ -177,6 +183,8 @@ namespace Gravity.UnitTests.Utility
         {
             foreach (var bufferLength in _bufferSizes)
             {
+                TestContext.Out.WriteLine($"Buffer length {bufferLength}");
+
                 var stream = new System.IO.MemoryStream();
                 var streamPos = 0L;
                 using (var bufferedStream = new BufferedStream(
@@ -218,6 +226,41 @@ namespace Gravity.UnitTests.Utility
         [TestCase(1745)]
         public void Should_insert_bytes_in_stream_writes(int iterations)
         {
+            foreach (var bufferLength in _bufferSizes)
+            {
+                TestContext.Out.WriteLine($"Buffer length {bufferLength}");
+
+                var stream = new System.IO.MemoryStream();
+                var streamPos = 0L;
+                using (var bufferedStream = new BufferedStream(
+                    stream, 
+                    SetupMock<IBufferPool>(), 
+                    0, 
+                    null, 
+                    bufferLength, 
+                    bs => 
+                    { 
+                        var count = bs.BufferedWriteLength - (int)(streamPos - bs.BufferedWriteStart);
+                        if (count > 0)
+                        {
+                            var originalBytes = new byte[count];
+                            bs.GetWrittenBytes(streamPos, count, originalBytes, 0);
+
+                            var s = _encoding.GetString(originalBytes).Replace("B", "BB");
+                            var newBytes = _encoding.GetBytes(s);
+
+                            bs.ReplaceWrittenBytes(streamPos, count, newBytes, 0, newBytes.Length);
+
+                            streamPos += newBytes.Length;
+                        }
+                    }))
+                {
+                    FillStream(bufferedStream, iterations);
+                    bufferedStream.Close();
+                    stream.Position = 0;
+                    Assert.AreEqual(iterations, TestDoubleBsStream(stream, (int)stream.Length));
+                }
+            }
         }
 
         [Test]
@@ -289,6 +332,43 @@ namespace Gravity.UnitTests.Utility
             for (var i = 0; i < message.Length; i++)
             {
                 Assert.AreEqual(_testMessage[j] + 1, message[i] + 0);
+                if (++j == _testMessage.Length)
+                {
+                    j = 0;
+                    iterations++;
+                }
+            }
+
+            return iterations;
+        }
+
+        private int TestDoubleBsStream(System.IO.Stream stream, int bufferSize)
+        {
+            var stringBuilder = new StringBuilder();
+            var buffer = new byte[bufferSize];
+
+            do
+            {
+                var bytesRead = stream.Read(buffer, 0, buffer.Length);
+                if (bytesRead == 0) break;
+
+                stringBuilder.Append(_encoding.GetString(buffer, 0, bytesRead));
+            } while (true);
+
+            var message = stringBuilder.ToString();
+            var iterations = 0;
+            var j = 0;
+
+            for (var i = 0; i < message.Length; i++)
+            {
+                Assert.AreEqual(_testMessage[j], message[i]);
+
+                if (message[i] == 'B')
+                {
+                    i++;
+                    Assert.AreEqual(_testMessage[j], message[i]);
+                }
+
                 if (++j == _testMessage.Length)
                 {
                     j = 0;

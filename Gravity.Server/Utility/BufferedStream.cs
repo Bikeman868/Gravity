@@ -282,6 +282,7 @@ namespace Gravity.Server.Utility
         public void ReplaceReadBytes(long streamOffset, int bytesToReplace, byte[] replacementBytes, int replacementOffset, int replacementCount)
         {
             ReplaceBufferedBytes(_readBuffers, (int)(streamOffset - BufferedReadStart) + _bytesReadFromOldestBuffer, bytesToReplace, replacementBytes, replacementOffset, replacementCount);
+            _bytesInReadBuffers += replacementCount - bytesToReplace;
         }
 
         public override void Write(byte[] buffer, int offset, int count)
@@ -345,6 +346,7 @@ namespace Gravity.Server.Utility
         public void ReplaceWrittenBytes(long streamOffset, int bytesToReplace, byte[] replacementBytes, int replacementOffset, int replacementCount)
         {
             ReplaceBufferedBytes(_writeBuffers, (int)(streamOffset - BufferedWriteStart), bytesToReplace, replacementBytes, replacementOffset, replacementCount);
+            _bytesInWriteBuffers += replacementCount - bytesToReplace;
         }
 
         public override long Seek(long offset, SeekOrigin origin)
