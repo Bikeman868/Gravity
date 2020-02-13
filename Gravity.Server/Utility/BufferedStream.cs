@@ -258,14 +258,16 @@ namespace Gravity.Server.Utility
         }
 
         /// <summary>
-        /// Copies bytes from the read buffer into a buffer supplied by the caller
+        /// Copies bytes from the read buffer into a buffer supplied by the caller. These
+        /// bytes have been read from the wrapped stream already but not read from the
+        /// buffered stream.
         /// </summary>
         /// <param name="streamOffset">The absolute position within the stream to copy from. 
         /// Must not be less than BufferedReadStart</param>
         /// <param name="count">The number of bytes to copy. Can not be more than BufferedReadLength from BufferedReadStart</param>
         /// <param name="buffer">The buffer to copy bytes into</param>
         /// <param name="offset">The offset to start copying into buffer</param>
-        public void GetReadBytes(long streamOffset, int count, byte[] buffer, int offset)
+        public void GetUnreadBytes(long streamOffset, int count, byte[] buffer, int offset)
         {
             GetBufferedBytes(_readBuffers, (int)(streamOffset - BufferedReadStart) + _bytesReadFromOldestBuffer, count, buffer, offset);
         }
@@ -279,9 +281,16 @@ namespace Gravity.Server.Utility
         /// <param name="replacementBytes">The bytes to insert into the stream at streamOffset</param>
         /// <param name="replacementOffset">The offset into the replacementBytes buffer to start copying bytes from</param>
         /// <param name="replacementCount">The number of bytes to copy from replacementBytes</param>
-        public void ReplaceReadBytes(long streamOffset, int bytesToReplace, byte[] replacementBytes, int replacementOffset, int replacementCount)
+        public void ReplaceUnreadBytes(long streamOffset, int bytesToReplace, byte[] replacementBytes, int replacementOffset, int replacementCount)
         {
-            ReplaceBufferedBytes(_readBuffers, (int)(streamOffset - BufferedReadStart) + _bytesReadFromOldestBuffer, bytesToReplace, replacementBytes, replacementOffset, replacementCount);
+            ReplaceBufferedBytes(
+                _readBuffers, 
+                (int)(streamOffset - BufferedReadStart) + _bytesReadFromOldestBuffer, 
+                bytesToReplace, 
+                ref _unusedBytesInNewestBuffer,
+                replacementBytes, 
+                replacementOffset, 
+                replacementCount);
             _bytesInReadBuffers += replacementCount - bytesToReplace;
         }
 
@@ -345,7 +354,15 @@ namespace Gravity.Server.Utility
         /// <param name="replacementCount">The number of bytes to copy from replacementBytes</param>
         public void ReplaceWrittenBytes(long streamOffset, int bytesToReplace, byte[] replacementBytes, int replacementOffset, int replacementCount)
         {
-            ReplaceBufferedBytes(_writeBuffers, (int)(streamOffset - BufferedWriteStart), bytesToReplace, replacementBytes, replacementOffset, replacementCount);
+            int unusedTailBytes = 0;
+            ReplaceBufferedBytes(
+                _writeBuffers, 
+                (int)(streamOffset - BufferedWriteStart), 
+                bytesToReplace, 
+                ref unusedTailBytes,
+                replacementBytes, 
+                replacementOffset, 
+                replacementCount);
             _bytesInWriteBuffers += replacementCount - bytesToReplace;
         }
 
@@ -418,6 +435,7 @@ namespace Gravity.Server.Utility
         private void ReplaceBufferedBytes(
             LinkedList<byte[]> bufferList, 
             int start, int length, 
+            ref int unusedTailBytes,
             byte[] replacementBytes, int replacementOffset, int replacementLength)
         {
             if (length < 1) return;
@@ -438,9 +456,32 @@ namespace Gravity.Server.Utility
                 if (bufferedData == null)
                     throw new Exception("Attempt to overwrite past the end of the buffer");
 
-                var bytesToCopy = length;
-                if (bytesToCopy > replacementLength) bytesToCopy = replacementLength;
-                if (start + bytesToCopy > bufferedData.Length) bytesToCopy = bufferedData.Length - start;
+                int bytesToCopy;
+                
+                if (bufferListElement.Next == null && start + length > bufferedData.Length - unusedTailBytes)
+                {
+                    bytesToCopy = replacementLength;
+
+                    if (start + bytesToCopy > bufferedData.Length)
+                    {
+                        bytesToCopy = bufferedData.Length - start;
+                        unusedTailBytes = 0;
+                    }
+                    else
+                    {
+                        unusedTailBytes = bufferedData.Length - start - bytesToCopy;
+                    }
+                }
+                else
+                {
+                    bytesToCopy = length;
+                
+                    if (bytesToCopy > replacementLength) 
+                        bytesToCopy = replacementLength;
+
+                    if (start + bytesToCopy > bufferedData.Length) 
+                        bytesToCopy = bufferedData.Length - start;
+                }
 
                 Array.Copy(replacementBytes, replacementOffset, bufferedData, start, bytesToCopy);
 
@@ -516,6 +557,10 @@ namespace Gravity.Server.Utility
             {
                 var additionalData = _bufferPool.Get(replacementLength);
                 Array.Copy(replacementBytes, replacementOffset, additionalData, 0, replacementLength);
+
+                if (bufferListElement.Next == null)
+                    unusedTailBytes = 0;
+
                 bufferList.InsertAfter(bufferListElement, additionalData);
             }
         }

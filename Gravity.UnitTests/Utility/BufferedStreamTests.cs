@@ -97,11 +97,11 @@ namespace Gravity.UnitTests.Utility
                             if (count > 0)
                             {
                                 var buffer = new byte[count];
-                                bs.GetReadBytes(streamPos, count, buffer, 0);
+                                bs.GetUnreadBytes(streamPos, count, buffer, 0);
 
                                 for (var i = 0; i < count; i++) buffer[i] += 1;
 
-                                bs.ReplaceReadBytes(streamPos, count, buffer, 0, count);
+                                bs.ReplaceUnreadBytes(streamPos, count, buffer, 0, count);
 
                                 streamPos += count;
                             }
@@ -124,6 +124,47 @@ namespace Gravity.UnitTests.Utility
         [TestCase(1745)]
         public void Should_insert_bytes_in_stream_reads(int iterations)
         {
+            foreach (var readLength in _bufferSizes)
+            {
+                TestContext.Out.WriteLine($"Read length {readLength}");
+
+                foreach (var bufferLength in _bufferSizes)
+                {
+                    TestContext.Out.WriteLine($"Buffer length {bufferLength}");
+
+                    var stream = new System.IO.MemoryStream();
+                    FillStream(stream, iterations);
+                    stream.Position = 0;
+
+                    var streamPos = 0L;
+
+                    using (var bufferedStream = new BufferedStream(
+                        stream, 
+                        SetupMock<IBufferPool>(), 
+                        bufferLength, 
+                        bs => 
+                        {
+                            var count = bs.BufferedReadLength - (int)(streamPos - bs.BufferedReadStart);
+                            if (count > 0)
+                            {
+                                var originalBytes = new byte[count];
+                                bs.GetUnreadBytes(streamPos, count, originalBytes, 0);
+
+                                var s = _encoding.GetString(originalBytes).Replace("B", "BB");
+                                var newBytes = _encoding.GetBytes(s);
+
+                                bs.ReplaceUnreadBytes(streamPos, count, newBytes, 0, newBytes.Length);
+
+                                streamPos += newBytes.Length;
+                            }
+                        }, 
+                        0, 
+                        null))
+                    {
+                        Assert.AreEqual(iterations, TestDoubleBsStream(bufferedStream, readLength));
+                    }
+                }
+            }
         }
 
         [Test]
