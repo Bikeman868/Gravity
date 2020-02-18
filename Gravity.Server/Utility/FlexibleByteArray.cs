@@ -13,6 +13,7 @@ namespace Gravity.Server.Utility
     /// </summary>
     internal class FlexibleByteArray
     {
+    /*
         /// <summary>
         /// Used to obtain and recycle byte arrays
         /// </summary>
@@ -39,6 +40,7 @@ namespace Gravity.Server.Utility
         {
             _bufferPool = bufferPool;
             _chunkSize = chunkSize;
+            _buffers = new LinkedList<ByteBuffer>();
         }
 
         public void Append(byte[] bytes, int offset, int count)
@@ -259,5 +261,6 @@ namespace Gravity.Server.Utility
                 bufferList.InsertAfter(bufferListElement, additionalData);
             }
         }
+*/
     }
 }

@@ -45,6 +45,7 @@
     <Compile Include="Mocks\MockBufferPool.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utility\BufferedStreamTests.cs" />
+    <Compile Include="Utility\ByteBufferTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="paket.references" />

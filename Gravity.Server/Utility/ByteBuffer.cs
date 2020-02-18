@@ -47,7 +47,7 @@ namespace Gravity.Server.Utility
         /// <summary>
         /// Returns true if this many bytes can be prepended
         /// </summary>
-        public bool CanPrepend(int count) => count <= HeadSize;
+        public bool CanPrepend(int count) => End == Start ? count <= Size : count <= HeadSize;
 
         public ByteBuffer(byte[] data, int? length = null)
         {
@@ -100,48 +100,72 @@ namespace Gravity.Server.Utility
         }
 
         /// <summary>
-        /// Replaces a range of bytes from the data array with some new bytes.
-        /// The new bytes can always be shorter than the bytes that they are replacing
-        /// The new bytes can be longer if there are enough unused bytes at the end
+        /// Replaces a range of bytes from the data array with some new byte and
+        /// updates the input parameters to allow the replacement to continue in the
+        /// next buffer
         /// </summary>
-        public void Replace(int offset, int count, byte[] replacementBytes, int replacementStart, int replacementCount)
+        /// <param name="replacementBytes">The array of bytes to write into this buffer. Can be
+        /// null or zero length to simply delete bytes from the buffer</param>
+        /// <param name="offset">The offset into this buffer to start overwritng. Returns
+        /// zero because this is where you would start overwriting in the next buffer</param>
+        /// <param name="count">The number of bytes to overwrite. Can be 0 to insert bytes
+        /// without overwriting existing ones. Returns the number of bytes remaining to
+        /// be overwritten in the next buffer</param>
+        /// <param name="replacementStart">The offset into replacementBytes to start copying.
+        /// This routine increments this offset by the number of bytes copied from replacementBytes</param>
+        /// <param name="replacementCount">The number of bytes to copy from replacementBytes. Can
+        /// be zero to delete bytes from the buffer without replacing them</param>
+        public void Replace(
+            byte[] replacementBytes, 
+            ref int offset, 
+            ref int count, 
+            ref int replacementStart, 
+            ref int replacementCount)
         {
 #if DEBUG
             if (HeadSize + offset < 0) throw new ArgumentException("Offset is before buffer start");
-            if (Start + offset + count > Size) throw new ArgumentException("Offset+count is after buffer end");
 #endif
-            if (count == replacementCount)
+            if (count == replacementCount && offset >= 0)
             {
-                Array.Copy(replacementBytes, replacementStart, Data, Start + offset, count);
-                if (offset < 0) Start += offset;
-                if (Start + offset + replacementCount > End) End = Start + offset + replacementCount;
+                // Straight overwrite with no moving bytes around
+
+                var bytesToCopy = Start + offset + count > End 
+                    ? End - Start - offset
+                    : count;
+
+                Array.Copy(replacementBytes, replacementStart, Data, Start + offset, bytesToCopy);
+
+                offset = 0;
+                count -= bytesToCopy;
+                replacementStart += bytesToCopy;
+                replacementCount -= bytesToCopy;
+
+                return;
+            }
+
+            var tailBytes = End - Start - offset - count;
+
+            if (count < replacementCount)
+            {
+                var extraBytes = replacementCount - count;
+                if (tailBytes > 0)
+                {
+                    var tailOffset = End - tailBytes;
+                    Array.Copy(Data, tailOffset, Data, tailOffset + extraBytes, tailBytes);
+                }
+                Array.Copy(replacementBytes, replacementStart, Data, Start + offset, replacementCount);
+                End += extraBytes;
             }
             else
             {
-                var tailBytes = End - Start - offset - count;
-
-                if (count < replacementCount)
+                var deletedBytes = count - replacementCount;
+                Array.Copy(replacementBytes, replacementStart, Data, Start + offset, replacementCount);
+                if (tailBytes > 0)
                 {
-                    var extraBytes = replacementCount - count;
-                    if (tailBytes > 0)
-                    {
-                        var tailOffset = End - tailBytes;
-                        Array.Copy(Data, tailOffset, Data, tailOffset + extraBytes, tailBytes);
-                    }
-                    Array.Copy(replacementBytes, replacementStart, Data, Start + offset, replacementCount);
-                    End += extraBytes;
+                    var tailOffset = End - tailBytes;
+                    Array.Copy(Data, tailOffset, Data, tailOffset - deletedBytes, tailBytes);
                 }
-                else
-                {
-                    var deletedBytes = count - replacementCount;
-                    Array.Copy(replacementBytes, replacementStart, Data, Start + offset, replacementCount);
-                    if (tailBytes > 0)
-                    {
-                        var tailOffset = End - tailBytes;
-                        Array.Copy(Data, tailOffset, Data, tailOffset - deletedBytes, tailBytes);
-                    }
-                    End -= deletedBytes;
-                }
+                End -= deletedBytes;
             }
         }
     }
