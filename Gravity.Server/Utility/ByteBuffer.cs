@@ -3,6 +3,11 @@ using System;
 
 namespace Gravity.Server.Utility
 {
+    /// <summary>
+    /// Represents an array of bytes that supports appending, deleting and
+    /// inserting bytes. Also provided information to allow these operations
+    /// to span multiple ByteBuffer instances
+    /// </summary>
     internal class ByteBuffer
     {
         /// <summary>
@@ -53,7 +58,7 @@ namespace Gravity.Server.Utility
         public ByteBuffer(byte[] data, int? length = null)
         {
             Data = data;
-            End = length ?? Data.Length;
+            End = length ?? 0;
         }
 
         /// <summary>
@@ -201,7 +206,7 @@ namespace Gravity.Server.Utility
                 return null;
             }
             
-            var result = new ByteBuffer(bufferPool.GetAtLeast(newBytesCount + bytesToMove), 0);
+            var result = new ByteBuffer(bufferPool.GetAtLeast(newBytesCount + bytesToMove));
             result.Append(newBytes, newBytesStart, newBytesCount);
 
             if (bytesToMove > 0)

@@ -26,7 +26,7 @@ namespace Gravity.UnitTests.Utility
         public void Should_calculate_properties()
         {
             const int size = 10;
-            var bb = new ByteBuffer(new byte[size]);
+            var bb = new ByteBuffer(new byte[size], size);
 
             Assert.IsNotNull(bb.Data);
             Assert.AreEqual(size, bb.Data.Length);
@@ -40,7 +40,7 @@ namespace Gravity.UnitTests.Utility
         public void Should_append_up_to_size()
         {
             const int size = 10;
-            var bb = new ByteBuffer(new byte[size], 0);
+            var bb = new ByteBuffer(new byte[size]);
 
             Assert.AreEqual(size, bb.Size);
             Assert.AreEqual(0, bb.Length);
@@ -76,7 +76,7 @@ namespace Gravity.UnitTests.Utility
         public void Should_prepend_up_to_size()
         {
             const int size = 10;
-            var bb = new ByteBuffer(new byte[size], 0);
+            var bb = new ByteBuffer(new byte[size]);
 
             Assert.AreEqual(size, bb.Size);
             Assert.AreEqual(0, bb.Length);
@@ -125,7 +125,7 @@ namespace Gravity.UnitTests.Utility
                         for (var i = 0; i < length2; i++)
                             expectedData[i + replacementOffest] = replacementData[i];
 
-                        var bb = new ByteBuffer(new byte[size], 0);
+                        var bb = new ByteBuffer(new byte[size]);
                         bb.Append(originalData, 0, originalData.Length);
 
                         var offset = replacementOffest;
@@ -163,7 +163,7 @@ namespace Gravity.UnitTests.Utility
                         for (var i = 0; i < length2; i++)
                             expectedData[i + replacementOffest] = replacementData[i];
 
-                        var bb = new ByteBuffer(new byte[size], 0);
+                        var bb = new ByteBuffer(new byte[size]);
                         bb.Prepend(originalData, 0, originalData.Length);
 
                         var offset = replacementOffest;
@@ -201,7 +201,7 @@ namespace Gravity.UnitTests.Utility
                         for (var i = 0; (i < replacementData.Length) && (i + replacementOffest < originalData.Length); i++)
                             expectedData[i + replacementOffest] = replacementData[i];
 
-                        var bb = new ByteBuffer(new byte[size], 0);
+                        var bb = new ByteBuffer(new byte[size]);
                         bb.Prepend(originalData, 0, originalData.Length);
 
                         var offset = replacementOffest;
@@ -228,7 +228,7 @@ namespace Gravity.UnitTests.Utility
         public void Should_replace_larger_buffer()
         {
             const int size = 10;
-            var bb = new ByteBuffer(new byte[size], 0);
+            var bb = new ByteBuffer(new byte[size]);
 
             bb.Append(new byte[] { 1, 2, 3, 4, 5, 6 }, 0, 6);
 
@@ -256,7 +256,7 @@ namespace Gravity.UnitTests.Utility
             var bufferPool = SetupMock<IBufferPool>();
 
             const int size = 10;
-            var bb1 = new ByteBuffer(new byte[size], 0);
+            var bb1 = new ByteBuffer(new byte[size]);
 
             bb1.Append(new byte[] { 1, 2, 3, 4 }, 0, 4);
             var bb2 = bb1.Insert(1, 2, bufferPool, new byte[] { 8, 9, 10 }, 0, 3);
@@ -270,7 +270,7 @@ namespace Gravity.UnitTests.Utility
             var bufferPool = SetupMock<IBufferPool>();
 
             const int size = 10;
-            var bb1 = new ByteBuffer(new byte[size], 0);
+            var bb1 = new ByteBuffer(new byte[size]);
 
             bb1.Append(new byte[] { 1, 2, 3, 4 }, 0, 4);
             var bb2 = bb1.Insert(2, 2, bufferPool, new byte[] { 8, 9, 10, 11, 12 }, 0, 5);
@@ -284,7 +284,7 @@ namespace Gravity.UnitTests.Utility
             var bufferPool = SetupMock<IBufferPool>();
 
             const int size = 10;
-            var bb1 = new ByteBuffer(new byte[size], 0);
+            var bb1 = new ByteBuffer(new byte[size]);
 
             bb1.Append(new byte[] { 1, 2, 3, 4 }, 0, 4);
             var bb2 = bb1.Insert(0, 2, bufferPool, new byte[] { 8, 9, 10, 11, 12 }, 0, 5);
@@ -298,7 +298,7 @@ namespace Gravity.UnitTests.Utility
             var bufferPool = SetupMock<IBufferPool>();
 
             const int size = 10;
-            var bb1 = new ByteBuffer(new byte[size], 0);
+            var bb1 = new ByteBuffer(new byte[size]);
 
             bb1.Prepend(new byte[] { 1, 2, 3, 4 }, 0, 4);
             var bb2 = bb1.Insert(2, 2, bufferPool, new byte[] { 8, 9, 10, 11, 12 }, 0, 5);
@@ -312,7 +312,7 @@ namespace Gravity.UnitTests.Utility
             var bufferPool = SetupMock<IBufferPool>();
 
             const int size = 10;
-            var bb1 = new ByteBuffer(new byte[size], 0);
+            var bb1 = new ByteBuffer(new byte[size]);
 
             bb1.Prepend(new byte[] { 1, 2, 3, 4 }, 0, 4);
             var bb2 = bb1.Insert(0, 2, bufferPool, new byte[] { 8, 9, 10, 11, 12 }, 0, 5);
@@ -326,7 +326,7 @@ namespace Gravity.UnitTests.Utility
             var bufferPool = SetupMock<IBufferPool>();
 
             const int size = 10;
-            var bb1 = new ByteBuffer(new byte[size], 0);
+            var bb1 = new ByteBuffer(new byte[size]);
 
             bb1.Append(new byte[] { 1, 2, 3, 4 }, 0, 4);
             var bb2 = bb1.Insert(2, 2, bufferPool, new byte[] { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 }, 0, 10);
@@ -340,7 +340,7 @@ namespace Gravity.UnitTests.Utility
             var bufferPool = SetupMock<IBufferPool>();
 
             const int size = 10;
-            var bb1 = new ByteBuffer(new byte[size], 0);
+            var bb1 = new ByteBuffer(new byte[size]);
 
             bb1.Append(new byte[] { 1, 2, 3, 4 }, 0, 4);
             var bb2 = bb1.Insert(1, 2, bufferPool, new byte[] { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 }, 0, 10);
@@ -352,7 +352,7 @@ namespace Gravity.UnitTests.Utility
         public void Should_delete_within()
         {
             const int size = 10;
-            var bb = new ByteBuffer(new byte[size], 0);
+            var bb = new ByteBuffer(new byte[size]);
 
             bb.Append(new byte[] { 1, 2, 3, 4, 5, 6 }, 0, 6);
 
@@ -378,7 +378,7 @@ namespace Gravity.UnitTests.Utility
         public void Should_delete_at_end()
         {
             const int size = 10;
-            var bb = new ByteBuffer(new byte[size], 0);
+            var bb = new ByteBuffer(new byte[size]);
 
             bb.Append(new byte[] { 1, 2, 3, 4, 5, 6 }, 0, 6);
 
@@ -404,7 +404,7 @@ namespace Gravity.UnitTests.Utility
         public void Should_delete_at_start()
         {
             const int size = 10;
-            var bb = new ByteBuffer(new byte[size], 0);
+            var bb = new ByteBuffer(new byte[size]);
 
             bb.Append(new byte[] { 1, 2, 3, 4, 5, 6 }, 0, 6);
 
@@ -432,8 +432,8 @@ namespace Gravity.UnitTests.Utility
         {
             const int size = 10;
 
-            var bb1 = new ByteBuffer(new byte[size], 0);
-            var bb2 = new ByteBuffer(new byte[size], 0);
+            var bb1 = new ByteBuffer(new byte[size]);
+            var bb2 = new ByteBuffer(new byte[size]);
 
             bb1.Append(new byte[] { 1, 2, 3, 4, 5 }, 0, 5);
             bb2.Append(new byte[] { 6, 7, 8, 9, 10 }, 0, 5);
@@ -460,7 +460,7 @@ namespace Gravity.UnitTests.Utility
         public void Should_delete_large()
         {
             const int size = 10;
-            var bb = new ByteBuffer(new byte[size], 0);
+            var bb = new ByteBuffer(new byte[size]);
 
             bb.Append(new byte[] { 1, 2, 3, 4, 5, 6 }, 0, 6);
 
