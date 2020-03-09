@@ -56,6 +56,8 @@ namespace Gravity.UnitTests.Utility
             Assert.AreEqual(0, bb.Start);
             Assert.AreEqual(3, bb.End);
 
+            Check(bb, new byte[] { 1, 2, 3 });
+
             Assert.IsTrue(bb.CanAppend(1));
             Assert.IsTrue(bb.CanAppend(size - 3));
             Assert.IsFalse(bb.CanAppend(size - 2));
@@ -67,15 +69,7 @@ namespace Gravity.UnitTests.Utility
             Assert.AreEqual(0, bb.Start);
             Assert.AreEqual(6, bb.End);
 
-            var dest = new byte[6];
-            bb.Get(0, 6, dest, 0);
-
-            Assert.AreEqual(1, dest[0]);
-            Assert.AreEqual(2, dest[1]);
-            Assert.AreEqual(3, dest[2]);
-            Assert.AreEqual(4, dest[3]);
-            Assert.AreEqual(5, dest[4]);
-            Assert.AreEqual(6, dest[5]);
+            Check(bb, new byte[] { 1, 2, 3, 4, 5, 6 });
         }
 
         [Test]
@@ -98,6 +92,8 @@ namespace Gravity.UnitTests.Utility
             Assert.AreEqual(size - 3, bb.Start);
             Assert.AreEqual(size, bb.End);
 
+            Check(bb, new byte[] { 4, 5, 6 });
+
             Assert.IsTrue(bb.CanPrepend(1));
             Assert.IsTrue(bb.CanPrepend(size - 3));
             Assert.IsFalse(bb.CanPrepend(size - 2));
@@ -109,19 +105,11 @@ namespace Gravity.UnitTests.Utility
             Assert.AreEqual(size - 6, bb.Start);
             Assert.AreEqual(size, bb.End);
 
-            var dest = new byte[6];
-            bb.Get(0, 6, dest, 0);
-
-            Assert.AreEqual(1, dest[0]);
-            Assert.AreEqual(2, dest[1]);
-            Assert.AreEqual(3, dest[2]);
-            Assert.AreEqual(4, dest[3]);
-            Assert.AreEqual(5, dest[4]);
-            Assert.AreEqual(6, dest[5]);
+            Check(bb, new byte[] { 1, 2, 3, 4, 5, 6 });
         }
 
         [Test]
-        public void Should_replace_at_start()
+        public void Should_replace_at_start_append()
         {
             const int size = 10;
             var bb = new ByteBuffer(new byte[size], 0);
@@ -142,19 +130,11 @@ namespace Gravity.UnitTests.Utility
             Assert.AreEqual(3, replacementStart);
             Assert.AreEqual(0, replacementCount);
 
-            var dest = new byte[6];
-            bb.Get(0, 6, dest, 0);
-
-            Assert.AreEqual(8, dest[0]);
-            Assert.AreEqual(9, dest[1]);
-            Assert.AreEqual(10, dest[2]);
-            Assert.AreEqual(4, dest[3]);
-            Assert.AreEqual(5, dest[4]);
-            Assert.AreEqual(6, dest[5]);
+            Check(bb, new byte[] { 8, 9, 10, 4, 5, 6 });
         }
 
         [Test]
-        public void Should_replace_at_end()
+        public void Should_replace_at_end_append()
         {
             const int size = 10;
             var bb = new ByteBuffer(new byte[size], 0);
@@ -175,15 +155,57 @@ namespace Gravity.UnitTests.Utility
             Assert.AreEqual(3, replacementStart);
             Assert.AreEqual(0, replacementCount);
 
-            var dest = new byte[6];
-            bb.Get(0, 6, dest, 0);
+            Check(bb, new byte[] { 1, 2, 3, 8, 9, 10 });
+        }
 
-            Assert.AreEqual(1, dest[0]);
-            Assert.AreEqual(2, dest[1]);
-            Assert.AreEqual(3, dest[2]);
-            Assert.AreEqual(8, dest[3]);
-            Assert.AreEqual(9, dest[4]);
-            Assert.AreEqual(10, dest[5]);
+        [Test]
+        public void Should_replace_at_start_prepend()
+        {
+            const int size = 10;
+            var bb = new ByteBuffer(new byte[size], 0);
+
+            bb.Prepend(new byte[] { 1, 2, 3, 4, 5, 6 }, 0, 6);
+
+            var offset = 0;
+            var count = 3;
+            var replacementStart = 0;
+            var replacementCount = 3;
+
+            Assert.IsTrue(bb.CanReplace(offset, count, replacementCount));
+
+            bb.Replace(new byte[] { 8, 9, 10}, ref offset, ref count, ref replacementStart, ref replacementCount);
+
+            Assert.AreEqual(3, offset);
+            Assert.AreEqual(0, count);
+            Assert.AreEqual(3, replacementStart);
+            Assert.AreEqual(0, replacementCount);
+
+            Check(bb, new byte[] { 8, 9, 10, 4, 5, 6 });
+        }
+
+        [Test]
+        public void Should_replace_at_end_prepend()
+        {
+            const int size = 10;
+            var bb = new ByteBuffer(new byte[size], 0);
+
+            bb.Prepend(new byte[] { 1, 2, 3, 4, 5, 6 }, 0, 6);
+
+            var offset = 3;
+            var count = 3;
+            var replacementStart = 0;
+            var replacementCount = 3;
+
+            Assert.IsTrue(bb.CanReplace(offset, count, replacementCount));
+
+            bb.Replace(new byte[] { 8, 9, 10}, ref offset, ref count, ref replacementStart, ref replacementCount);
+
+            Assert.AreEqual(0, offset);
+            Assert.AreEqual(0, count);
+            Assert.AreEqual(3, replacementStart);
+            Assert.AreEqual(0, replacementCount);
+
+            Check(bb, new byte[] { 1, 2, 3, 8, 9, 10 });
         }
 
         [Test]
@@ -208,15 +230,7 @@ namespace Gravity.UnitTests.Utility
             Assert.AreEqual(2, replacementStart);
             Assert.AreEqual(1, replacementCount);
 
-            var dest = new byte[6];
-            bb.Get(0, 6, dest, 0);
-
-            Assert.AreEqual(1, dest[0]);
-            Assert.AreEqual(2, dest[1]);
-            Assert.AreEqual(3, dest[2]);
-            Assert.AreEqual(4, dest[3]);
-            Assert.AreEqual(8, dest[4]);
-            Assert.AreEqual(9, dest[5]);
+            Check(bb, new byte[] { 1, 2, 3, 4, 8, 9 });
         }
 
         [Test]
@@ -242,15 +256,7 @@ namespace Gravity.UnitTests.Utility
             Assert.AreEqual(4, replacementStart);
             Assert.AreEqual(6, replacementCount);
 
-            var dest = new byte[6];
-            bb.Get(0, 6, dest, 0);
-
-            Assert.AreEqual(1, dest[0]);
-            Assert.AreEqual(2, dest[1]);
-            Assert.AreEqual(8, dest[2]);
-            Assert.AreEqual(9, dest[3]);
-            Assert.AreEqual(10, dest[4]);
-            Assert.AreEqual(11, dest[5]);
+            Check(bb, new byte[] { 1, 2, 8, 9, 10, 11 });
         }
 
         [Test]
@@ -264,21 +270,11 @@ namespace Gravity.UnitTests.Utility
             bb1.Append(new byte[] { 1, 2, 3, 4 }, 0, 4);
             var bb2 = bb1.Insert(1, 2, bufferPool, new byte[] { 8, 9, 10 }, 0, 3);
 
-            Assert.IsNull(bb2);
-            Assert.AreEqual(5, bb1.Length);
-
-            var dest = new byte[5];
-            bb1.Get(0, 5, dest, 0);
-
-            Assert.AreEqual(1, dest[0]);
-            Assert.AreEqual(8, dest[1]);
-            Assert.AreEqual(9, dest[2]);
-            Assert.AreEqual(10, dest[3]);
-            Assert.AreEqual(4, dest[4]);
+            Check(bb1, bb2, new byte[] { 1, 8, 9, 10, 4 });
         }
 
         [Test]
-        public void Should_insert_at_end()
+        public void Should_insert_at_end_append()
         {
             var bufferPool = SetupMock<IBufferPool>();
 
@@ -288,19 +284,49 @@ namespace Gravity.UnitTests.Utility
             bb1.Append(new byte[] { 1, 2, 3, 4 }, 0, 4);
             var bb2 = bb1.Insert(2, 2, bufferPool, new byte[] { 8, 9, 10, 11, 12 }, 0, 5);
 
-            Assert.IsNull(bb2);
-            Assert.AreEqual(7, bb1.Length);
+            Check(bb1, bb2, new byte[] { 1, 2, 8, 9, 10, 11, 12 });
+        }
 
-            var dest = new byte[7];
-            bb1.Get(0, 7, dest, 0);
+        [Test]
+        public void Should_insert_at_start_append()
+        {
+            var bufferPool = SetupMock<IBufferPool>();
 
-            Assert.AreEqual(1, dest[0]);
-            Assert.AreEqual(2, dest[1]);
-            Assert.AreEqual(8, dest[2]);
-            Assert.AreEqual(9, dest[3]);
-            Assert.AreEqual(10, dest[4]);
-            Assert.AreEqual(11, dest[5]);
-            Assert.AreEqual(12, dest[6]);
+            const int size = 10;
+            var bb1 = new ByteBuffer(new byte[size], 0);
+
+            bb1.Append(new byte[] { 1, 2, 3, 4 }, 0, 4);
+            var bb2 = bb1.Insert(0, 2, bufferPool, new byte[] { 8, 9, 10, 11, 12 }, 0, 5);
+
+            Check(bb1, bb2, new byte[] { 8, 9, 10, 11, 12, 3, 4 });
+        }
+
+        [Test]
+        public void Should_insert_at_end_prepend()
+        {
+            var bufferPool = SetupMock<IBufferPool>();
+
+            const int size = 10;
+            var bb1 = new ByteBuffer(new byte[size], 0);
+
+            bb1.Prepend(new byte[] { 1, 2, 3, 4 }, 0, 4);
+            var bb2 = bb1.Insert(2, 2, bufferPool, new byte[] { 8, 9, 10, 11, 12 }, 0, 5);
+
+            Check(bb1, bb2, new byte[] { 1, 2, 8, 9, 10, 11, 12 });
+        }
+
+        [Test]
+        public void Should_insert_at_start_prepend()
+        {
+            var bufferPool = SetupMock<IBufferPool>();
+
+            const int size = 10;
+            var bb1 = new ByteBuffer(new byte[size], 0);
+
+            bb1.Prepend(new byte[] { 1, 2, 3, 4 }, 0, 4);
+            var bb2 = bb1.Insert(0, 2, bufferPool, new byte[] { 8, 9, 10, 11, 12 }, 0, 5);
+
+            Check(bb1, bb2, new byte[] { 8, 9, 10, 11, 12, 3, 4 });
         }
 
         [Test]
@@ -314,17 +340,7 @@ namespace Gravity.UnitTests.Utility
             bb1.Append(new byte[] { 1, 2, 3, 4 }, 0, 4);
             var bb2 = bb1.Insert(2, 2, bufferPool, new byte[] { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 }, 0, 10);
 
-            var expected = new byte[] { 1, 2, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 };
-
-            Assert.IsNotNull(bb2);
-            Assert.AreEqual(expected.Length, bb1.Length + bb2.Length);
-
-            var actual = new byte[bb1.Length + bb2.Length];
-            bb1.Get(0, bb1.Length, actual, 0);
-            bb2.Get(0, bb2.Length, actual, bb1.Length);
-
-            for (var i = 0; i < expected.Length; i++)
-                Assert.AreEqual(expected[i], actual[i]);
+            Check(bb1, bb2, new byte[] { 1, 2, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 });
         }
 
         [Test]
@@ -338,17 +354,7 @@ namespace Gravity.UnitTests.Utility
             bb1.Append(new byte[] { 1, 2, 3, 4 }, 0, 4);
             var bb2 = bb1.Insert(1, 2, bufferPool, new byte[] { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 }, 0, 10);
 
-            var expected = new byte[] { 1, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 4 };
-
-            Assert.IsNotNull(bb2);
-            Assert.AreEqual(expected.Length, bb1.Length + bb2.Length);
-
-            var actual = new byte[bb1.Length + bb2.Length];
-            bb1.Get(0, bb1.Length, actual, 0);
-            bb2.Get(0, bb2.Length, actual, bb1.Length);
-
-            for (var i = 0; i < expected.Length; i++)
-                Assert.AreEqual(expected[i], actual[i]);
+            Check(bb1, bb2, new byte[] { 1, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 4 });
         }
 
         [Test]
@@ -374,13 +380,7 @@ namespace Gravity.UnitTests.Utility
             Assert.AreEqual(0, replacementCount);
             Assert.AreEqual(4, bb.Length);
 
-            var dest = new byte[4];
-            bb.Get(0, 4, dest, 0);
-
-            Assert.AreEqual(1, dest[0]);
-            Assert.AreEqual(2, dest[1]);
-            Assert.AreEqual(5, dest[2]);
-            Assert.AreEqual(6, dest[3]);
+            Check(bb, new byte[] { 1, 2, 5, 6 });
         }
 
         [Test]
@@ -406,12 +406,7 @@ namespace Gravity.UnitTests.Utility
             Assert.AreEqual(0, replacementCount);
             Assert.AreEqual(3, bb.Length);
 
-            var dest = new byte[bb.Length];
-            bb.Get(0, bb.Length, dest, 0);
-
-            Assert.AreEqual(1, dest[0]);
-            Assert.AreEqual(2, dest[1]);
-            Assert.AreEqual(3, dest[2]);
+            Check(bb, new byte[] { 1, 2, 3 });
         }
 
         [Test]
@@ -438,12 +433,7 @@ namespace Gravity.UnitTests.Utility
             Assert.AreEqual(3, bb.Length);
             Assert.AreEqual(3, bb.HeadSize);
 
-            var dest = new byte[3];
-            bb.Get(0, 3, dest, 0);
-
-            Assert.AreEqual(4, dest[0]);
-            Assert.AreEqual(5, dest[1]);
-            Assert.AreEqual(6, dest[2]);
+            Check(bb, new byte[] { 4, 5, 6 });
         }
 
         [Test]
@@ -472,16 +462,7 @@ namespace Gravity.UnitTests.Utility
 
             bb2.Replace(replacementBytes, ref offset, ref count, ref replacementStart, ref replacementCount);
 
-            var expected = new byte[] { 1, 2, 3, 4, 90, 91, 92, 10 };
-
-            Assert.AreEqual(expected.Length, bb1.Length + bb2.Length);
-
-            var actual = new byte[bb1.Length + bb2.Length];
-            bb1.Get(0, bb1.Length, actual, 0);
-            bb2.Get(0, bb2.Length, actual, bb1.Length);
-
-            for (var i = 0; i < expected.Length; i++)
-                Assert.AreEqual(expected[i], actual[i]);
+            Check(bb1, bb2, new byte[] { 1, 2, 3, 4, 90, 91, 92, 10 });
         }
 
         [Test]
@@ -507,12 +488,29 @@ namespace Gravity.UnitTests.Utility
             Assert.AreEqual(0, replacementCount);
             Assert.AreEqual(3, bb.Length);
 
-            var dest = new byte[3];
-            bb.Get(0, 3, dest, 0);
+            Check(bb, new byte[] { 1, 2, 3 });
+        }
 
-            Assert.AreEqual(1, dest[0]);
-            Assert.AreEqual(2, dest[1]);
-            Assert.AreEqual(3, dest[2]);
+        private void Check(ByteBuffer bb1, ByteBuffer bb2, byte[] expected)
+        {
+            if (bb2 == null)
+                Assert.AreEqual(expected.Length, bb1.Length);
+            else
+                Assert.AreEqual(expected.Length, bb1.Length + bb2.Length);
+
+            var actual = new byte[expected.Length];
+            bb1.Get(0, bb1.Length, actual, 0);
+
+            if (bb2 != null)
+                bb2.Get(0, bb2.Length, actual, bb1.Length);
+
+            for (var i = 0; i < expected.Length; i++)
+                Assert.AreEqual(expected[i], actual[i]);
+        }
+
+        private void Check(ByteBuffer bb, byte[] expected)
+        {
+            Check(bb, null, expected);
         }
     }
 }

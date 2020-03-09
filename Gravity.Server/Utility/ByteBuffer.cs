@@ -241,41 +241,67 @@ namespace Gravity.Server.Utility
             int tailBytes, 
             int headBytes)
         {
+            int insertStart = Start + offset;
+            int insertCount = count;
+
             void moveHead(
                 ref int o,
-                ref int c,
                 ref int rs,
                 ref int rc)
             {
+                var extraSpace = rc - insertCount;
+                if (extraSpace <= 0 || HeadSize == 0) return;
+
+                if (extraSpace > HeadSize)
+                    extraSpace = HeadSize;
+
+                if (headBytes > 0)
+                    Array.Copy(Data, Start, Data, Start - extraSpace, headBytes);
+
+                Start -= extraSpace;
+                insertCount += extraSpace;
+                insertStart -= extraSpace;
+                o -= extraSpace;
             };
 
             void moveTail(
                 ref int o,
-                ref int c,
                 ref int rs,
                 ref int rc)
             {
-                var extraBytes = rc - c;
+                var extraSpace = rc - insertCount;
+                if (extraSpace <= 0 || TailSize == 0) return;
+
+                if (extraSpace > TailSize)
+                    extraSpace = TailSize;
+
                 if (tailBytes > 0)
                 {
                     var tailOffset = End - tailBytes;
-                    Array.Copy(Data, tailOffset, Data, tailOffset + extraBytes, tailBytes);
+                    Array.Copy(Data, tailOffset, Data, tailOffset + extraSpace, tailBytes);
                 }
-                Array.Copy(replacementBytes, rs, Data, Start + o, rc);
-                End += extraBytes;
-                o += rc;
+
+                End += extraSpace;
+                insertCount += extraSpace;
             };
 
-            if (headBytes < tailBytes)
+            if (tailBytes > 0 && headBytes < tailBytes)
             {
-                moveHead(ref offset, ref count, ref replacementStart, ref replacementCount);
-                moveTail(ref offset, ref count, ref replacementStart, ref replacementCount);
+                moveHead(ref offset, ref replacementStart, ref replacementCount);
+                moveTail(ref offset, ref replacementStart, ref replacementCount);
             }
             else
             {
-                moveTail(ref offset, ref count, ref replacementStart, ref replacementCount);
-                moveHead(ref offset, ref count, ref replacementStart, ref replacementCount);
+                moveTail(ref offset, ref replacementStart, ref replacementCount);
+                moveHead(ref offset, ref replacementStart, ref replacementCount);
             }
+
+            if (tailBytes > 0 && insertCount < replacementCount)
+                throw new Exception("Not enough room to insert this many bytes, use the Insert() method instead");
+
+            Array.Copy(replacementBytes, replacementStart, Data, insertStart, insertCount);
+            replacementStart += insertCount;
+            replacementCount -= insertCount;
         }
 
         private void ReplaceDelete(
