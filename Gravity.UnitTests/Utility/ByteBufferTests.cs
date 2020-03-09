@@ -109,128 +109,119 @@ namespace Gravity.UnitTests.Utility
         }
 
         [Test]
-        public void Should_replace_at_start_append()
+        public void Should_replace_after_append()
         {
             const int size = 10;
-            var bb = new ByteBuffer(new byte[size], 0);
+            for (var length1 = 1; length1 <= size; length1++)
+            {
+                for (var length2 = 1; length2 < length1; length2++)
+                {
+                    for (var replacementOffest = 0; replacementOffest < length1 - length2 + 1; replacementOffest++)
+                    {
+                        var originalData = TestBytes(1, length1);
+                        var replacementData = TestBytes(10, length2);
 
-            bb.Append(new byte[] { 1, 2, 3, 4, 5, 6 }, 0, 6);
+                        var expectedData = Copy(originalData);
+                        for (var i = 0; i < length2; i++)
+                            expectedData[i + replacementOffest] = replacementData[i];
 
-            var offset = 0;
-            var count = 3;
-            var replacementStart = 0;
-            var replacementCount = 3;
+                        var bb = new ByteBuffer(new byte[size], 0);
+                        bb.Append(originalData, 0, originalData.Length);
 
-            Assert.IsTrue(bb.CanReplace(offset, count, replacementCount));
+                        var offset = replacementOffest;
+                        var count = length2;
+                        var replacementStart = 0;
+                        var replacementCount = length2;
 
-            bb.Replace(new byte[] { 8, 9, 10}, ref offset, ref count, ref replacementStart, ref replacementCount);
+                        Assert.IsTrue(bb.CanReplace(offset, count, replacementCount));
 
-            Assert.AreEqual(3, offset);
-            Assert.AreEqual(0, count);
-            Assert.AreEqual(3, replacementStart);
-            Assert.AreEqual(0, replacementCount);
+                        bb.Replace(replacementData, ref offset, ref count, ref replacementStart, ref replacementCount);
 
-            Check(bb, new byte[] { 8, 9, 10, 4, 5, 6 });
+                        Assert.AreEqual(0, count);
+                        Assert.AreEqual(0, replacementCount);
+
+                        Check(bb, expectedData);
+                    }
+                }
+            }
         }
 
         [Test]
-        public void Should_replace_at_end_append()
+        public void Should_replace_after_prepend()
         {
             const int size = 10;
-            var bb = new ByteBuffer(new byte[size], 0);
+            for (var length1 = 1; length1 <= size; length1++)
+            {
+                for (var length2 = 1; length2 < length1; length2++)
+                {
+                    for (var replacementOffest = 0; replacementOffest < length1 - length2 + 1; replacementOffest++)
+                    {
+                        var originalData = TestBytes(1, length1);
+                        var replacementData = TestBytes(10, length2);
 
-            bb.Append(new byte[] { 1, 2, 3, 4, 5, 6 }, 0, 6);
+                        var expectedData = Copy(originalData);
+                        for (var i = 0; i < length2; i++)
+                            expectedData[i + replacementOffest] = replacementData[i];
 
-            var offset = 3;
-            var count = 3;
-            var replacementStart = 0;
-            var replacementCount = 3;
+                        var bb = new ByteBuffer(new byte[size], 0);
+                        bb.Prepend(originalData, 0, originalData.Length);
 
-            Assert.IsTrue(bb.CanReplace(offset, count, replacementCount));
+                        var offset = replacementOffest;
+                        var count = length2;
+                        var replacementStart = 0;
+                        var replacementCount = length2;
 
-            bb.Replace(new byte[] { 8, 9, 10}, ref offset, ref count, ref replacementStart, ref replacementCount);
+                        Assert.IsTrue(bb.CanReplace(offset, count, replacementCount));
 
-            Assert.AreEqual(0, offset);
-            Assert.AreEqual(0, count);
-            Assert.AreEqual(3, replacementStart);
-            Assert.AreEqual(0, replacementCount);
+                        bb.Replace(replacementData, ref offset, ref count, ref replacementStart, ref replacementCount);
 
-            Check(bb, new byte[] { 1, 2, 3, 8, 9, 10 });
-        }
+                        Assert.AreEqual(0, count);
+                        Assert.AreEqual(0, replacementCount);
 
-        [Test]
-        public void Should_replace_at_start_prepend()
-        {
-            const int size = 10;
-            var bb = new ByteBuffer(new byte[size], 0);
-
-            bb.Prepend(new byte[] { 1, 2, 3, 4, 5, 6 }, 0, 6);
-
-            var offset = 0;
-            var count = 3;
-            var replacementStart = 0;
-            var replacementCount = 3;
-
-            Assert.IsTrue(bb.CanReplace(offset, count, replacementCount));
-
-            bb.Replace(new byte[] { 8, 9, 10}, ref offset, ref count, ref replacementStart, ref replacementCount);
-
-            Assert.AreEqual(3, offset);
-            Assert.AreEqual(0, count);
-            Assert.AreEqual(3, replacementStart);
-            Assert.AreEqual(0, replacementCount);
-
-            Check(bb, new byte[] { 8, 9, 10, 4, 5, 6 });
-        }
-
-        [Test]
-        public void Should_replace_at_end_prepend()
-        {
-            const int size = 10;
-            var bb = new ByteBuffer(new byte[size], 0);
-
-            bb.Prepend(new byte[] { 1, 2, 3, 4, 5, 6 }, 0, 6);
-
-            var offset = 3;
-            var count = 3;
-            var replacementStart = 0;
-            var replacementCount = 3;
-
-            Assert.IsTrue(bb.CanReplace(offset, count, replacementCount));
-
-            bb.Replace(new byte[] { 8, 9, 10}, ref offset, ref count, ref replacementStart, ref replacementCount);
-
-            Assert.AreEqual(0, offset);
-            Assert.AreEqual(0, count);
-            Assert.AreEqual(3, replacementStart);
-            Assert.AreEqual(0, replacementCount);
-
-            Check(bb, new byte[] { 1, 2, 3, 8, 9, 10 });
+                        Check(bb, expectedData);
+                    }
+                }
+            }
         }
 
         [Test]
         public void Should_replace_overlapping_end()
         {
             const int size = 10;
-            var bb = new ByteBuffer(new byte[size], 0);
+            for (var length1 = 1; length1 <= size; length1++)
+            {
+                for (var length2 = 2; length2 < 5; length2++)
+                {
+                    for (var replacementOffest = length2 > length1 ? 1 : length1 - length2 + 1; replacementOffest < length1 - 1; replacementOffest++)
+                    {
+                        var originalData = TestBytes(1, length1);
+                        var replacementData = TestBytes(10, length2);
 
-            bb.Append(new byte[] { 1, 2, 3, 4, 5, 6 }, 0, 6);
+                        var expectedData = Copy(originalData);
+                        for (var i = 0; (i < replacementData.Length) && (i + replacementOffest < originalData.Length); i++)
+                            expectedData[i + replacementOffest] = replacementData[i];
 
-            var offset = 4;
-            var count = 3;
-            var replacementStart = 0;
-            var replacementCount = 3;
+                        var bb = new ByteBuffer(new byte[size], 0);
+                        bb.Prepend(originalData, 0, originalData.Length);
 
-            Assert.IsTrue(bb.CanReplace(offset, count, replacementCount));
+                        var offset = replacementOffest;
+                        var count = length2;
+                        var replacementStart = 0;
+                        var replacementCount = length2;
 
-            bb.Replace(new byte[] { 8, 9, 10}, ref offset, ref count, ref replacementStart, ref replacementCount);
+                        Assert.IsTrue(bb.CanReplace(offset, count, replacementCount));
 
-            Assert.AreEqual(0, offset);
-            Assert.AreEqual(1, count);
-            Assert.AreEqual(2, replacementStart);
-            Assert.AreEqual(1, replacementCount);
+                        bb.Replace(replacementData, ref offset, ref count, ref replacementStart, ref replacementCount);
 
-            Check(bb, new byte[] { 1, 2, 3, 4, 8, 9 });
+                        Assert.AreEqual(0, offset);
+                        Assert.AreEqual(length2 - length1 + replacementOffest, count);
+                        Assert.AreEqual(length1 - replacementOffest, replacementStart);
+                        Assert.AreEqual(length2 - replacementStart, replacementCount);
+
+                        Check(bb, expectedData);
+                    }
+                }
+            }
         }
 
         [Test]
@@ -489,6 +480,21 @@ namespace Gravity.UnitTests.Utility
             Assert.AreEqual(3, bb.Length);
 
             Check(bb, new byte[] { 1, 2, 3 });
+        }
+
+        private byte[] Copy(byte[] original)
+        {
+            var result = new byte[original.Length];
+            Array.Copy(original, 0, result, 0, original.Length);
+            return result;
+        }
+
+        private byte[] TestBytes(byte start, int length)
+        {
+            var result = new byte[length];
+            for (var i = 0; i < length; i++)
+                result[i] = (byte)(start + i);
+            return result;
         }
 
         private void Check(ByteBuffer bb1, ByteBuffer bb2, byte[] expected)
