@@ -209,12 +209,11 @@
     <Compile Include="Ui\Shapes\LegendDrawing.cs" />
     <Compile Include="Ui\Shapes\PieDrawing.cs" />
     <Compile Include="Utility\ByteBuffer.cs" />
-    <Compile Include="Utility\FlexibleByteArray.cs" />
     <Compile Include="Utility\BufferedStream.cs" />
     <Compile Include="Utility\BufferPool.cs" />
     <Compile Include="Utility\DefaultDictionary.cs" />
     <Compile Include="Utility\Factory.cs" />
-    <Compile Include="Utility\InfiniteByteArray.cs" />
+    <Compile Include="Utility\FlexibleByteArray.cs" />
     <Compile Include="Utility\IPAddressRange.cs" />
     <Compile Include="Utility\LogFactory.cs" />
     <Compile Include="Utility\LogFileWriter.cs" />
