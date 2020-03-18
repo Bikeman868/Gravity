@@ -107,14 +107,16 @@ namespace Gravity.Server.Utility
 
         /// <summary>
         /// Tests whether the Replace method can be used to replace bytes in this
-        /// buffer. Note that this method returnd True for the case where the
+        /// buffer. Note that this method returns True for the case where the
         /// replacement continues into subsequent buffers, i.e. the whole replacement
         /// operation is not confined to just this buffer.
         /// </summary>
         /// <param name="offset">The offset into this buffer to start replacing</param>
         /// <param name="count">The number of bytes to replace</param>
         /// <param name="replacementCount">The number of bytes to replace them with</param>
-        /// <returns></returns>
+        /// <returns>Only returns false when the replacement is entirely within this
+        /// buffer, but this buffer is not large enough to accommodate the additional bytes.
+        /// In this case a new buffer must be inserted by calling the Insert() method instead</returns>
         public bool CanReplace(int offset, int count, int replacementCount)
         {
             var additionalBytes = replacementCount - count;

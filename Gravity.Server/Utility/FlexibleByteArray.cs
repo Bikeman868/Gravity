@@ -143,7 +143,7 @@ namespace Gravity.Server.Utility
             var byteBuffer = bufferElement.Data;
             buffer = byteBuffer.Data;
 
-            bufferOffset = (int)(index - startIndex);
+            bufferOffset = (int)(index - startIndex) + byteBuffer.Start;
             bufferCount = byteBuffer.End - bufferOffset;
         }
 
@@ -212,7 +212,11 @@ namespace Gravity.Server.Utility
             }
          
             var bufferElement = FindBufferAt(index, out var bufferStartIndex);
-            bufferElement.Data.Insert((int)(index - bufferStartIndex), 0, _bufferPool, data, offset, count);
+            var newBuffer = bufferElement.Data.Insert((int)(index - bufferStartIndex), 0, _bufferPool, data, offset, count);
+
+            if (newBuffer != null)
+                _buffers.InsertAfter(bufferElement, newBuffer);
+
             Length += count;
         }
 
@@ -240,8 +244,20 @@ namespace Gravity.Server.Utility
             var bufferIndex = (int)(index - bufferStartIndex);
             while (bufferElement != null && count > 0)
             {
-                bufferElement.Data.Replace(data, ref bufferIndex, ref bytesToOverwrite, ref offset, ref count);
-                bufferElement = bufferElement.Next;
+                if (bufferElement.Data.CanReplace(bufferIndex, bytesToOverwrite, count))
+                {
+                    bufferElement.Data.Replace(data, ref bufferIndex, ref bytesToOverwrite, ref offset, ref count);
+                    bufferElement = bufferElement.Next;
+                }
+                else
+                {
+                    var newBuffer = bufferElement.Data.Insert(bufferIndex, bytesToOverwrite, _bufferPool, data, offset, count);
+
+                    if (newBuffer != null)
+                        _buffers.InsertAfter(bufferElement, newBuffer);
+
+                    return;
+                }
             }
         }
 
