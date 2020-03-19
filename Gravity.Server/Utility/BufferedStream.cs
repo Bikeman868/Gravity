@@ -21,8 +21,8 @@ namespace Gravity.Server.Utility
         private readonly IBufferPool _bufferPool;
         private readonly int _readBytesToKeepInMemory;
         private readonly int _writeBytesToKeepInMemory;
-        private readonly LinkedList<byte[]> _readBuffers;
-        private readonly LinkedList<byte[]> _writeBuffers;
+        private readonly FlexibleByteArray _readBuffer;
+        private readonly FlexibleByteArray _writeBuffer;
         private Action<BufferedStream> _onBytesRead;
         private Action<BufferedStream> _onBytesWritten;
 
@@ -30,26 +30,6 @@ namespace Gravity.Server.Utility
         /// True after we read 0 bytes from the stream
         /// </summary>
         private bool _endOfReadStream;
-
-        /// <summary>
-        /// The sum of the lengths of the byte arrays in _readBuffers
-        /// </summary>
-        private int _bytesInReadBuffers;
-
-        /// <summary>
-        /// The sum of the lengths of the byte arrays in _writeBuffers
-        /// </summary>
-        private int _bytesInWriteBuffers;
-
-        /// <summary>
-        /// The number of bytes at the front of the _readBuffers that have already been read
-        /// </summary>
-        private int _bytesReadFromOldestBuffer;
-
-        /// <summary>
-        /// The number of bytes at the back of the _readBuffers that have not yet been filled with data
-        /// </summary>
-        private int _unusedBytesInNewestBuffer;
 
         /// <summary>
         /// Constructs a wrapper around a source stream
@@ -77,14 +57,14 @@ namespace Gravity.Server.Utility
             {
                 if (onBytesRead == null)
                     throw new ArgumentException("There is no point to buffer reads if there is no processing action");
-                _readBuffers = new LinkedList<byte[]>();
+                _readBuffer = new FlexibleByteArray(bufferPool);
             }
 
             if (writeBufferLength > 0)
             {
                 if (onBytesWritten == null)
                     throw new ArgumentException("There is no point to buffer writes if there is no processing action");
-                _writeBuffers = new LinkedList<byte[]>();
+                _writeBuffer = new FlexibleByteArray(bufferPool);
             }
         }
 
@@ -94,6 +74,9 @@ namespace Gravity.Server.Utility
             {
                 _stream.Close();
                 _stream.Dispose();
+
+                _readBuffer?.Dispose();
+                _writeBuffer?.Dispose();
             }
             base.Dispose(disposing);
         }
@@ -107,17 +90,15 @@ namespace Gravity.Server.Utility
         /// </summary>
         public override void Close()
         {
-            if (_writeBuffers != null)
+            if (_writeBuffer != null)
             {
                 _onBytesWritten(this);
 
-                var writeBuffer = _writeBuffers.PopFirst();
-
-                while (writeBuffer != null)
+                while (_writeBuffer.Length > 0)
                 {
-                    _stream.Write(writeBuffer, 0, writeBuffer.Length);
-                    _bufferPool.Reuse(writeBuffer);
-                    writeBuffer = _writeBuffers.PopFirst();
+                    _writeBuffer.GetReadBuffer(0, out var buffer, out var offset, out var count);
+                    _stream.Write(buffer, offset, count);
+                    _writeBuffer.Delete(0, count);
                 }
 
                 _stream.Flush();
@@ -137,8 +118,7 @@ namespace Gravity.Server.Utility
         /// <summary>
         /// The number of bytes that are currently buffered in the read stream
         /// </summary>
-        public int BufferedReadLength => _bytesInReadBuffers - _bytesReadFromOldestBuffer - _unusedBytesInNewestBuffer;
-
+        public long BufferedReadLength => _readBuffer.Length;
 
         /// <summary>
         /// The absolute byte offset into the write stream where the first byte of buffered data is available
@@ -148,7 +128,7 @@ namespace Gravity.Server.Utility
         /// <summary>
         /// The number of bytes that are currently buffered in the write stream
         /// </summary>
-        public int BufferedWriteLength => _bytesInWriteBuffers;
+        public long BufferedWriteLength => _writeBuffer.Length;
 
         public override long Position
         {
@@ -158,103 +138,42 @@ namespace Gravity.Server.Utility
 
         public override void Flush()
         {
-            if (_writeBuffers == null)
+            if (_writeBuffer == null)
                 _stream.Flush();
         }
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (_readBuffers == null)
+            if (_readBuffer == null)
                 return _stream.Read(buffer, offset, count);
 
-            var oldestBuffer = _readBuffers.FirstOrDefault();
-            var newestBuffer = _readBuffers.LastOrDefault();
-
-            if (_endOfReadStream)
+            while (!_endOfReadStream && _readBuffer.Length < _readBytesToKeepInMemory)
             {
-                if (oldestBuffer == null) return 0;
+                var updateFunc = _readBuffer.GetAppendBuffer(_readBytesToKeepInMemory, out var readBuffer, out var readBufferStart, out var readBufferCount);
+                var bytesRead = _stream.Read(readBuffer, readBufferStart, readBufferCount);
+
+                if (bytesRead == 0)
+                    _endOfReadStream = true;
+                else
+                    updateFunc(bytesRead);
             }
-            else
+            
+            _onBytesRead(this);
+
+            var bytesAvailable = (int)(_endOfReadStream ? _readBuffer.Length : _readBuffer.Length - _readBytesToKeepInMemory);
+            if (bytesAvailable > count) bytesAvailable = count;
+
+            if (bytesAvailable > 0)
             {
-                while (!_endOfReadStream && BufferedReadLength < _readBytesToKeepInMemory)
-                {
-                    byte[] readBuffer;
-                    int readBufferOffset;
+                _readBuffer.GetReadBuffer(0, out var readBuffer, out var readBufferStart, out var readBufferCount);
+                Array.Copy(readBuffer, readBufferStart, buffer, offset, readBufferCount);
+                _readBuffer.Delete(0, readBufferCount);
 
-                    var allocateNewBuffer = newestBuffer == null || _unusedBytesInNewestBuffer == 0;
-
-                    if (allocateNewBuffer)
-                    {
-                        readBuffer = _bufferPool.Get();
-                        readBufferOffset = 0;
-                    }
-                    else
-                    {
-                        readBuffer = newestBuffer;
-                        readBufferOffset = newestBuffer.Length - _unusedBytesInNewestBuffer;
-                    }
-
-                    var bytesRead = _stream.Read(readBuffer, readBufferOffset, readBuffer.Length - readBufferOffset);
-
-                    if (bytesRead == 0)
-                    {
-                        _endOfReadStream = true;
-                        if (allocateNewBuffer) _bufferPool.Reuse(readBuffer);
-                        if (oldestBuffer == null) return 0;
-                    }
-                    else
-                    {
-                        if (allocateNewBuffer)
-                        {
-                            _readBuffers.Append(readBuffer);
-                            _bytesInReadBuffers += readBuffer.Length;
-                            newestBuffer = readBuffer;
-                            _unusedBytesInNewestBuffer = readBuffer.Length - bytesRead;
-
-                            if (oldestBuffer == null) oldestBuffer = readBuffer;
-                        }
-                        else
-                        {
-                            _unusedBytesInNewestBuffer -= bytesRead;
-                        }
-                    }
-                }
+                bytesAvailable = readBufferCount;
+                BufferedReadStart += readBufferCount;
             }
 
-            if (_endOfReadStream || BufferedReadLength >= _readBytesToKeepInMemory)
-            {
-                _onBytesRead(this);
-
-                oldestBuffer = _readBuffers.FirstOrDefault();
-                newestBuffer = _readBuffers.LastOrDefault();
-            }
-
-            var isLastBuffer = ReferenceEquals(oldestBuffer, newestBuffer);
-
-            var bytesAvailable = isLastBuffer
-                ? oldestBuffer.Length - _bytesReadFromOldestBuffer - _unusedBytesInNewestBuffer
-                : oldestBuffer.Length - _bytesReadFromOldestBuffer;
-
-            if (bytesAvailable <= count)
-            {
-                oldestBuffer = _readBuffers.PopFirst();
-                _bytesInReadBuffers -= oldestBuffer.Length;
-
-                Array.Copy(oldestBuffer, _bytesReadFromOldestBuffer, buffer, offset, bytesAvailable);
-                _bytesReadFromOldestBuffer = 0;
-                BufferedReadStart += bytesAvailable;
-
-                _bufferPool.Reuse(oldestBuffer);
-
-                return bytesAvailable;
-            }
-
-            Array.Copy(oldestBuffer, _bytesReadFromOldestBuffer, buffer, offset, count);
-
-            _bytesReadFromOldestBuffer += count;
-            BufferedReadStart += count;
-
-            return count;
+            return bytesAvailable;
         }
 
         /// <summary>
@@ -269,7 +188,7 @@ namespace Gravity.Server.Utility
         /// <param name="offset">The offset to start copying into buffer</param>
         public void GetUnreadBytes(long streamOffset, int count, byte[] buffer, int offset)
         {
-            GetBufferedBytes(_readBuffers, (int)(streamOffset - BufferedReadStart) + _bytesReadFromOldestBuffer, count, buffer, offset);
+            GetBufferedBytes(_readBuffer, (int)(streamOffset - BufferedReadStart), count, buffer, offset);
         }
 
         /// <summary>
@@ -283,50 +202,40 @@ namespace Gravity.Server.Utility
         /// <param name="replacementCount">The number of bytes to copy from replacementBytes</param>
         public void ReplaceUnreadBytes(long streamOffset, int bytesToReplace, byte[] replacementBytes, int replacementOffset, int replacementCount)
         {
-            ReplaceBufferedBytes(
-                _readBuffers, 
-                (int)(streamOffset - BufferedReadStart) + _bytesReadFromOldestBuffer, 
-                bytesToReplace, 
-                ref _unusedBytesInNewestBuffer,
-                replacementBytes, 
-                replacementOffset, 
+            _readBuffer.Replace(
+                streamOffset - BufferedReadStart,
+                bytesToReplace,
+                replacementBytes,
+                replacementOffset,
                 replacementCount);
-            _bytesInReadBuffers += replacementCount - bytesToReplace;
         }
 
         public override void Write(byte[] buffer, int offset, int count)
         {
             if (count < 1) return;
 
-            if (_writeBuffers == null)
+            if (_writeBuffer == null)
             {
                 _stream.Write(buffer, offset, count);
                 return;
             }
 
-            var newBuffer = _bufferPool.Get(count);
-            Array.Copy(buffer, offset, newBuffer, 0, count);
+            _writeBuffer.Append(buffer, offset, count);
 
-            _writeBuffers.Append(newBuffer);
-            _bytesInWriteBuffers += count;
-
-            if (BufferedWriteLength > _writeBytesToKeepInMemory)
+            if (_writeBuffer.Length > _writeBytesToKeepInMemory)
                 _onBytesWritten(this);
 
-            while (BufferedWriteLength > _writeBytesToKeepInMemory) // We are buffering more bytes than we need to
+            while (_writeBuffer.Length > _writeBytesToKeepInMemory)
             {
-                var oldestBuffer = _writeBuffers.FirstOrDefault();
+                _writeBuffer.GetReadBuffer(0, out var writeBuffer, out var writeBufferOffset, out var writeBufferCount);
 
-                if (oldestBuffer == null || _bytesInWriteBuffers - oldestBuffer.Length < _writeBytesToKeepInMemory)
-                    return; // Writing this buffer would leave us with not enough bytes in the buffer
+                var bytesToWrite = (int)(_writeBytesToKeepInMemory - _writeBuffer.Length);
+                if (writeBufferCount < bytesToWrite) bytesToWrite = writeBufferCount;
 
-                oldestBuffer = _writeBuffers.PopFirst();
-                _bytesInWriteBuffers -= oldestBuffer.Length;
-                BufferedWriteStart += oldestBuffer.Length;
+                _stream.Write(writeBuffer, writeBufferOffset, bytesToWrite);
 
-                _stream.Write(oldestBuffer, 0, oldestBuffer.Length);
-
-                _bufferPool.Reuse(oldestBuffer);
+                _writeBuffer.Delete(0, bytesToWrite);
+                BufferedWriteStart += bytesToWrite;
             }
         }
 
@@ -340,7 +249,7 @@ namespace Gravity.Server.Utility
         /// <param name="offset">The offset to start copying into buffer</param>
         public void GetWrittenBytes(long streamOffset, int count, byte[] buffer, int offset)
         {
-            GetBufferedBytes(_writeBuffers, (int)(streamOffset - BufferedWriteStart), count, buffer, offset);
+            GetBufferedBytes(_writeBuffer, (int)(streamOffset - BufferedWriteStart), count, buffer, offset);
         }
 
         /// <summary>
@@ -354,16 +263,12 @@ namespace Gravity.Server.Utility
         /// <param name="replacementCount">The number of bytes to copy from replacementBytes</param>
         public void ReplaceWrittenBytes(long streamOffset, int bytesToReplace, byte[] replacementBytes, int replacementOffset, int replacementCount)
         {
-            int unusedTailBytes = 0;
-            ReplaceBufferedBytes(
-                _writeBuffers, 
-                (int)(streamOffset - BufferedWriteStart), 
-                bytesToReplace, 
-                ref unusedTailBytes,
+            _writeBuffer.Replace(
+                streamOffset - BufferedWriteStart,
+                bytesToReplace,
                 replacementBytes, 
                 replacementOffset, 
                 replacementCount);
-            _bytesInWriteBuffers += replacementCount - bytesToReplace;
         }
 
         public override long Seek(long offset, SeekOrigin origin)
@@ -379,189 +284,30 @@ namespace Gravity.Server.Utility
         /// <summary>
         /// Extracts bytes from the buffered data
         /// </summary>
-        /// <param name="bufferList">A list of data buffers</param>
+        /// <param name="byteArray">A flexible byte array</param>
         /// <param name="start">The byte offset where reading should start</param>
         /// <param name="length">The number of bytes to read</param>
         /// <param name="buffer">The buffer to return read bytes into</param>
         /// <param name="offset">The offset within buffer to start writing bytes</param>
         private void GetBufferedBytes(
-            LinkedList<byte[]> bufferList, 
-            int start, int length, 
-            byte[] buffer, int offset)
+            FlexibleByteArray byteArray,
+            int start, 
+            int length,
+            byte[] buffer, 
+            int offset)
         {
             if (length < 1) return;
 
-            var bufferListElement = bufferList.FirstElement();
-            var bufferedData = bufferListElement?.Data;
-
-            while (bufferedData != null && start >= bufferedData.Length)
+            while (start < byteArray.Length)
             {
-                start -= bufferedData.Length;
-                bufferListElement = bufferListElement.Next;
-                bufferedData = bufferListElement?.Data;
-            }
+                byteArray.GetReadBuffer(start, out var readBuffer, out var readBufferOffset, out var readCount);
 
-            do
-            {
-                if (bufferedData == null)
-                    throw new Exception("Attempt to read more data than there is in the buffer");
+                var bytesToCopy = readCount > length ? length : readCount;
+                Array.Copy(readBuffer, readBufferOffset, buffer, offset, bytesToCopy);
 
-                var bytesToCopy = length;
-                if (start + bytesToCopy > bufferedData.Length)
-                    bytesToCopy = bufferedData.Length - start;
-
-                Array.Copy(bufferedData, start, buffer, offset, bytesToCopy);
-
+                start += bytesToCopy;
+                length -= bytesToCopy;
                 offset += bytesToCopy;
-                length -= bytesToCopy;
-
-                if (length == 0) return;
-
-                bufferListElement = bufferListElement.Next;
-                bufferedData = bufferListElement?.Data;
-                start = 0;
-            } while (bufferListElement != null);
-        }
-
-        /// <summary>
-        /// Replaces a section of buffered data with some new bytes
-        /// </summary>
-        /// <param name="bufferList">A list of data buffers</param>
-        /// <param name="start">The byte offset to overwrite in the buffered data</param>
-        /// <param name="length">How many bytes to delete from the buffers</param>
-        /// <param name="replacementBytes">The new bytes to insert into the buffer</param>
-        /// <param name="replacementOffset">An offset into replacementBytes to copy from</param>
-        /// <param name="replacementLength">The number of bytes to copy from replacementBytes into the buffer</param>
-        private void ReplaceBufferedBytes(
-            LinkedList<byte[]> bufferList, 
-            int start, int length, 
-            ref int unusedTailBytes,
-            byte[] replacementBytes, int replacementOffset, int replacementLength)
-        {
-            if (length < 1) return;
-
-            var bufferListElement = bufferList.FirstElement();
-            var bufferedData = bufferListElement?.Data;
-
-            while (bufferedData != null && start >= bufferedData.Length)
-            {
-                start -= bufferedData.Length;
-                bufferListElement = bufferListElement.Next;
-                bufferedData = bufferListElement?.Data;
-            }
-
-            // Overwrite the overalpping bytes
-            do
-            {
-                if (bufferedData == null)
-                    throw new Exception("Attempt to overwrite past the end of the buffer");
-
-                int bytesToCopy;
-                
-                if (bufferListElement.Next == null && start + length > bufferedData.Length - unusedTailBytes)
-                {
-                    bytesToCopy = replacementLength;
-
-                    if (start + bytesToCopy > bufferedData.Length)
-                    {
-                        bytesToCopy = bufferedData.Length - start;
-                        unusedTailBytes = 0;
-                    }
-                    else
-                    {
-                        unusedTailBytes = bufferedData.Length - start - bytesToCopy;
-                    }
-                }
-                else
-                {
-                    bytesToCopy = length;
-                
-                    if (bytesToCopy > replacementLength) 
-                        bytesToCopy = replacementLength;
-
-                    if (start + bytesToCopy > bufferedData.Length) 
-                        bytesToCopy = bufferedData.Length - start;
-                }
-
-                Array.Copy(replacementBytes, replacementOffset, bufferedData, start, bytesToCopy);
-
-                length -= bytesToCopy;
-                replacementOffset += bytesToCopy;
-                replacementLength -= bytesToCopy;
-
-                if (length > 0 && replacementLength > 0)
-                {
-                    bufferListElement = bufferListElement.Next;
-                    bufferedData = bufferListElement.Data;
-                    start = 0;
-                }
-                else
-                {
-                    start += bytesToCopy;
-                    break;
-                }
-            } while (true);
-
-            // Delete extra bytes if the replacement is shorter
-            while (length > 0)
-            {
-                var bytesToDelete = length;
-
-                if (start + bytesToDelete > bufferedData.Length)
-                {
-                    bytesToDelete = bufferedData.Length - start;
-                    if (start == 0)
-                    {
-                        var bufferListElementToDelete = bufferListElement;
-                        bufferListElement = bufferListElement.Prior;
-                        bufferList.Delete(bufferListElementToDelete);
-                        _bufferPool.Reuse(bufferedData);
-                    }
-                    else
-                    {
-                        var dataToKeep = _bufferPool.Get(bufferedData.Length - bytesToDelete);
-                        Array.Copy(bufferedData, 0, dataToKeep, 0, dataToKeep.Length);
-                        bufferListElement.Data = dataToKeep;
-                        _bufferPool.Reuse(bufferedData);
-                    }
-                }
-                else
-                {
-                    if (start == 0)
-                    {
-                        var dataToKeep = _bufferPool.Get(bufferedData.Length - bytesToDelete);
-                        Array.Copy(bufferedData, length, dataToKeep, 0, dataToKeep.Length);
-                        bufferListElement.Data = dataToKeep;
-                        _bufferPool.Reuse(bufferedData);
-                    }
-                    else
-                    {
-                        var dataBefore = _bufferPool.Get(start);
-                        var dataAfter = _bufferPool.Get(bufferedData.Length - start - length);
-                        Array.Copy(bufferedData, 0, dataBefore, 0, dataBefore.Length);
-                        Array.Copy(bufferedData, start + length, dataAfter, 0, dataAfter.Length);
-                        bufferListElement.Data = dataBefore;
-                        bufferListElement = bufferList.InsertAfter(bufferListElement, dataAfter);
-                        _bufferPool.Reuse(bufferedData);
-                    }
-                }
-
-                length -= bytesToDelete;
-                bufferListElement = bufferListElement?.Next ?? bufferList.FirstElementOrDefault();
-                bufferedData = bufferListElement?.Data;
-                start = 0;
-            }
-
-            // Append extra bytes if the replacement is longer
-            if (replacementLength > 0)
-            {
-                var additionalData = _bufferPool.Get(replacementLength);
-                Array.Copy(replacementBytes, replacementOffset, additionalData, 0, replacementLength);
-
-                if (bufferListElement.Next == null)
-                    unusedTailBytes = 0;
-
-                bufferList.InsertAfter(bufferListElement, additionalData);
             }
         }
     }
