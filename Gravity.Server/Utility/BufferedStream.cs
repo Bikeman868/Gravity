@@ -147,7 +147,7 @@ namespace Gravity.Server.Utility
             if (_readBuffer == null)
                 return _stream.Read(buffer, offset, count);
 
-            while (!_endOfReadStream && _readBuffer.Length < _readBytesToKeepInMemory)
+            while (!_endOfReadStream && _readBuffer.Length <= _readBytesToKeepInMemory)
             {
                 var updateFunc = _readBuffer.GetAppendBuffer(_readBytesToKeepInMemory, out var readBuffer, out var readBufferStart, out var readBufferCount);
                 var bytesRead = _stream.Read(readBuffer, readBufferStart, readBufferCount);
@@ -166,11 +166,12 @@ namespace Gravity.Server.Utility
             if (bytesAvailable > 0)
             {
                 _readBuffer.GetReadBuffer(0, out var readBuffer, out var readBufferStart, out var readBufferCount);
-                Array.Copy(readBuffer, readBufferStart, buffer, offset, readBufferCount);
-                _readBuffer.Delete(0, readBufferCount);
+                if (readBufferCount < bytesAvailable) bytesAvailable = readBufferCount;
 
-                bytesAvailable = readBufferCount;
-                BufferedReadStart += readBufferCount;
+                Array.Copy(readBuffer, readBufferStart, buffer, offset, bytesAvailable);
+
+                _readBuffer.Delete(0, bytesAvailable);
+                BufferedReadStart += bytesAvailable;
             }
 
             return bytesAvailable;
@@ -229,7 +230,7 @@ namespace Gravity.Server.Utility
             {
                 _writeBuffer.GetReadBuffer(0, out var writeBuffer, out var writeBufferOffset, out var writeBufferCount);
 
-                var bytesToWrite = (int)(_writeBytesToKeepInMemory - _writeBuffer.Length);
+                var bytesToWrite = (int)(_writeBuffer.Length - _writeBytesToKeepInMemory);
                 if (writeBufferCount < bytesToWrite) bytesToWrite = writeBufferCount;
 
                 _stream.Write(writeBuffer, writeBufferOffset, bytesToWrite);

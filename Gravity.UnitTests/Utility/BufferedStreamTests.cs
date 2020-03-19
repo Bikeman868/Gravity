@@ -236,7 +236,7 @@ namespace Gravity.UnitTests.Utility
                     bufferLength, 
                     bs => 
                     { 
-                            var count = (int)(bs.BufferedReadLength - streamPos + bs.BufferedReadStart);
+                        var count = (int)(bs.BufferedWriteLength - streamPos + bs.BufferedWriteStart);
                         if (count > 0)
                         {
                             var buffer = new byte[count];
@@ -281,7 +281,7 @@ namespace Gravity.UnitTests.Utility
                     bufferLength, 
                     bs => 
                     { 
-                            var count = (int)(bs.BufferedReadLength - streamPos + bs.BufferedReadStart);
+                        var count = (int)(bs.BufferedWriteStart + bs.BufferedWriteLength - streamPos);
                         if (count > 0)
                         {
                             var originalBytes = new byte[count];

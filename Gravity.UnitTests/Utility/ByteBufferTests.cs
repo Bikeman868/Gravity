@@ -251,6 +251,32 @@ namespace Gravity.UnitTests.Utility
         }
 
         [Test]
+        public void Should_replace_entirely()
+        {
+            const int size = 5;
+            var bb = new ByteBuffer(new byte[size]);
+
+            bb.Append(new byte[] { 1, 2, 3, 4, 5}, 0, 5);
+
+            var offset = 0;
+            var count = 10;
+            var replacementStart = 0;
+            var replacementCount = 10;
+
+            Assert.IsTrue(bb.CanReplace(offset, count, replacementCount));
+
+            bb.Replace(new byte[] { 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 }, 
+                ref offset, ref count, ref replacementStart, ref replacementCount);
+
+            Assert.AreEqual(0, offset);
+            Assert.AreEqual(5, count);
+            Assert.AreEqual(5, replacementStart);
+            Assert.AreEqual(5, replacementCount);
+
+            Check(bb, new byte[] { 8, 9, 10, 11, 12 });
+        }
+
+        [Test]
         public void Should_insert_within()
         {
             var bufferPool = SetupMock<IBufferPool>();
